@@ -188,4 +188,29 @@ export const SearchIcon = (props: IconSvgProps) => (
   </svg>
 );
 
+export const UserIcon: React.FC<IconSvgProps> = ({
+  size = 24,
+  width,
+  height,
+  ...props
+}) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    height={size || height}
+    width={size || width}
+    {...props}
+  >
+    <path
+      d="M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5z"
+      fill="currentColor"
+    />
+    <path
+      d="M4 20c0-2.761 3.582-5 8-5s8 2.239 8 5v1H4v-1z"
+      fill="currentColor"
+    />
+  </svg>
+);
+
+
 
