@@ -34,7 +34,14 @@ This project implements a secure authentication system using Next.js and Keycloa
    - Root URL: http://localhost:10001
    - Click "Save"
 
-5. Configure Client Settings:
+5. Adjust local environment:
+   - Create .env.local
+   - Copy .env.example and paste it in .env.local
+   - Go to Clients -> front -> Credentials
+   - Generate and copy Client Secret
+   - Paste it in .env.local as KEYCLOAK_CLIENT_SECRET
+
+6. Configure Client Settings:
    - Access Type: confidential
    - Valid Redirect URIs: 
      - http://localhost:10001/api/auth/callback
@@ -44,7 +51,7 @@ This project implements a secure authentication system using Next.js and Keycloa
      - http://localhost:3000
    - Click "Save"
 
-6. Get Client Secret:
+7. Get Client Secret:
    - Go to Credentials tab
    - Copy the Secret value
 
