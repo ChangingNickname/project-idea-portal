@@ -12,6 +12,8 @@ import { GithubIcon } from "@/components/icons";
 import { useState, useEffect } from "react";
 
 
+
+
 const subtitles = [
     "Where students bring their project ideas to life — together.",
     "Share ideas. Collaborate freely. Build something great.",
@@ -32,19 +34,16 @@ export default function Home() {
   return (
     <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10">
       <div className="inline-block max-w-xl text-center justify-center">
-        <span className={title()}>Student Project&nbsp;</span>
-        <span className={title({ color: "cyan" })}>Idea&nbsp;</span>
+        <span className={title()}>Student&nbsp;</span>
+        <span className={title({ color: "cyan" })}>Project Idea Portal&nbsp;</span>
         <br />
-        <span className={title()}>
-          Portal.
-        </span>
         <div className={subtitle({ class: "mt-4" })}>
           {subtitleText}
         </div>
       </div>
 
       <div className="flex gap-3">
-        <Link
+        {/* <Link
           isExternal
           className={buttonStyles({
             color: "primary",
@@ -54,15 +53,15 @@ export default function Home() {
           href={siteConfig.links.docs}
         >
           Documentation
-        </Link>
-        <Link
+        </Link> */}
+        {/* <Link
           isExternal
           className={buttonStyles({ variant: "bordered", radius: "full" })}
           href={siteConfig.links.github}
         >
           <GithubIcon size={20} />
           GitHub
-        </Link>
+        </Link> */}
       </div>
 
       <div className="mt-8">
