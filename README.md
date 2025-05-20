@@ -1,53 +1,179 @@
-# Next.js & HeroUI Template
+# Next.js Application with Keycloak Authentication
 
-This is a template for creating applications using Next.js 14 (app directory) and HeroUI (v2).
+This project implements a secure authentication system using Next.js and Keycloak. The authentication flow is handled through OpenID Connect protocol.
 
-[Try it on CodeSandbox](https://githubbox.com/heroui-inc/heroui/next-app-template)
+## Prerequisites
 
-## Technologies Used
+- Node.js 18 or higher
+- Docker and Docker Compose
+- Keycloak server (included in docker-compose)
 
-- [Next.js 14](https://nextjs.org/docs/getting-started)
-- [HeroUI v2](https://heroui.com/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [Tailwind Variants](https://tailwind-variants.org)
-- [TypeScript](https://www.typescriptlang.org/)
-- [Framer Motion](https://www.framer.com/motion/)
-- [next-themes](https://github.com/pacocoursey/next-themes)
+## Setup Instructions
 
-## How to Use
+### 1. Keycloak Configuration
 
-### Use the template with create-next-app
+1. Start the services using Docker Compose:
+   ```bash
+   docker-compose up -d
+   ```
 
-To create a new project based on this template using `create-next-app`, run the following command:
+2. Access Keycloak Admin Console:
+   - URL: http://localhost:10000
+   - Username: admin
+   - Password: admin_password
 
-```bash
-npx create-next-app -e https://github.com/heroui-inc/next-app-template
-```
+3. Create a new Realm:
+   - Click "Add realm"
+   - Name: project_idea
+   - Click "Create"
 
-### Install dependencies
+4. Create a new Client:
+   - Go to Clients → Create client
+   - Client ID: front
+   - Client Protocol: openid-connect
+   - Root URL: http://localhost:10001
+   - Click "Save"
 
-You can use one of them `npm`, `yarn`, `pnpm`, `bun`, Example using `npm`:
+5. Configure Client Settings:
+   - Access Type: confidential
+   - Valid Redirect URIs: 
+     - http://localhost:10001/api/auth/callback
+     - http://localhost:3000/api/auth/callback
+   - Web Origins: 
+     - http://localhost:10001
+     - http://localhost:3000
+   - Click "Save"
 
-```bash
-npm install
-```
+6. Get Client Secret:
+   - Go to Credentials tab
+   - Copy the Secret value
 
-### Run the development server
+### 2. Application Configuration
 
-```bash
-npm run dev
-```
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-### Setup pnpm (optional)
+2. Configure environment variables:
+   Create a `.env.local` file with the following content:
+   ```
+   KEYCLOAK_REALM=project_idea
+   KEYCLOAK_CLIENT_ID=front
+   KEYCLOAK_CLIENT_SECRET=your_client_secret
+   KEYCLOAK_AUTH_SERVER_URL=http://localhost:10000
+   ```
 
-If you are using `pnpm`, you need to add the following code to your `.npmrc` file:
+## Authentication Flow
 
-```bash
-public-hoist-pattern[]=*@heroui/*
-```
+1. **Initial Request**:
+   - User attempts to access a protected route
+   - Middleware checks for `keycloak_token` cookie
+   - If no token exists, redirects to `/login`
 
-After modifying the `.npmrc` file, you need to run `pnpm install` again to ensure that the dependencies are installed correctly.
+2. **Login Process**:
+   - `/login` page redirects to `/api/auth/login`
+   - `/api/auth/login` constructs Keycloak authorization URL
+   - User is redirected to Keycloak login page
 
-## License
+3. **Keycloak Authentication**:
+   - User enters credentials on Keycloak
+   - Keycloak validates credentials
+   - On success, redirects back to `/api/auth/callback` with authorization code
 
-Licensed under the [MIT license](https://github.com/heroui-inc/next-app-template/blob/main/LICENSE).
+4. **Token Exchange**:
+   - `/api/auth/callback` exchanges code for tokens
+   - Access token is stored in `keycloak_token` cookie
+   - User is redirected to the original requested page
+
+5. **Protected Route Access**:
+   - Middleware validates token using JWKS
+   - If valid, adds user info to request headers
+   - If invalid, redirects to login
+
+## Security Features
+
+1. **Token Validation**:
+   - JWT signature verification using JWKS
+   - Token expiration check
+   - Issuer validation
+
+2. **Cookie Security**:
+   - HttpOnly flag to prevent XSS
+   - Secure flag in production
+   - SameSite policy for CSRF protection
+
+3. **Headers**:
+   - User ID: `x-user-id`
+   - User Email: `x-user-email`
+   - User Roles: `x-user-roles`
+
+## Development
+
+1. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+2. Access the application:
+   - URL: http://localhost:10001
+
+## Production Deployment
+
+1. Build the application:
+   ```bash
+   npm run build
+   ```
+
+2. Start the production server:
+   ```bash
+   npm start
+   ```
+
+## Troubleshooting
+
+1. **Infinite Redirects**:
+   - Check Keycloak client configuration
+   - Verify redirect URIs match exactly
+   - Check token validation in middleware
+
+2. **Token Validation Errors**:
+   - Verify JWKS endpoint is accessible
+   - Check token expiration
+   - Validate issuer and audience claims
+
+3. **CORS Issues**:
+   - Verify Web Origins in Keycloak
+   - Check redirect URIs configuration
+   - Ensure proper protocol (http/https)
+
+## API Routes
+
+1. `/api/auth/login`:
+   - Initiates Keycloak authentication
+   - Redirects to Keycloak login page
+
+2. `/api/auth/callback`:
+   - Handles Keycloak callback
+   - Exchanges code for tokens
+   - Sets authentication cookie
+
+3. `/api/auth/logout`:
+   - Clears authentication cookie
+   - Redirects to Keycloak logout
+
+## Middleware
+
+The middleware (`middleware.ts`) handles:
+- Token validation
+- User information extraction
+- Protected route enforcement
+- Authentication state management
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
