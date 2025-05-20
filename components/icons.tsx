@@ -2,6 +2,8 @@ import * as React from "react";
 
 import { IconSvgProps } from "@/types";
 
+import {Alert} from "@heroui/alert";
+
 export const Logo: React.FC<IconSvgProps> = ({
   size = 36,
   width,
@@ -185,3 +187,5 @@ export const SearchIcon = (props: IconSvgProps) => (
     />
   </svg>
 );
+
+
