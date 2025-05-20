@@ -24,6 +24,7 @@ export const siteConfig = {
       label: "About",
       href: "/about",
     },
+
   ],
   navMenuItems: [
     {
@@ -61,7 +62,6 @@ export const siteConfig = {
   ],
   links: {
     github: "https://github.com/ChangingNickname/project-idea-portal",
-    docs: "https://heroui.com",
-    login: "/api/auth/login",
+    docs: "https://heroui.com"
   },
 };

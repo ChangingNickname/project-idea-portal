@@ -24,6 +24,7 @@ import {
   HeartFilledIcon,
   SearchIcon,
   Logo,
+  UserIcon,
 } from "@/components/icons";
 
 export const Navbar = () => {
@@ -91,15 +92,16 @@ export const Navbar = () => {
             isExternal
             as={Link}
             className="text-sm font-normal text-default-600 bg-default-100"
-            href={siteConfig.links.sponsor}
-            startContent={<HeartFilledIcon className="text-danger" />}
+            href="/login"
+            startContent={<UserIcon className="text-default-500" />}
             variant="flat"
           >
-            Sponsor
+            Login
           </Button>
         </NavbarItem>
       </NavbarContent>
 
+      {/* Mobile Navbar */}
       <NavbarContent className="sm:hidden basis-1 pl-4" justify="end">
         <Link isExternal aria-label="Github" href={siteConfig.links.github}>
           <GithubIcon className="text-default-500" />
