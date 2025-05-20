@@ -5,15 +5,15 @@ services:
     image: postgres:15
     container_name: project-idea-postgres
     environment:
-      POSTGRES_DB: keycloak
-      POSTGRES_USER: keycloak
-      POSTGRES_PASSWORD: keycloak_password
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "10002:5432"
+      - "${POSTGRES_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "keycloak"]
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -25,37 +25,42 @@ services:
     container_name: project-idea-keycloak
     environment:
       KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
-      KC_DB_USERNAME: keycloak
-      KC_DB_PASSWORD: keycloak_password
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin_password
+      KC_DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      KC_DB_USERNAME: ${POSTGRES_USER}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
       KC_HOSTNAME_STRICT: false
       KC_HOSTNAME_STRICT_HTTPS: false
       KC_HTTP_ENABLED: true
     command:
       - start-dev
     ports:
-      - "10000:8080"
+      - "${KEYCLOAK_PORT}:8080"
     depends_on:
       postgres:
         condition: service_healthy
     networks:
       - keycloak-network
 
-  # app:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #   container_name: project-idea-next-app
-  #   environment:
-  #     - NODE_ENV=production
-  #   ports:
-  #     - "10001:3000"
-  #   networks:
-  #     - keycloak-network
-  #   depends_on:
-  #     - keycloak
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: project-idea-next-app
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
+      - NEXT_PUBLIC_KEYCLOAK_URL=${NEXT_PUBLIC_KEYCLOAK_URL}
+      - KEYCLOAK_REALM=${KEYCLOAK_REALM}
+      - KEYCLOAK_CLIENT_ID=${KEYCLOAK_CLIENT_ID}
+      - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET}
+    ports:
+      - "10001:3000"
+    networks:
+      - keycloak-network
+    depends_on:
+      - keycloak
 
 volumes:
   postgres_data:
