@@ -1,8 +1,8 @@
 export const KEYCLOAK_CONFIG = {
-  realm: 'project_idea',
-  clientId: 'front',
-  clientSecret: 'rwCJ9SR6aVTC5Qvz4MBUf15OqJX5wsHY',
-  authServerUrl: 'http://localhost:10000',
+  realm: process.env.KEYCLOAK_REALM || 'project_idea',
+  clientId: process.env.KEYCLOAK_CLIENT_ID || 'front',
+  clientSecret: process.env.KEYCLOAK_CLIENT_SECRET || 'rwCJ9SR6aVTC5Qvz4MBUf15OqJX5wsHY',
+  authServerUrl: process.env.NEXT_PUBLIC_KEYCLOAK_URL || 'http://localhost:10000',
   redirectUri: '/api/auth/callback',
 } as const
 
