@@ -7,6 +7,82 @@ This project implements a secure authentication system using Next.js and Keycloa
 - Node.js 18 or higher
 - Docker and Docker Compose
 - Keycloak server (included in docker-compose)
+- PostgreSQL database (included in docker-compose)
+
+## Database Management with Prisma
+
+### Initial Setup
+
+1. Initialize Prisma in your project:
+   ```bash
+   npx prisma init
+   ```
+   This creates a `prisma` directory with a `schema.prisma` file and a `.env` file.
+
+2. Configure your database connection in `.env`:
+   ```
+   DATABASE_URL="postgresql://project_idea:project_idea@localhost:10002/project_idea"
+   ```
+
+### Schema Management
+
+1. Create or modify your database schema in `prisma/schema.prisma`:
+   ```prisma
+   model User {
+     id        Int      @id @default(autoincrement())
+     email     String   @unique
+     name      String?
+     createdAt DateTime @default(now())
+   }
+   ```
+
+2. Create a migration after schema changes:
+   ```bash
+   npx prisma migrate dev --name init
+   ```
+   This will:
+   - Create a new migration file
+   - Apply the migration to your database
+   - Regenerate the Prisma Client
+
+3. Apply existing migrations to your database:
+   ```bash
+   npx prisma migrate deploy
+   ```
+
+### Database Synchronization
+
+1. Pull the current database schema into your Prisma schema:
+   ```bash
+   npx prisma db pull
+   ```
+   This is useful when:
+   - You've made changes directly to the database
+   - You're working with an existing database
+   - You want to update your schema.prisma file
+
+2. Push your schema changes to the database:
+   ```bash
+   npx prisma db push
+   ```
+   Note: This is for development only. Use migrations in production.
+
+### Additional Commands
+
+1. Generate Prisma Client:
+   ```bash
+   npx prisma generate
+   ```
+
+2. View your database in Prisma Studio:
+   ```bash
+   npx prisma studio
+   ```
+
+3. Reset your database (development only):
+   ```bash
+   npx prisma migrate reset
+   ```
 
 ## Setup Instructions
 
