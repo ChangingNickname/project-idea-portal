@@ -17,6 +17,8 @@ type Post = {
 };
 
 
+
+
 // Mock data for posts
 // This should be replaced with actual data fetching logic
 import { MockPosts } from './mockposts';
@@ -47,8 +49,9 @@ export default function Dashboard() {
   //     </div>
   //   </div>
   // );
-    return (
+    return ( 
       <div className="min-h-screen px-6 py-10">
+        
         <h1 className={`${title()} text-3xl text-center mb-10`}>Dashboard</h1>
         <div className="flex flex-row gap-6 mx-auto">
           {posts.map((post) => (
@@ -60,9 +63,9 @@ export default function Dashboard() {
                 <div className='relative w-20 h-20 flex-shrink-0'>
                   <Image src={post.image} alt="Post image" fill className="object-cover" />
                 </div>
-                <h2 className="text-base font-semibold text-gray-800">{post.title}</h2>
+                <h2 className="text-base font-semibold light:text-gray-800 dark:text-white-800">{post.title}</h2>
               </div>
-              <p className="text-sm text-gray-600 mt-1">{post.shortDescription}</p>
+              <p className="text-sm light:text-gray-500 dark:text-white-600 mt-1">{post.shortDescription}</p>
             </Link>
           ))}
         </div>

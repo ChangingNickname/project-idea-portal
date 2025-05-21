@@ -2,7 +2,9 @@
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { MockPosts } from '../../dashboard/mockposts';
+import { MockPosts } from '@/app/dashboard/mockposts';
+
+import {  Modal,  ModalContent,  ModalHeader,  ModalBody,  ModalFooter} from "@heroui/modal";
 
 const posts = MockPosts;
 
