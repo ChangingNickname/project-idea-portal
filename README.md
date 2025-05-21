@@ -183,3 +183,42 @@ The middleware (`middleware.ts`) handles:
 3. Commit your changes
 4. Push to the branch
 5. Create a Pull Request
+
+## MDX Editor Implementation
+
+The project includes a rich text editor based on MDX Editor with the following features:
+
+### Features
+- Rich text editing with markdown support
+- Source code view
+- Diff mode for comparing versions
+- Undo/Redo functionality
+- Basic markdown formatting (headings, lists, quotes)
+
+### Components
+1. `InitializedMDXEditor` - Base editor component with plugins
+2. `ForwardRefEditor` - Client-side only wrapper with dynamic import
+3. Test page at `/editor/test` for demonstration
+
+### Usage
+```tsx
+import { ForwardRefEditor } from '@/components/editor/ForwardRefEditor'
+
+export default function MyEditor() {
+  return (
+    <ForwardRefEditor
+      markdown="# Your content here"
+      onChange={(markdown) => console.log(markdown)}
+    />
+  )
+}
+```
+
+### Available Plugins
+- Headings
+- Lists
+- Quotes
+- Thematic breaks
+- Markdown shortcuts
+- Diff/Source mode
+- Toolbar with Undo/Redo
