@@ -8,21 +8,18 @@ export const siteConfig = {
       label: "Home",
       href: "/",
     },
+    
     {
-      label: "Docs",
-      href: "/docs",
-    },
-    {
-      label: "Pricing",
-      href: "/pricing",
-    },
-    {
-      label: "Blog",
-      href: "/blog",
+      label: "Dashboard",
+      href: "/dashboard",
     },
     {
       label: "About",
       href: "/about",
+    },
+    {
+      label: "Docs",
+      href: "/docs",
     },
   ],
   navMenuItems: [
@@ -33,18 +30,6 @@ export const siteConfig = {
     {
       label: "Dashboard",
       href: "/dashboard",
-    },
-    {
-      label: "Projects",
-      href: "/projects",
-    },
-    {
-      label: "Team",
-      href: "/team",
-    },
-    {
-      label: "Calendar",
-      href: "/calendar",
     },
     {
       label: "Settings",
@@ -60,10 +45,7 @@ export const siteConfig = {
     },
   ],
   links: {
-    github: "https://github.com/heroui-inc/heroui",
-    twitter: "https://twitter.com/hero_ui",
+    github: "https://github.com/ChangingNickname/project-idea-portal",
     docs: "https://heroui.com",
-    discord: "https://discord.gg/9b6yyZKmH4",
-    sponsor: "https://patreon.com/jrgarciadev",
   },
 };
