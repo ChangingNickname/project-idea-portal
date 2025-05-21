@@ -43,6 +43,26 @@ services:
     networks:
       - keycloak-network
 
+  minio:
+    image: minio/minio
+    container_name: project-idea-minio
+    ports:
+      - "10003:9000"  # API
+      - "10004:9001"  # Console
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - keycloak-network
+
   app:
     build:
       context: .
@@ -55,16 +75,23 @@ services:
       - KEYCLOAK_REALM=${KEYCLOAK_REALM}
       - KEYCLOAK_CLIENT_ID=${KEYCLOAK_CLIENT_ID}
       - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET}
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=${MINIO_ROOT_USER:-minioadmin}
+      - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD:-minioadmin}
+      - MINIO_BUCKET_NAME=media
     ports:
       - "10001:3000"
     networks:
       - keycloak-network
     depends_on:
       - keycloak
+      - minio
 
 volumes:
   postgres_data:
     name: project-idea-postgres-data
+  minio_data:
+    name: project-idea-minio-data
 
 networks:
   keycloak-network:
