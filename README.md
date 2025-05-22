@@ -1,13 +1,50 @@
-# Next.js Application with Keycloak Authentication
+# Next.js Application with Firebase Authentication
 
-This project implements a secure authentication system using Next.js and Keycloak. The authentication flow is handled through OpenID Connect protocol.
+This project implements a secure authentication system using Next.js and Firebase Authentication. The authentication flow supports multiple providers including email/password, Google, and anonymous sign-in.
 
 ## Prerequisites
 
 - Node.js 18 or higher
-- Docker and Docker Compose
-- Keycloak server (included in docker-compose)
-- PostgreSQL database (included in docker-compose)
+- Firebase account
+- Git
+
+## Firebase Setup
+
+1. Create a Firebase Project:
+   - Go to [Firebase Console](https://console.firebase.google.com/)
+   - Click "Add project"
+   - Enter a project name (e.g., "project-idea")
+   - Follow the setup wizard
+
+2. Enable Authentication:
+   - In Firebase Console, go to "Authentication" → "Sign-in method"
+   - Enable the following providers:
+     - Email/Password
+     - Google
+     - Anonymous
+
+3. Configure Google Sign-in:
+   - In the Google provider settings
+   - Add your authorized domains
+   - Configure OAuth consent screen if needed
+
+4. Get Firebase Configuration:
+   - Go to Project Settings (gear icon)
+   - Scroll down to "Your apps"
+   - Click the web icon (</>)
+   - Register your app with a nickname
+   - Copy the Firebase configuration object
+
+5. Set up Environment Variables:
+   Create a `.env.local` file with the following content:
+   ```
+   NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
+   NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain
+   NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+   NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+   NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+   NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+   ```
 
 ## Database Management with Prisma
 
@@ -40,166 +77,57 @@ This project implements a secure authentication system using Next.js and Keycloa
    ```bash
    npx prisma migrate dev --name init
    ```
-   This will:
-   - Create a new migration file
-   - Apply the migration to your database
-   - Regenerate the Prisma Client
 
-3. Apply existing migrations to your database:
-   ```bash
-   npx prisma migrate deploy
-   ```
+## Authentication Flow
 
-### Database Synchronization
+1. **Initial Request**:
+   - User attempts to access a protected route
+   - Middleware checks for Firebase authentication state
+   - If not authenticated, redirects to `/login`
 
-1. Pull the current database schema into your Prisma schema:
-   ```bash
-   npx prisma db pull
-   ```
-   This is useful when:
-   - You've made changes directly to the database
-   - You're working with an existing database
-   - You want to update your schema.prisma file
+2. **Login Process**:
+   - User can choose between:
+     - Email/Password login
+     - Google Sign-in
+     - Anonymous Sign-in
+   - Firebase handles the authentication process
 
-2. Push your schema changes to the database:
-   ```bash
-   npx prisma db push
-   ```
-   Note: This is for development only. Use migrations in production.
+3. **Authentication State**:
+   - Firebase maintains the authentication state
+   - User information is stored in localStorage
+   - Protected routes check for valid authentication
 
-### Additional Commands
+4. **Protected Route Access**:
+   - Middleware validates Firebase token
+   - If valid, allows access to protected routes
+   - If invalid, redirects to login
 
-1. Generate Prisma Client:
-   ```bash
-   npx prisma generate
-   ```
+## Security Features
 
-2. View your database in Prisma Studio:
-   ```bash
-   npx prisma studio
-   ```
+1. **Token Validation**:
+   - Firebase JWT verification
+   - Token expiration check
+   - Secure session management
 
-3. Reset your database (development only):
-   ```bash
-   npx prisma migrate reset
-   ```
+2. **User Information**:
+   - Email verification
+   - Profile information
+   - Authentication state persistence
 
-## Setup Instructions
-
-### 1. Keycloak Configuration
-
-1. Start the services using Docker Compose:
-   ```bash
-   docker-compose up -d
-   ```
-
-2. Access Keycloak Admin Console:
-   - URL: http://localhost:10000
-   - Username: admin
-   - Password: admin_password
-
-3. Create a new Realm:
-   - Click "Add realm"
-   - Name: project_idea
-   - Click "Create"
-
-4. Create a new Client:
-   - Go to Clients → Create client
-   - Client ID: front
-   - Client Protocol: openid-connect
-   - Root URL: http://localhost:10001
-   - Click "Save"
-
-5. Adjust local environment:
-   - Create .env.local
-   - Copy .env.example and paste it in .env.local
-   - Go to Clients -> front -> Credentials
-   - Generate and copy Client Secret
-   - Paste it in .env.local as KEYCLOAK_CLIENT_SECRET
-
-6. Configure Client Settings:
-   - Access Type: confidential
-   - Valid Redirect URIs: 
-     - http://localhost:10001/api/auth/callback
-     - http://localhost:3000/api/auth/callback
-   - Web Origins: 
-     - http://localhost:10001
-     - http://localhost:3000
-   - Click "Save"
-
-7. Get Client Secret:
-   - Go to Credentials tab
-   - Copy the Secret value
-
-### 2. Application Configuration
+## Development
 
 1. Install dependencies:
    ```bash
    npm install
    ```
 
-2. Configure environment variables:
-   Create a `.env.local` file with the following content:
-   ```
-   KEYCLOAK_REALM=project_idea
-   KEYCLOAK_CLIENT_ID=front
-   KEYCLOAK_CLIENT_SECRET=your_client_secret
-   KEYCLOAK_AUTH_SERVER_URL=http://localhost:10000
-   ```
-
-## Authentication Flow
-
-1. **Initial Request**:
-   - User attempts to access a protected route
-   - Middleware checks for `keycloak_token` cookie
-   - If no token exists, redirects to `/login`
-
-2. **Login Process**:
-   - `/login` page redirects to `/api/auth/login`
-   - `/api/auth/login` constructs Keycloak authorization URL
-   - User is redirected to Keycloak login page
-
-3. **Keycloak Authentication**:
-   - User enters credentials on Keycloak
-   - Keycloak validates credentials
-   - On success, redirects back to `/api/auth/callback` with authorization code
-
-4. **Token Exchange**:
-   - `/api/auth/callback` exchanges code for tokens
-   - Access token is stored in `keycloak_token` cookie
-   - User is redirected to the original requested page
-
-5. **Protected Route Access**:
-   - Middleware validates token using JWKS
-   - If valid, adds user info to request headers
-   - If invalid, redirects to login
-
-## Security Features
-
-1. **Token Validation**:
-   - JWT signature verification using JWKS
-   - Token expiration check
-   - Issuer validation
-
-2. **Cookie Security**:
-   - HttpOnly flag to prevent XSS
-   - Secure flag in production
-   - SameSite policy for CSRF protection
-
-3. **Headers**:
-   - User ID: `x-user-id`
-   - User Email: `x-user-email`
-   - User Roles: `x-user-roles`
-
-## Development
-
-1. Start the development server:
+2. Start the development server:
    ```bash
    npm run dev
    ```
 
-2. Access the application:
-   - URL: http://localhost:10001
+3. Access the application:
+   - URL: http://localhost:3000
 
 ## Production Deployment
 
@@ -215,40 +143,35 @@ This project implements a secure authentication system using Next.js and Keycloa
 
 ## Troubleshooting
 
-1. **Infinite Redirects**:
-   - Check Keycloak client configuration
-   - Verify redirect URIs match exactly
-   - Check token validation in middleware
+1. **Authentication Issues**:
+   - Check Firebase configuration
+   - Verify environment variables
+   - Check browser console for errors
 
 2. **Token Validation Errors**:
-   - Verify JWKS endpoint is accessible
+   - Verify Firebase project settings
    - Check token expiration
-   - Validate issuer and audience claims
+   - Validate Firebase configuration
 
 3. **CORS Issues**:
-   - Verify Web Origins in Keycloak
-   - Check redirect URIs configuration
+   - Verify authorized domains in Firebase Console
+   - Check Firebase configuration
    - Ensure proper protocol (http/https)
 
 ## API Routes
 
 1. `/api/auth/login`:
-   - Initiates Keycloak authentication
-   - Redirects to Keycloak login page
+   - Handles Firebase authentication
+   - Manages user session
 
-2. `/api/auth/callback`:
-   - Handles Keycloak callback
-   - Exchanges code for tokens
-   - Sets authentication cookie
-
-3. `/api/auth/logout`:
-   - Clears authentication cookie
-   - Redirects to Keycloak logout
+2. `/api/auth/logout`:
+   - Handles user logout
+   - Clears authentication state
 
 ## Middleware
 
 The middleware (`middleware.ts`) handles:
-- Token validation
+- Firebase token validation
 - User information extraction
 - Protected route enforcement
 - Authentication state management
