@@ -20,7 +20,7 @@ export default function LoginForm() {
     }
   }, [router]);
 
-  const storeUserAndRedirect = (user: User) => {
+  const storeUserAndRedirect = async (user: User) => {
     const userData = {
       email: user.email,
       uid: user.uid,
@@ -32,6 +32,23 @@ export default function LoginForm() {
         lastSignInTime: user.metadata.lastSignInTime
       }
     };
+    
+    // Get the ID token
+    const idToken = await user.getIdToken();
+    
+    // Create session cookie
+    const response = await fetch('/api/auth/session', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ idToken }),
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to create session');
+    }
     
     localStorage.setItem('user', JSON.stringify(userData));
     // Trigger storage event to update UserMenu
