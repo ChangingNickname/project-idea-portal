@@ -3,42 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { UserAvatar } from '@/components/user/UserAvatar';
-
-interface ProviderData {
-  providerId: string;
-  uid: string;
-  displayName: string | null;
-  email: string | null;
-  phoneNumber: string | null;
-  photoURL: string | null;
-}
-
-interface MultiFactorInfo {
-  uid: string;
-  factorId: string;
-  displayName: string | null;
-  enrollmentTime: string;
-}
-
-interface UserProfile {
-  uid: string;
-  email: string | null;
-  emailVerified: boolean;
-  displayName: string | null;
-  photoURL: string | null;
-  phoneNumber: string | null;
-  disabled: boolean;
-  isAnonymous: boolean;
-  providerData: ProviderData[];
-  customClaims: Record<string, any>;
-  metadata: {
-    creationTime: string;
-    lastSignInTime: string;
-    lastRefreshTime: string;
-  };
-  tenantId: string | null;
-  multiFactor: MultiFactorInfo[] | null;
-}
+import { User } from '@/types/user';
 
 export default function UserProfilePage({
   params,
@@ -46,7 +11,7 @@ export default function UserProfilePage({
   params: { id: string };
 }) {
   const router = useRouter();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profile, setProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -196,18 +161,18 @@ export default function UserProfilePage({
           )}
 
           {/* Multi-Factor Authentication */}
-          {profile.multiFactor && profile.multiFactor.length > 0 && (
+          {profile.multiFactor?.enrolledFactors && profile.multiFactor.enrolledFactors.length > 0 && (
             <div className="space-y-4">
               <h2 className="text-lg font-semibold">Multi-Factor Authentication</h2>
               <div className="grid gap-4">
-                {profile.multiFactor.map((factor) => (
+                {profile.multiFactor.enrolledFactors.map((factor) => (
                   <div key={factor.uid} className="bg-content2 p-4 rounded-lg">
                     <p className="font-medium capitalize">{factor.factorId}</p>
                     {factor.displayName && (
                       <p className="text-sm text-default-500">{factor.displayName}</p>
                     )}
                     <p className="text-sm text-default-500">
-                      Enrolled: {new Date(factor.enrollmentTime).toLocaleDateString()}
+                      Enrolled: {new Date(factor.enrollmentTime ?? '').toLocaleDateString()}
                     </p>
                   </div>
                 ))}
@@ -222,19 +187,19 @@ export default function UserProfilePage({
               <div>
                 <p className="text-sm font-medium text-default-500">Account Created</p>
                 <p className="text-lg">
-                  {new Date(profile.metadata.creationTime).toLocaleDateString()}
+                  {new Date(profile.metadata.creationTime ?? '').toLocaleDateString()}
                 </p>
               </div>
               <div>
                 <p className="text-sm font-medium text-default-500">Last Sign In</p>
                 <p className="text-lg">
-                  {new Date(profile.metadata.lastSignInTime).toLocaleDateString()}
+                  {new Date(profile.metadata.lastSignInTime ?? '').toLocaleDateString()}
                 </p>
               </div>
               <div>
                 <p className="text-sm font-medium text-default-500">Last Refresh</p>
                 <p className="text-lg">
-                  {new Date(profile.metadata.lastRefreshTime).toLocaleDateString()}
+                  {new Date(profile.metadata.lastRefreshTime ?? '').toLocaleDateString()}
                 </p>
               </div>
             </div>
