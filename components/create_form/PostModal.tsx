@@ -42,6 +42,10 @@ import { addToast } from "@heroui/toast";
 import type { Post } from '@/types/posts';
 import { isPost } from '@/types/posts';
 
+import { getAuth } from 'firebase/auth';
+import { auth } from '@/lib/firebase/client';
+
+
 const STORAGE_KEY = 'post_editor_content';
 
 interface PostModalProps {
@@ -120,6 +124,7 @@ export const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose }) => {
   };
 
   const handleSubmit = async () => {
+    
     if (!validateFields()) {
       addToast({
         title: "Validation Error",
@@ -131,25 +136,42 @@ export const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose }) => {
 
     try {
       setIsLoading(true);
-      const post: Omit<Post, 'id' | 'createdAt' | 'updatedAt'> = {
-        name: name.trim(),
+      const user = auth.currentUser;
+
+      if (!user || user.isAnonymous) {
+        addToast({
+          title: 'Unauthorized',
+          description: 'You must be logged in with a proper account to submit a post.',
+          color: 'danger'
+        });
+        return;
+      }
+
+      const post = {
+        title: name.trim(),
         shortDesc: shortDesc.trim(),
         fullDesc: fullDesc.trim(),
         tags,
-        image
+        image,
+        authorId: user.uid,
+        createdAt: new Date().toISOString(),
+        status: 'Open'
       };
+
 
       const response = await fetch('/api/posts', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(post),
       });
 
+      const responseText = await response.text(); // Log full server message
+      console.log('🧾 Server response:', responseText);
+
       if (!response.ok) {
-        throw new Error('Failed to create post');
+        throw new Error(responseText || 'Failed to create post');
       }
+
 
       addToast({
         title: "Success",
@@ -166,10 +188,12 @@ export const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose }) => {
       setErrors({});
       localStorage.removeItem(STORAGE_KEY);
       onClose();
-    } catch (error) {
+    } catch (error: any) {
+      const text = await error?.response?.text?.() ?? '';
+      console.error('🔥 Post creation error:', error, text);
       addToast({
         title: "Error",
-        description: "Failed to create post",
+        description: error.message || 'Failed to create post',
         color: "danger"
       });
     } finally {

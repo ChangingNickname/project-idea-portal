@@ -16,3 +16,23 @@ export async function GET() {
     return NextResponse.json({ error: 'Failed to fetch posts' }, { status: 500 });
   }
 }
+
+export async function POST(req: Request) {
+  try {
+    const data = await req.json();
+    console.log('📥 POST data:', data);
+
+    const post = {
+      ...data,
+      createdAt: new Date().toISOString(),
+    };
+
+    const ref = await db.collection('posts').add(post);
+
+    return NextResponse.json({ id: ref.id });
+  } catch (err) {
+    console.error('❌ Backend error creating post:', err);
+    return NextResponse.json({ error: 'Failed to create post', details: err.message }, { status: 500 });
+  }
+}
+
