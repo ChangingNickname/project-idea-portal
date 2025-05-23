@@ -218,14 +218,12 @@ export const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose }) => {
         <>
           <UndoRedo />
           <BoldItalicUnderlineToggles />
-          <CodeToggle />
           <ListsToggle />
           <BlockTypeSelect />
           <CreateLink />
           <InsertTable />
           <InsertImage />
           <InsertThematicBreak />
-          <InsertCodeBlock />
           <DiffSourceToggleWrapper>
             <></>
           </DiffSourceToggleWrapper>
