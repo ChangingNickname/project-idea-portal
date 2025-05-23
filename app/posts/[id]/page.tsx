@@ -2,6 +2,9 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { db } from '@/lib/firebase/admin';
+import { getAuth } from 'firebase-admin/auth';
+
+
 
 export default async function PostsPage({ params }: { params: { id: string } }) {
   const doc = await db.collection('posts').doc(params.id).get();
@@ -19,6 +22,13 @@ export default async function PostsPage({ params }: { params: { id: string } }) 
     tags: string[];
   };
 
+  let authorName = 'Unknown Author';
+  try {
+    const userRecord = await getAuth().getUser(post.authorId);
+    authorName = userRecord.displayName || userRecord.email || 'Anonymous';
+  } catch (err) {
+    console.warn('⚠️ Failed to fetch author info for UID:', post.authorId, err);
+  }
   return (
     <div className="max-w-3xl mx-auto px-6 py-10">
       <Link href="/dashboard" className="text-sm text-blue-600 underline mb-4 inline-block">
@@ -26,20 +36,23 @@ export default async function PostsPage({ params }: { params: { id: string } }) 
       </Link>
 
       {/* Image */}
-      <Image
-        src={post.image}
-        alt={post.title || 'Post image'}
-        width={800}
-        height={500}
-        className="rounded mb-6 object-contain w-full"
-      />
+      {post.image && (
+        <Image
+          src={post.image}
+          alt={post.title || 'Post image'}
+          width={800}
+          height={500}
+          className="rounded mb-6 object-contain w-full"
+        />
+      )}
+
 
       {/* Title */}
       <h1 className="text-3xl font-bold mb-2">{post.title}</h1>
 
       {/* Meta Info */}
       <ul className="text-sm text-gray-600 space-y-1 mb-4">
-        <li><strong>Author:</strong> {post.authorId}</li>
+        <li><strong>Author:</strong> {authorName}</li>
         <li><strong>Date:</strong> {new Date(post.createdAt).toLocaleDateString()}</li>
         <li><strong>Status:</strong> {post.status}</li>
       </ul>
