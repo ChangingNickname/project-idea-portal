@@ -1,21 +1,29 @@
-
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { MockPosts } from '@/app/dashboard/mockposts';
+import { db } from '@/lib/firebase/admin';
 
-import {  Modal,  ModalContent,  ModalHeader,  ModalBody,  ModalFooter} from "@heroui/modal";
+export default async function PostsPage({ params }: { params: { id: string } }) {
+  const doc = await db.collection('posts').doc(params.id).get();
 
-const posts = MockPosts;
+  if (!doc.exists) return notFound();
 
-export default function PostsPage({ params }: { params: { id: string } }) {
-  const post = posts.find((p) => p.id.toString() === params.id);
-  // Send the console command showing the post data
-  if (!post) return notFound();
+  const post = { id: doc.id, ...doc.data() } as {
+    id: string;
+    title: string;
+    fullDesc: string;
+    image: string;
+    authorId: string;
+    createdAt: string;
+    status: string;
+    tags: string[];
+  };
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-10">
-      <Link href="/dashboard" className="text-sm text-blue-600 underline mb-4 inline-block">← Back to Dashboard</Link>
+      <Link href="/dashboard" className="text-sm text-blue-600 underline mb-4 inline-block">
+        ← Back to Dashboard
+      </Link>
 
       <div className="flex flex-col sm:flex-row gap-6">
         <div className="relative w-full sm:w-60 h-60">
@@ -23,11 +31,11 @@ export default function PostsPage({ params }: { params: { id: string } }) {
         </div>
         <div>
           <h1 className="text-3xl font-bold mb-2">{post.title}</h1>
-          <p className="text-gray-700 mb-4">{post.fullDescription}</p>
+          <div className="prose text-gray-800 mb-4">{post.fullDesc}</div>
 
           <ul className="text-sm text-gray-600 space-y-1">
-            <li><strong>Author:</strong> {post.author}</li>
-            <li><strong>Date:</strong> {post.date}</li>
+            <li><strong>Author:</strong> {post.authorId}</li>
+            <li><strong>Date:</strong> {new Date(post.createdAt).toLocaleDateString()}</li>
             <li><strong>Status:</strong> {post.status}</li>
           </ul>
 

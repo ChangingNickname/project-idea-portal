@@ -34,7 +34,7 @@ export default function Dashboard() {
     // Simulate fetching posts from an API or database
     const fetchPosts = async () => {
       // Replace this with your actual data fetching logic
-      const response = await fetch('/api/posts');
+      const response = await fetch('/api/posts', { cache: 'no-store' });
       const data = await response.json();
       setPosts(data);
     };
@@ -66,6 +66,10 @@ export default function Dashboard() {
   //     </div>
   //   </div>
   // );
+  if (!Array.isArray(posts)) {
+    console.error('Expected posts array but got:', posts);
+    return <p className="text-red-500">⚠️ Failed to load posts.</p>;
+  }
   return (
     <div className="min-h-screen px-6 py-10">
       <h1 className={`${title()} text-3xl text-center mb-10`}>Dashboard</h1>
