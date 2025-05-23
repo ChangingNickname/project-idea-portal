@@ -85,12 +85,12 @@ export const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose }) => {
     if (!fullDesc.trim()) {
       newErrors.fullDesc = 'Full description is required';
     }
-    if (!image) {
-      newErrors.image = 'Image is required';
-    }
-    if (tags.length === 0) {
-      newErrors.tags = 'At least one tag is required';
-    }
+    // if (!image) {
+    //   newErrors.image = 'Image is required';
+    // }
+    // if (tags.length === 0) {
+    //   newErrors.tags = 'At least one tag is required';
+    // }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -301,8 +301,7 @@ export const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose }) => {
 
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Tags
-                  <span className="text-gray-500 text-xs ml-2">(Separate tags with commas)</span>
+                  Tags <span className="text-gray-500 text-xs ml-2">(optional, comma separated)</span>
                 </label>
                 <input
                   type="text"
@@ -315,9 +314,8 @@ export const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose }) => {
 
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Featured Image
-                  <span className="text-gray-500 text-xs ml-2">(Upload a cover image for your post)</span>
-                </label>
+                Featured Image <span className="text-gray-500 text-xs ml-2">(optional)</span>
+              </label>
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                   <input
                     type="file"
