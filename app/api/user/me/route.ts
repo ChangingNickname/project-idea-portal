@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/firebase/admin';
 import { cookies } from 'next/headers';
+import { User } from '@/types/user';
 
-export async function GET() {
+export async function GET(): Promise<NextResponse<User | string>> {
   try {
     const cookieStore = await cookies();
     const sessionCookie = cookieStore.get('session')?.value;
@@ -14,36 +15,38 @@ export async function GET() {
     const decodedToken = await auth.verifySessionCookie(sessionCookie);
     const userRecord = await auth.getUser(decodedToken.uid);
 
-    const userData = {
+    const userData: User = {
       uid: userRecord.uid,
-      email: userRecord.email,
+      email: userRecord.email ?? null,
       emailVerified: userRecord.emailVerified,
-      displayName: userRecord.displayName,
-      photoURL: userRecord.photoURL,
-      phoneNumber: userRecord.phoneNumber,
+      displayName: userRecord.displayName ?? null,
+      photoURL: userRecord.photoURL ?? null,
+      phoneNumber: userRecord.phoneNumber ?? null,
       disabled: userRecord.disabled,
       isAnonymous: userRecord.providerData.length === 0,
       providerData: userRecord.providerData.map(provider => ({
         providerId: provider.providerId,
         uid: provider.uid,
-        displayName: provider.displayName,
-        email: provider.email,
-        phoneNumber: provider.phoneNumber,
-        photoURL: provider.photoURL
+        displayName: provider.displayName ?? null,
+        email: provider.email ?? null,
+        phoneNumber: provider.phoneNumber ?? null,
+        photoURL: provider.photoURL ?? null
       })),
-      customClaims: userRecord.customClaims,
+      customClaims: userRecord.customClaims ?? null,
       metadata: {
-        creationTime: userRecord.metadata.creationTime,
-        lastSignInTime: userRecord.metadata.lastSignInTime,
-        lastRefreshTime: userRecord.metadata.lastRefreshTime
+        creationTime: userRecord.metadata.creationTime ?? null,
+        lastSignInTime: userRecord.metadata.lastSignInTime ?? null,
+        lastRefreshTime: userRecord.metadata.lastRefreshTime ?? null
       },
-      tenantId: userRecord.tenantId,
-      multiFactor: userRecord.multiFactor?.enrolledFactors?.map(factor => ({
-        uid: factor.uid,
-        factorId: factor.factorId,
-        displayName: factor.displayName,
-        enrollmentTime: factor.enrollmentTime
-      }))
+      tenantId: userRecord.tenantId ?? null,
+      multiFactor: userRecord.multiFactor?.enrolledFactors ? {
+        enrolledFactors: userRecord.multiFactor.enrolledFactors.map(factor => ({
+          uid: factor.uid,
+          factorId: factor.factorId,
+          displayName: factor.displayName ?? null,
+          enrollmentTime: factor.enrollmentTime ?? null
+        }))
+      } : null
     };
 
     return NextResponse.json(userData);

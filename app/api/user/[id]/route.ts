@@ -1,43 +1,46 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/firebase/admin';
+import { User } from '@/types/user';
 
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
-) {
+): Promise<NextResponse<User | string>> {
   try {
     const userRecord = await auth.getUser(params.id);
 
-    const userData = {
+    const userData: User = {
       uid: userRecord.uid,
-      email: userRecord.email,
+      email: userRecord.email ?? null,
       emailVerified: userRecord.emailVerified,
-      displayName: userRecord.displayName,
-      photoURL: userRecord.photoURL,
-      phoneNumber: userRecord.phoneNumber,
+      displayName: userRecord.displayName ?? null,
+      photoURL: userRecord.photoURL ?? null,
+      phoneNumber: userRecord.phoneNumber ?? null,
       disabled: userRecord.disabled,
       isAnonymous: userRecord.providerData.length === 0,
       providerData: userRecord.providerData.map(provider => ({
         providerId: provider.providerId,
         uid: provider.uid,
-        displayName: provider.displayName,
-        email: provider.email,
-        phoneNumber: provider.phoneNumber,
-        photoURL: provider.photoURL
+        displayName: provider.displayName ?? null,
+        email: provider.email ?? null,
+        phoneNumber: provider.phoneNumber ?? null,
+        photoURL: provider.photoURL ?? null
       })),
-      customClaims: userRecord.customClaims,
+      customClaims: userRecord.customClaims ?? null,
       metadata: {
-        creationTime: userRecord.metadata.creationTime,
-        lastSignInTime: userRecord.metadata.lastSignInTime,
-        lastRefreshTime: userRecord.metadata.lastRefreshTime
+        creationTime: userRecord.metadata.creationTime ?? null,
+        lastSignInTime: userRecord.metadata.lastSignInTime ?? null,
+        lastRefreshTime: userRecord.metadata.lastRefreshTime ?? null
       },
-      tenantId: userRecord.tenantId,
-      multiFactor: userRecord.multiFactor?.enrolledFactors?.map(factor => ({
-        uid: factor.uid,
-        factorId: factor.factorId,
-        displayName: factor.displayName,
-        enrollmentTime: factor.enrollmentTime
-      }))
+      tenantId: userRecord.tenantId ?? null,
+      multiFactor: userRecord.multiFactor?.enrolledFactors ? {
+        enrolledFactors: userRecord.multiFactor.enrolledFactors.map(factor => ({
+          uid: factor.uid,
+          factorId: factor.factorId,
+          displayName: factor.displayName ?? null,
+          enrollmentTime: factor.enrollmentTime ?? null
+        }))
+      } : null
     };
 
     return NextResponse.json(userData);

@@ -8,16 +8,16 @@ interface UserProviderData {
 }
 
 interface UserMetadata {
-  creationTime: string;
-  lastSignInTime: string;
-  lastRefreshTime: string;
+  creationTime: string | null;
+  lastSignInTime: string | null;
+  lastRefreshTime: string | null;
 }
 
 interface MultiFactorInfo {
   uid: string;
   factorId: string;
   displayName: string | null;
-  enrollmentTime: string;
+  enrollmentTime: string | null;
 }
 
 export interface User {
