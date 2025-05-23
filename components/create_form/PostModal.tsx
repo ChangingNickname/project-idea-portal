@@ -212,6 +212,11 @@ export const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose }) => {
     diffSourcePlugin()
   ];
 
+  const handleModalClick = (e: React.MouseEvent) => {
+    // Prevent clicks inside the modal from closing it
+    e.stopPropagation();
+  };
+
   return (
     <Modal 
       isOpen={isOpen} 
@@ -225,140 +230,144 @@ export const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose }) => {
         body: "max-h-[90vh] overflow-y-auto"
       }}
     >
-      <ModalContent>
-        <ModalHeader className="sticky top-0 bg-white z-10 border-b">
-          Create New Post
-        </ModalHeader>
-        <ModalBody className="overflow-y-auto">
-          <div className="space-y-6 pb-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">Post Title</label>
-              <input
-                type="text"
-                placeholder="Enter post title"
-                value={name}
-                onChange={(e) => {
-                  setName(e.target.value);
-                  setErrors(prev => ({ ...prev, name: '' }));
-                }}
-                className={`w-full p-2 border rounded ${errors.name ? 'border-red-500' : ''}`}
-              />
-              {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Short Description
-                <span className="text-gray-500 text-xs ml-2">(Brief summary of your post)</span>
-              </label>
-              <div className={`border rounded ${errors.shortDesc ? 'border-red-500' : ''}`}>
-                <MDXEditor
-                  markdown={shortDesc}
-                  onChange={(value) => {
-                    setShortDesc(value);
-                    setErrors(prev => ({ ...prev, shortDesc: '' }));
-                  }}
-                  contentEditableClassName="prose max-w-none min-h-[100px]"
-                  plugins={editorPlugins}
-                />
-              </div>
-              {errors.shortDesc && <p className="text-red-500 text-sm mt-1">{errors.shortDesc}</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Tags
-                <span className="text-gray-500 text-xs ml-2">(Separate tags with commas)</span>
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. technology, programming, web"
-                onChange={(e) => handleTagsChange(e.target.value)}
-                className={`w-full p-2 border rounded ${errors.tags ? 'border-red-500' : ''}`}
-              />
-              {errors.tags && <p className="text-red-500 text-sm mt-1">{errors.tags}</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Featured Image
-                <span className="text-gray-500 text-xs ml-2">(Upload a cover image for your post)</span>
-              </label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+      <div onClick={handleModalClick} className="relative">
+        <ModalContent>
+          <ModalHeader className="sticky top-0 bg-white z-[1002] border-b">
+            Create New Post
+          </ModalHeader>
+          <ModalBody className="overflow-y-auto">
+            <div className="space-y-6 pb-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Post Title</label>
                 <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
-                  className="hidden"
-                  id="image-upload"
-                />
-                <label
-                  htmlFor="image-upload"
-                  className={`cursor-pointer block ${errors.image ? 'text-red-500' : 'text-gray-600'}`}
-                >
-                  {image ? (
-                    <div className="mt-2">
-                      <img src={image} alt="Preview" className="max-h-40 rounded mx-auto" />
-                      <p className="mt-2 text-sm">Click to change image</p>
-                    </div>
-                  ) : (
-                    <div>
-                      <svg
-                        className="mx-auto h-12 w-12 text-gray-400"
-                        stroke="currentColor"
-                        fill="none"
-                        viewBox="0 0 48 48"
-                        aria-hidden="true"
-                      >
-                        <path
-                          d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                          strokeWidth={2}
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                      <p className="mt-1 text-sm">Click to upload an image</p>
-                      <p className="mt-1 text-xs">PNG, JPG, GIF up to 10MB</p>
-                    </div>
-                  )}
-                </label>
-              </div>
-              {errors.image && <p className="text-red-500 text-sm mt-1">{errors.image}</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Full Description
-                <span className="text-gray-500 text-xs ml-2">(Main content of your post)</span>
-              </label>
-              <div className={`h-[60vh] overflow-auto border rounded ${errors.fullDesc ? 'border-red-500' : ''}`}>
-                <MDXEditor
-                  markdown={fullDesc}
-                  onChange={(value) => {
-                    setFullDesc(value);
-                    setErrors(prev => ({ ...prev, fullDesc: '' }));
+                  type="text"
+                  placeholder="Enter post title"
+                  value={name}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    setErrors(prev => ({ ...prev, name: '' }));
                   }}
-                  contentEditableClassName="prose max-w-none"
-                  plugins={editorPlugins}
+                  className={`w-full p-2 border rounded ${errors.name ? 'border-red-500' : ''}`}
                 />
+                {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
               </div>
-              {errors.fullDesc && <p className="text-red-500 text-sm mt-1">{errors.fullDesc}</p>}
+
+              <div className="relative">
+                <label className="block text-sm font-medium mb-2">
+                  Short Description
+                  <span className="text-gray-500 text-xs ml-2">(Brief summary of your post)</span>
+                </label>
+                <div className={`border rounded ${errors.shortDesc ? 'border-red-500' : ''}`}>
+                  <MDXEditor
+                    markdown={shortDesc}
+                    onChange={(value) => {
+                      setShortDesc(value);
+                      setErrors(prev => ({ ...prev, shortDesc: '' }));
+                    }}
+                    contentEditableClassName="prose max-w-none min-h-[100px]"
+                    plugins={editorPlugins}
+                    className="z-[1003]"
+                  />
+                </div>
+                {errors.shortDesc && <p className="text-red-500 text-sm mt-1">{errors.shortDesc}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Tags
+                  <span className="text-gray-500 text-xs ml-2">(Separate tags with commas)</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. technology, programming, web"
+                  onChange={(e) => handleTagsChange(e.target.value)}
+                  className={`w-full p-2 border rounded ${errors.tags ? 'border-red-500' : ''}`}
+                />
+                {errors.tags && <p className="text-red-500 text-sm mt-1">{errors.tags}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Featured Image
+                  <span className="text-gray-500 text-xs ml-2">(Upload a cover image for your post)</span>
+                </label>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
+                    className="hidden"
+                    id="image-upload"
+                  />
+                  <label
+                    htmlFor="image-upload"
+                    className={`cursor-pointer block ${errors.image ? 'text-red-500' : 'text-gray-600'}`}
+                  >
+                    {image ? (
+                      <div className="mt-2">
+                        <img src={image} alt="Preview" className="max-h-40 rounded mx-auto" />
+                        <p className="mt-2 text-sm">Click to change image</p>
+                      </div>
+                    ) : (
+                      <div>
+                        <svg
+                          className="mx-auto h-12 w-12 text-gray-400"
+                          stroke="currentColor"
+                          fill="none"
+                          viewBox="0 0 48 48"
+                          aria-hidden="true"
+                        >
+                          <path
+                            d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                            strokeWidth={2}
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                        <p className="mt-1 text-sm">Click to upload an image</p>
+                        <p className="mt-1 text-xs">PNG, JPG, GIF up to 10MB</p>
+                      </div>
+                    )}
+                  </label>
+                </div>
+                {errors.image && <p className="text-red-500 text-sm mt-1">{errors.image}</p>}
+              </div>
+
+              <div className="relative">
+                <label className="block text-sm font-medium mb-2">
+                  Full Description
+                  <span className="text-gray-500 text-xs ml-2">(Main content of your post)</span>
+                </label>
+                <div className={`h-[60vh] overflow-auto border rounded ${errors.fullDesc ? 'border-red-500' : ''}`}>
+                  <MDXEditor
+                    markdown={fullDesc}
+                    onChange={(value) => {
+                      setFullDesc(value);
+                      setErrors(prev => ({ ...prev, fullDesc: '' }));
+                    }}
+                    contentEditableClassName="prose max-w-none"
+                    plugins={editorPlugins}
+                    className="z-[1003]"
+                  />
+                </div>
+                {errors.fullDesc && <p className="text-red-500 text-sm mt-1">{errors.fullDesc}</p>}
+              </div>
             </div>
-          </div>
-        </ModalBody>
-        <ModalFooter className="sticky bottom-0 bg-white z-10 border-t">
-          <Button color="danger" variant="light" onPress={onClose}>
-            Cancel
-          </Button>
-          <Button
-            color="primary"
-            onPress={handleSubmit}
-            isLoading={isLoading}
-          >
-            Create Post
-          </Button>
-        </ModalFooter>
-      </ModalContent>
+          </ModalBody>
+          <ModalFooter className="sticky bottom-0 bg-white z-[1002] border-t">
+            <Button color="danger" variant="light" onPress={onClose}>
+              Cancel
+            </Button>
+            <Button
+              color="primary"
+              onPress={handleSubmit}
+              isLoading={isLoading}
+            >
+              Create Post
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </div>
     </Modal>
   );
 }; 
