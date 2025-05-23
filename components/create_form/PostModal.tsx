@@ -142,7 +142,10 @@ export const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose }) => {
         addToast({
           title: 'Unauthorized',
           description: 'You must be logged in with a proper account to submit a post.',
-          color: 'danger'
+          color: 'danger',
+          classNames: {
+            base: 'z-[7100]',
+          }
         });
         return;
       }
