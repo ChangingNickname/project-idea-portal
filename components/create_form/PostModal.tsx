@@ -61,6 +61,7 @@ export const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose }) => {
   const [image, setImage] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [shortDescEdited, setShortDescEdited] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -72,6 +73,13 @@ export const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose }) => {
   useEffect(() => {
     if (fullDesc) localStorage.setItem(STORAGE_KEY, fullDesc);
   }, [fullDesc]);
+
+  useEffect(() => {
+    if (!shortDescEdited) {
+      setShortDesc(fullDesc.slice(0, 300)); // or any reasonable limit
+    }
+  }, [fullDesc]);
+
 
   const validateFields = () => {
     const newErrors: Record<string, string> = {};
@@ -279,27 +287,7 @@ export const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose }) => {
                 {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
               </div>
 
-              <div className="relative">
-                <label className="block text-sm font-medium mb-2">
-                  Short Description
-                  <span className="text-gray-500 text-xs ml-2">(Brief summary of your post)</span>
-                </label>
-                <div className={`border rounded ${errors.shortDesc ? 'border-red-500' : ''}`}>
-                  <MDXEditor
-                    markdown={shortDesc}
-                    onChange={(value) => {
-                      setShortDesc(value);
-                      setErrors(prev => ({ ...prev, shortDesc: '' }));
-                    }}
-                    contentEditableClassName="prose max-w-none min-h-[100px]"
-                    plugins={editorPlugins}
-                    className="z-[1003]"
-                  />
-                </div>
-                {errors.shortDesc && <p className="text-red-500 text-sm mt-1">{errors.shortDesc}</p>}
-              </div>
-
-              <div>
+                <div>
                 <label className="block text-sm font-medium mb-2">
                   Tags <span className="text-gray-500 text-xs ml-2">(optional, comma separated)</span>
                 </label>
@@ -363,19 +351,50 @@ export const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose }) => {
                   Full Description
                   <span className="text-gray-500 text-xs ml-2">(Main content of your post)</span>
                 </label>
-                <div className={`h-[60vh] overflow-auto border rounded ${errors.fullDesc ? 'border-red-500' : ''}`}>
+                <div className={`
+                  border rounded transition-colors
+                  ${errors.fullDesc ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}
+                  focus-within:border-blue-500
+                  bg-white dark:bg-gray-900
+                `}>
                   <MDXEditor
                     markdown={fullDesc}
                     onChange={(value) => {
                       setFullDesc(value);
                       setErrors(prev => ({ ...prev, fullDesc: '' }));
                     }}
-                    contentEditableClassName="prose max-w-none"
+                    contentEditableClassName="prose max-w-none min-h-[100px] text-gray-900 dark:text-gray-100"
                     plugins={editorPlugins}
                     className="z-[1003]"
                   />
                 </div>
                 {errors.fullDesc && <p className="text-red-500 text-sm mt-1">{errors.fullDesc}</p>}
+              </div>
+
+              <div className="relative">
+                <label className="block text-sm font-medium mb-2">
+                  Short Description
+                  <span className="text-gray-500 text-xs ml-2">(Brief summary of your post)</span>
+                </label>
+                <div className={`
+                  border rounded transition-colors
+                  ${errors.fullDesc ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}
+                  focus-within:border-blue-500
+                  bg-white dark:bg-gray-900
+                `}>
+                  <MDXEditor
+                    markdown={shortDesc}
+                    onChange={(value) => {
+                      setShortDescEdited(true);
+                      setShortDesc(value);
+                      setErrors(prev => ({ ...prev, shortDesc: '' }));
+                    }}
+                    contentEditableClassName="prose max-w-none min-h-[100px] text-gray-900 dark:text-gray-100"
+                    plugins={editorPlugins}
+                    className="z-[1003]"
+                  />
+                </div>
+                {errors.shortDesc && <p className="text-red-500 text-sm mt-1">{errors.shortDesc}</p>}
               </div>
             </div>
           </ModalBody>
