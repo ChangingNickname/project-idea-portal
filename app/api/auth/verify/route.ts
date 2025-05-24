@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { adminAuth } from '@/config/firebase-admin'
+import { auth } from '@/lib/firebase/admin'
 
 export async function GET(request: NextRequest) {
   try {
@@ -29,4 +30,28 @@ export async function OPTIONS() {
   }
   
   return response
+}
+
+export async function POST(request: Request) {
+  try {
+    const { token } = await request.json();
+
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Token is required' },
+        { status: 400 }
+      );
+    }
+
+    // Проверяем токен через Firebase Admin
+    await auth.verifyIdToken(token);
+
+    return NextResponse.json({ valid: true });
+  } catch (error) {
+    console.error('Token verification failed:', error);
+    return NextResponse.json(
+      { error: 'Invalid token' },
+      { status: 401 }
+    );
+  }
 } 

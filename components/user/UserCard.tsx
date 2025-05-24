@@ -1,80 +1,102 @@
-import { UserAvatar } from './UserAvatar';
+'use client';
+
 import { User } from '@/types/user';
-import { useState } from 'react';
-import { Card, CardHeader, CardBody, CardFooter } from "@heroui/card";
+import { UserAvatar } from './UserAvatar';
+import { Card, CardBody } from '@heroui/card';
 import { Button } from '@heroui/button';
-import { Tooltip } from "@heroui/tooltip";
+import { ExternalLinkIcon } from '@/components/icons';
+import { useRouter } from 'next/navigation';
 
 interface UserCardProps {
   user: User;
 }
 
-function copyToClipboard(text: string) {
-  navigator.clipboard.writeText(text);
-}
+export const UserCard = ({ user }: UserCardProps) => {
+  const router = useRouter();
 
-function formatUid(uid: string) {
-  if (uid.length <= 8) return uid;
-  return `${uid.slice(0, 4)}...${uid.slice(-4)}`;
-}
-
-export function UserCard({ user }: UserCardProps) {
-  const [copied, setCopied] = useState<{ email?: boolean; uid?: boolean }>({});
-
-  const handleCopy = (type: 'email' | 'uid', value: string) => {
-    copyToClipboard(value);
-    setCopied(prev => ({ ...prev, [type]: true }));
-    setTimeout(() => setCopied(prev => ({ ...prev, [type]: false })), 1500);
+  const handleCopy = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (err) {
+      console.error('Failed to copy text:', err);
+    }
   };
 
-  // Приведение типов для UserAvatar
-  const avatarUser = {
-    photoURL: user.photoURL ?? null,
-    displayName: user.displayName ?? null,
-    email: user.email ?? null,
-    isAnonymous: user.isAnonymous,
+  const formatUid = (uid: string) => {
+    if (uid.length <= 8) return uid;
+    return `${uid.slice(0, 4)}...${uid.slice(-4)}`;
   };
 
   return (
-    <Card className="w-full max-w-xs">
-      <CardHeader className="flex flex-col items-center p-6">
-        <UserAvatar user={avatarUser} size="lg" />
-        {user.displayName && (
-          <div className="font-semibold text-lg mt-2">{user.displayName}</div>
-        )}
-      </CardHeader>
-      <CardBody className="flex flex-col gap-2">
-        <div className="flex items-center gap-2">
-          <span className="text-gray-600 truncate">{user.email || <span className="italic">Нет email</span>}</span>
-          {user.email && (
-            <Tooltip content={copied.email ? 'Скопировано!' : 'Копировать email'}>
+    <Card>
+      <CardBody className="relative">
+        <Button
+          isIconOnly
+          variant="light"
+          className="absolute top-2 right-2"
+          onClick={() => router.push(`/profile/${user.uid}`)}
+        >
+          <ExternalLinkIcon className="text-default-500" />
+        </Button>
+        <div className="flex items-start gap-4">
+          <UserAvatar user={user} size="lg" />
+          <div className="flex-1">
+            {user.displayName && (
+              <h3 className="text-lg font-semibold mb-1">{user.displayName}</h3>
+            )}
+            {user.email && (
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-default-500">{user.email}</span>
+                <Button
+                  isIconOnly
+                  size="sm"
+                  variant="light"
+                  onClick={() => handleCopy(user.email!)}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                  </svg>
+                </Button>
+              </div>
+            )}
+            <div className="flex items-center gap-2">
+              <span className="text-default-500">{formatUid(user.uid)}</span>
               <Button
-                variant="ghost"
+                isIconOnly
                 size="sm"
-                onClick={() => handleCopy('email', user.email!)}
-                className="p-1"
+                variant="light"
+                onClick={() => handleCopy(user.uid)}
               >
-                <span className="sr-only">Скопировать email</span>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16h8a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2Zm0 0v2a2 2 0 0 0 2 2h6"/></svg>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                  <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                </svg>
               </Button>
-            </Tooltip>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-gray-500 font-mono">{formatUid(user.uid)}</span>
-          <Tooltip content={copied.uid ? 'Скопировано!' : 'Копировать UID'}>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleCopy('uid', user.uid)}
-              className="p-1"
-            >
-              <span className="sr-only">Скопировать UID</span>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16h8a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2Zm0 0v2a2 2 0 0 0 2 2h6"/></svg>
-            </Button>
-          </Tooltip>
+            </div>
+          </div>
         </div>
       </CardBody>
     </Card>
   );
-} 
+}; 
