@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 import { Blacklist } from '@/types/blacklist';
 import { User } from '@/types/user';
 
-// Получить черный список пользователя
+
 export async function GET() {
   try {
     const cookieStore = await cookies();
@@ -36,7 +36,7 @@ export async function GET() {
   }
 }
 
-// Добавить пользователей в черный список
+
 export async function POST(request: Request) {
   try {
     const cookieStore = await cookies();
@@ -54,7 +54,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'userIds must be an array' }, { status: 400 });
     }
 
-    // Проверяем, не пытается ли пользователь заблокировать самого себя
+
     if (userIds.includes(userRecord.uid)) {
       return NextResponse.json(
         { error: 'You cannot add yourself to the blacklist' },
@@ -67,7 +67,6 @@ export async function POST(request: Request) {
     const querySnapshot = await q.get();
 
     if (querySnapshot.empty) {
-      // Создаем новый черный список
       const userData: User = {
         uid: userRecord.uid,
         email: userRecord.email || null,
@@ -111,14 +110,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ ...newBlacklist, id: docRef.id });
     }
 
-    // Обновляем существующий черный список
+
     const blacklistDoc = querySnapshot.docs[0];
     const blacklist = blacklistDoc.data() as Blacklist;
     
-    // Получаем информацию о пользователях для добавления
     const usersToAdd: User[] = [];
     for (const userId of userIds) {
-      // Пропускаем текущего пользователя
       if (userId === userRecord.uid) continue;
 
       const targetUser = await auth.getUser(userId);
@@ -156,7 +153,6 @@ export async function POST(request: Request) {
       usersToAdd.push(userData);
     }
 
-    // Если после фильтрации не осталось пользователей для добавления
     if (usersToAdd.length === 0) {
       return NextResponse.json(
         { error: 'No valid users to add to blacklist' },
@@ -164,7 +160,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Добавляем только новых пользователей
     const existingIds = new Set(blacklist.blocked_users.map(user => user.uid));
     const newBlockedUsers = usersToAdd.filter(user => !existingIds.has(user.uid));
 
@@ -185,7 +180,7 @@ export async function POST(request: Request) {
   }
 }
 
-// Удалить пользователей из черного списка
+
 export async function DELETE(request: Request) {
   try {
     const cookieStore = await cookies();
@@ -214,7 +209,6 @@ export async function DELETE(request: Request) {
     const blacklistDoc = querySnapshot.docs[0];
     const blacklist = blacklistDoc.data() as Blacklist;
 
-    // Удаляем указанных пользователей из черного списка
     const updatedBlockedUsers = blacklist.blocked_users.filter(
       user => !userIds.includes(user.uid)
     );
@@ -236,7 +230,7 @@ export async function DELETE(request: Request) {
   }
 }
 
-// Отменить блокировку пользователя
+
 export async function PATCH(request: Request) {
   try {
     const cookieStore = await cookies();
@@ -265,13 +259,11 @@ export async function PATCH(request: Request) {
     const blacklistDoc = querySnapshot.docs[0];
     const blacklist = blacklistDoc.data() as Blacklist;
 
-    // Проверяем, есть ли пользователь в черном списке
     const userIndex = blacklist.blocked_users.findIndex(user => user.uid === userId);
     if (userIndex === -1) {
       return NextResponse.json({ error: 'User is not in blacklist' }, { status: 404 });
     }
 
-    // Удаляем пользователя из черного списка
     const updatedBlockedUsers = blacklist.blocked_users.filter(user => user.uid !== userId);
 
     await blacklistDoc.ref.update({
