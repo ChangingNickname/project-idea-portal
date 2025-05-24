@@ -147,7 +147,6 @@ export const UserFullProfile = ({ user, isBlocked, onBlock, onUnblock }: UserFul
                       key="block"
                       color={isBlocked ? "danger" : "default"}
                       onPress={handleBlockAction}
-                      isLoading={loading}
                     >
                       {isBlocked ? 'Unblock User' : 'Block User'}
                     </DropdownItem>
