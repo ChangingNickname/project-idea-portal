@@ -1,9 +1,9 @@
 import { db } from '@/lib/firebase/admin';
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(_: Request, { params }: { params: { id: string } }) {
+export async function GET(_: Request, { params }: { params: { uid: string } }) {
   try {
-    const doc = await db.collection('posts').doc(params.id).get();
+    const doc = await db.collection('posts').doc(params.uid).get();
     if (!doc.exists) {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
@@ -15,9 +15,9 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
   }
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: { uid: string } }) {
   try {
-    const postId = params.id;
+    const postId = params.uid;
     const body = await req.json();
 
     await db.collection('posts').doc(postId).update({
@@ -37,9 +37,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 }
 
-export async function DELETE(_: Request, { params }: { params: { id: string } }) {
+export async function DELETE(_: Request, { params }: { params: { uid: string } }) {
   try {
-    await db.collection('posts').doc(params.id).delete();
+    await db.collection('posts').doc(params.uid).delete();
     return NextResponse.json({ message: 'Post deleted' }, { status: 200 });
   } catch (error) {
     console.error('Error deleting post:', error);

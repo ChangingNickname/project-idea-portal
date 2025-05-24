@@ -7,6 +7,7 @@ import { Button } from '@heroui/button';
 import { Modal, ModalBody, ModalFooter, ModalHeader, ModalContent } from '@heroui/modal';
 import { addToast } from '@heroui/toast';
 import Link from 'next/link';
+import { PostAddButton } from '@/components/create_form/callbutton';
 
 export default function MyPostsPage() {
   const [posts, setPosts] = useState<any[]>([]);
@@ -34,27 +35,32 @@ export default function MyPostsPage() {
     return () => unsub();
     }, []);
 
-
   if (!userId) return <p className="text-center text-gray-500">Loading...</p>;
-  if (posts.length === 0) return <p className="text-center text-gray-500">You have no posts yet.</p>;
 
   return (
     <div className="max-w-2xl mx-auto px-6 py-10">
-      <h1 className="text-2xl font-semibold mb-6">📝 My Posts</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-semibold">📝 My Posts</h1>
+        <PostAddButton />
+      </div>
 
-      {posts.map((post) => (
-        <div key={post.id} className="bg-white border rounded p-4 mb-4 shadow-sm">
-          <h2 className="font-bold text-lg">{post.title}</h2>
-          <p className="text-sm text-gray-600 mb-3">{post.shortDesc}</p>
-          <div className="flex gap-3">
-            <Button color="primary" onPress={() => setEditPost(post)}>Edit Post</Button>
-            <Button color="danger" variant="light" onPress={() => {
-              setDeletePost(post);
-              setConfirmText('');
-            }}>Delete Post</Button>
+      {posts.length === 0 ? (
+        <p className="text-center text-gray-500">You have no posts yet.</p>
+      ) : (
+        posts.map((post) => (
+          <div key={post.id} className="bg-white border rounded p-4 mb-4 shadow-sm">
+            <h2 className="font-bold text-lg">{post.title}</h2>
+            <p className="text-sm text-gray-600 mb-3">{post.shortDesc}</p>
+            <div className="flex gap-3">
+              <Button color="primary" onPress={() => setEditPost(post)}>Edit Post</Button>
+              <Button color="danger" variant="light" onPress={() => {
+                setDeletePost(post);
+                setConfirmText('');
+              }}>Delete Post</Button>
+            </div>
           </div>
-        </div>
-      ))}
+        ))
+      )}
 
       {editPost && (
         <PostModal

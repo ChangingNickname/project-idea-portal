@@ -5,12 +5,18 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { signInWithEmail, signInWithGoogle, signInAnonymouslyUser } from '@/lib/firebase/auth';
 import { User } from 'firebase/auth';
+import { Card, CardBody, CardHeader, CardFooter } from '@heroui/card';
+import { Button } from '@heroui/button';
+import { Input } from '@heroui/input';
+import { Divider } from '@heroui/divider';
+import { Spinner } from '@heroui/spinner';
 
 export default function LoginForm() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     // Check if user is already logged in
@@ -59,134 +65,149 @@ export default function LoginForm() {
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
     
-    const { user, error } = await signInWithEmail(email, password);
-    if (error) {
-      setError('Failed to login. Please check your credentials.');
-      return;
-    }
-    
-    if (user) {
-      storeUserAndRedirect(user);
+    try {
+      const { user, error } = await signInWithEmail(email, password);
+      if (error) {
+        setError('Failed to login. Please check your credentials.');
+        return;
+      }
+      
+      if (user) {
+        await storeUserAndRedirect(user);
+      }
+    } catch (err) {
+      setError('An unexpected error occurred.');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleGoogleLogin = async () => {
     setError('');
-    const { user, error } = await signInWithGoogle();
-    if (error) {
-      setError('Failed to login with Google.');
-      return;
-    }
+    setLoading(true);
     
-    if (user) {
-      storeUserAndRedirect(user);
+    try {
+      const { user, error } = await signInWithGoogle();
+      if (error) {
+        setError('Failed to login with Google.');
+        return;
+      }
+      
+      if (user) {
+        await storeUserAndRedirect(user);
+      }
+    } catch (err) {
+      setError('An unexpected error occurred.');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleAnonymousLogin = async () => {
     setError('');
-    const { user, error } = await signInAnonymouslyUser();
-    if (error) {
-      setError('Failed to login anonymously.');
-      return;
-    }
+    setLoading(true);
     
-    if (user) {
-      storeUserAndRedirect(user);
+    try {
+      const { user, error } = await signInAnonymouslyUser();
+      if (error) {
+        setError('Failed to login anonymously.');
+        return;
+      }
+      
+      if (user) {
+        await storeUserAndRedirect(user);
+      }
+    } catch (err) {
+      setError('An unexpected error occurred.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-md w-full space-y-8">
-      <div>
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+    <Card className="max-w-md w-full mx-auto">
+      <CardHeader>
+        <h2 className="text-2xl font-bold text-center">
           Sign in to your account
         </h2>
-      </div>
-      <form className="mt-8 space-y-6" onSubmit={handleEmailLogin}>
-        <div className="rounded-md shadow-sm -space-y-px">
-          <div>
-            <label htmlFor="email-address" className="sr-only">
-              Email address
-            </label>
-            <input
-              id="email-address"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-              placeholder="Email address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-          <div>
-            <label htmlFor="password" className="sr-only">
-              Password
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-        </div>
+      </CardHeader>
+      
+      <CardBody>
+        <form onSubmit={handleEmailLogin} className="space-y-4">
+          <Input
+            type="email"
+            label="Email address"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            autoComplete="email"
+            placeholder="Enter your email"
+          />
+          
+          <Input
+            type="password"
+            label="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            autoComplete="current-password"
+            placeholder="Enter your password"
+          />
 
-        {error && (
-          <div className="text-red-500 text-sm text-center">{error}</div>
-        )}
+          {error && (
+            <div className="text-danger text-sm text-center">{error}</div>
+          )}
 
-        <div>
-          <button
+          <Button
             type="submit"
-            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            variant="solid"
+            className="w-full"
+            isLoading={loading}
           >
             Sign in
-          </button>
-        </div>
-      </form>
+          </Button>
+        </form>
 
-      <div className="mt-6">
-        <div className="relative">
+        <div className="relative my-6">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300" />
+            <div className="w-full border-t border-gray-300 dark:border-gray-600" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-gray-50 text-gray-500">Or continue with</span>
+            <span className="px-2 text-gray-500 dark:text-gray-400">Or continue with</span>
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-2 gap-3">
-          <button
+        <div className="grid grid-cols-2 gap-3">
+          <Button
+            variant="bordered"
             onClick={handleGoogleLogin}
-            className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+            isLoading={loading}
+            className="w-full"
           >
-            <span className="sr-only">Sign in with Google</span>
             Google
-          </button>
-          <button
+          </Button>
+          
+          <Button
+            variant="bordered"
             onClick={handleAnonymousLogin}
-            className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+            isLoading={loading}
+            className="w-full"
           >
-            <span className="sr-only">Sign in anonymously</span>
             Anonymous
-          </button>
+          </Button>
         </div>
-      </div>
+      </CardBody>
 
-      <div className="text-sm text-center">
-        <Link href="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
+      <CardFooter className="justify-center">
+        <Link 
+          href="/register" 
+          className="text-sm text-primary hover:text-primary-dark"
+        >
           Don't have an account? Sign up
         </Link>
-      </div>
-    </div>
+      </CardFooter>
+    </Card>
   );
 } 
