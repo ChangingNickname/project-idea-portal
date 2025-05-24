@@ -1,92 +1,130 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User } from '@/types/user';
+import { Card, CardBody } from '@heroui/card';
+import { Button } from '@heroui/button';
+import { Spinner } from '@heroui/spinner';
 import { UserFullProfile } from '@/components/user/UserFullProfile';
-import { Card, CardHeader, CardBody } from "@heroui/card";
-import { useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
-export default function UserProfilePage() {
-  const params = useParams();
+interface PageProps {
+  params: Promise<{
+    id: string;
+  }>;
+}
+
+export default function UserProfilePage({ params }: PageProps) {
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [blockedUsers, setBlockedUsers] = useState<Set<string>>(new Set());
+  const resolvedParams = React.use(params);
+
+  const fetchUser = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch(`/api/user/${resolvedParams.id}`);
+      if (!response.ok) throw new Error('Failed to fetch user');
+      
+      const userData = await response.json();
+      console.log('API Response:', userData);
+
+      if (!userData || !userData.uid) {
+        throw new Error('Invalid user data received');
+      }
+
+      setUser(userData);
+    } catch (err) {
+      console.error('Fetch user error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load user profile');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchBlockedUsers = async () => {
+    try {
+      const response = await fetch('/api/blacklist');
+      if (!response.ok) throw new Error('Failed to fetch blacklist');
+      const data = await response.json();
+      setBlockedUsers(new Set(data.blocked_users.map((u: User) => u.uid)));
+    } catch (err) {
+      console.error('Failed to fetch blacklist:', err);
+    }
+  };
 
   useEffect(() => {
-    let isMounted = true;
+    fetchUser();
+    fetchBlockedUsers();
+  }, [resolvedParams.id]);
 
-    async function fetchUserData() {
-      try {
-        const id = params.id as string;
-        if (!id) {
-          throw new Error('User ID is required');
-        }
+  const handleBlock = async (user: User) => {
+    try {
+      setError(null);
+      const response = await fetch('/api/blacklist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userIds: [user.uid] })
+      });
 
-        const response = await fetch(`/api/user/${id}`);
-        if (!response.ok) {
-          if (response.status === 404) {
-            throw new Error('User not found');
-          }
-          throw new Error('Failed to load user data');
-        }
-        const data = await response.json();
-        if (isMounted) {
-          setUser(data);
-        }
-      } catch (err) {
-        if (isMounted) {
-          setError(err instanceof Error ? err.message : 'An error occurred');
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
+      if (!response.ok) throw new Error('Failed to add user to blacklist');
+      
+      setBlockedUsers(prev => {
+        const next = new Set(prev);
+        next.add(user.uid);
+        return next;
+      });
+    } catch (err) {
+      setError('Failed to block user');
+      console.error('Block user error:', err);
     }
+  };
 
-    fetchUserData();
+  const handleUnblock = async (user: User) => {
+    try {
+      setError(null);
+      const response = await fetch('/api/blacklist', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userIds: [user.uid] })
+      });
 
-    return () => {
-      isMounted = false;
-    };
-  }, [params.id]);
+      if (!response.ok) throw new Error('Failed to remove user from blacklist');
+      
+      setBlockedUsers(prev => {
+        const next = new Set(prev);
+        next.delete(user.uid);
+        return next;
+      });
+    } catch (err) {
+      setError('Failed to unblock user');
+      console.error('Unblock user error:', err);
+    }
+  };
 
   if (loading) {
     return (
-      <div className="container mx-auto p-4">
-        <Card>
-          <CardBody className="flex justify-center items-center min-h-[200px]">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </CardBody>
-        </Card>
+      <div className="flex justify-center items-center h-[calc(100vh-64px)]">
+        <Spinner size="lg" />
       </div>
     );
   }
 
-  if (error) {
+  if (error || !user) {
     return (
-      <div className="container mx-auto p-4">
+      <div className="container mx-auto p-4 max-w-4xl">
         <Card>
-          <CardHeader>
-            <h1 className="text-xl font-semibold text-red-600">Error</h1>
-          </CardHeader>
-          <CardBody>
-            <p>{error}</p>
-          </CardBody>
-        </Card>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="container mx-auto p-4">
-        <Card>
-          <CardHeader>
-            <h1 className="text-xl font-semibold">Profile Not Found</h1>
-          </CardHeader>
-          <CardBody>
-            <p>Failed to load user data</p>
+          <CardBody className="text-center py-8">
+            <p className="text-danger mb-4">{error || 'User not found'}</p>
+            <Button
+              variant="light"
+              onPress={() => router.back()}
+            >
+              Go Back
+            </Button>
           </CardBody>
         </Card>
       </div>
@@ -94,8 +132,22 @@ export default function UserProfilePage() {
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <UserFullProfile user={user} />
+    <div className="container mx-auto p-4 max-w-4xl">
+      <div className="mb-6">
+        <Button
+          variant="light"
+          onPress={() => router.back()}
+        >
+          ← Go Back
+        </Button>
+      </div>
+
+      <UserFullProfile
+        user={user}
+        isBlocked={blockedUsers.has(user.uid)}
+        onBlock={handleBlock}
+        onUnblock={handleUnblock}
+      />
     </div>
   );
 } 

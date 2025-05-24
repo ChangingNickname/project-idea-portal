@@ -22,17 +22,34 @@ export type UserMetadata = {
   lastRefreshTime: string | null | undefined;
 };
 
-export type User = Common & {
-  email: string | null | undefined;
+export type User = {
+  uid: string;
+  email: string | null;
   emailVerified: boolean;
-  displayName: string | null | undefined;
-  photoURL: string | null | undefined;
-  phoneNumber: string | null | undefined;
+  displayName: string | null;
+  photoURL: string | null;
+  phoneNumber: string | null;
   disabled: boolean;
   isAnonymous: boolean;
-  providerData: ProviderData[];
-  customClaims: Record<string, any> | null | undefined;
-  metadata: UserMetadata;
-  tenantId: string | null | undefined;
-  multiFactor?: MultiFactorData[];
+  providerData: {
+    providerId: string;
+    uid: string;
+    displayName: string | null;
+    email: string | null;
+    phoneNumber: string | null;
+    photoURL: string | null;
+  }[];
+  customClaims: Record<string, any> | null;
+  metadata: {
+    creationTime: string | null;
+    lastSignInTime: string | null;
+    lastRefreshTime: string | null;
+  };
+  tenantId: string | null;
+  multiFactor: {
+    uid: string;
+    factorId: string;
+    displayName: string | null;
+    enrollmentTime: string;
+  }[];
 }; 

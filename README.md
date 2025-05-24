@@ -26,6 +26,7 @@ A modern web application built with Next.js and HeroUI, featuring user authentic
 - `/api/auth/session` - Session management
 - `/api/user/me` - Current user profile
 - `/api/user/[id]` - User profile by ID
+- `/api/blacklist` - User blacklist management
 
 ### Components
 - `UserAvatar` - Reusable avatar component with fallback
@@ -138,3 +139,141 @@ export default function MyEditor() {
 - Markdown shortcuts
 - Diff/Source mode
 - Toolbar with Undo/Redo
+
+# API Черного Списка
+
+## Описание
+API для управления черным списком пользователей. Позволяет добавлять, удалять и просматривать заблокированных пользователей.
+
+## Эндпоинты
+
+### GET /api/blacklist
+Получение списка заблокированных пользователей текущего пользователя.
+
+**Ответ:**
+```json
+{
+  "blocked_users": [
+    {
+      "uid": "string",
+      "email": "string | null",
+      "displayName": "string | null",
+      // ... другие поля пользователя
+    }
+  ]
+}
+```
+
+### POST /api/blacklist
+Добавление пользователей в черный список.
+
+**Тело запроса:**
+```json
+{
+  "userIds": ["string"]
+}
+```
+
+**Ответ:** Обновленный список заблокированных пользователей.
+
+### DELETE /api/blacklist
+Удаление пользователей из черного списка.
+
+**Тело запроса:**
+```json
+{
+  "userIds": ["string"]
+}
+```
+
+**Ответ:** Обновленный список заблокированных пользователей.
+
+### PATCH /api/blacklist
+Удаление одного пользователя из черного списка (альтернативный метод).
+
+**Тело запроса:**
+```json
+{
+  "userId": "string"
+}
+```
+
+**Ответ:** Обновленный список заблокированных пользователей.
+
+## Особенности
+- Требуется аутентификация (session cookie)
+- Нельзя добавить себя в черный список
+- При добавлении пользователей проверяется их существование
+- Дубликаты пользователей автоматически фильтруются
+- При первом использовании создается запись черного списка
+
+## API Endpoints
+- `/api/auth/session` - Session management
+- `/api/user/me` - Current user profile
+- `/api/user/[id]` - User profile by ID
+- `/api/blacklist` - User blacklist management
+
+### Blacklist API
+The blacklist API provides functionality to manage blocked users.
+
+#### Endpoints
+
+##### GET /api/blacklist
+Retrieves the list of blocked users for the current user.
+
+**Response:**
+```json
+{
+  "blocked_users": [
+    {
+      "uid": "string",
+      "email": "string | null",
+      "displayName": "string | null",
+      // ... other user fields
+    }
+  ]
+}
+```
+
+##### POST /api/blacklist
+Adds users to the blacklist.
+
+**Request Body:**
+```json
+{
+  "userIds": ["string"]
+}
+```
+
+**Response:** Updated list of blocked users.
+
+##### DELETE /api/blacklist
+Removes users from the blacklist.
+
+**Request Body:**
+```json
+{
+  "userIds": ["string"]
+}
+```
+
+**Response:** Updated list of blocked users.
+
+##### PATCH /api/blacklist
+Removes a single user from the blacklist (alternative method).
+
+**Request Body:**
+```json
+{
+  "userId": "string"
+}
+```
+
+**Response:** Updated list of blocked users.
+
+#### Features
+- Requires authentication (session cookie)
+- Cannot add yourself to the blacklist
+- Validates user existence when adding
+- Automatically filters duplicate users
+- Creates blacklist record on first use

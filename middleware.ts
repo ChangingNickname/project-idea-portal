@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { auth } from '@/lib/firebase/admin'
 
 // Paths that don't require authentication
 const publicPaths = [
@@ -140,6 +141,10 @@ export async function middleware(request: NextRequest) {
     const requestHeaders = new Headers(request.headers)
     requestHeaders.set('x-user-token', token)
 
+    // Клонируем заголовки и добавляем ID пользователя
+    const decodedClaims = await auth.verifySessionCookie(request.cookies.get('session')?.value);
+    requestHeaders.set('x-user-id', decodedClaims.uid);
+
     return NextResponse.next({
       request: {
         headers: requestHeaders,
@@ -180,5 +185,8 @@ export const config = {
      * - public folder
      */
     '/((?!_next/static|_next/image|favicon.ico|public/).*)',
+    '/api/user/search',
+    '/api/user/:id*',
+    '/api/blacklist',
   ],
 } 

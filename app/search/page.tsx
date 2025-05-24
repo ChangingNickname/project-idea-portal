@@ -1,227 +1,187 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { Input } from '@heroui/input';
-import { Button } from '@heroui/button';
-import { Card, CardBody } from '@heroui/card';
-import { UserCard } from '@/components/user/UserCard';
+import React, { useState, useEffect } from 'react';
 import { User } from '@/types/user';
-import { useInView } from 'react-intersection-observer';
-import { SearchIcon } from '@/components/icons';
-
-const SEARCH_HISTORY_KEY = 'search_history';
-const MAX_HISTORY_ITEMS = 5;
-const SEARCH_DELAY = 1500; // 1.5 секунды
+import { Input } from "@heroui/input";
+import { Button } from "@heroui/button";
+import { Card, CardBody } from "@heroui/card";
+import { Spinner } from "@heroui/spinner";
+import { useDebounce } from '@/hooks/useDebounce';
+import { UserCard } from '@/components/user/UserCard';
+import { UserFullProfile } from '@/components/user/UserFullProfile';
 
 export default function SearchPage() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const [query, setQuery] = useState(searchParams.get('q') || '');
+  const [query, setQuery] = useState('');
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(true);
   const [pageToken, setPageToken] = useState<string | null>(null);
-  const [searchHistory, setSearchHistory] = useState<string[]>([]);
-  const { ref, inView } = useInView();
-  const searchTimeoutRef = useRef<NodeJS.Timeout>();
-  const lastSearchTimeRef = useRef<number>(0);
-  const isInitialLoad = useRef(true);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [blockedUsers, setBlockedUsers] = useState<Set<string>>(new Set());
+  const debouncedQuery = useDebounce(query, 300);
 
-  // Загрузка истории поиска из localStorage
+  const fetchBlockedUsers = async () => {
+    try {
+      const response = await fetch('/api/blacklist');
+      if (!response.ok) throw new Error('Failed to fetch blacklist');
+      const data = await response.json();
+      setBlockedUsers(new Set(data.blocked_users.map((u: User) => u.uid)));
+    } catch (err) {
+      console.error('Failed to fetch blacklist:', err);
+    }
+  };
+
   useEffect(() => {
-    const history = localStorage.getItem(SEARCH_HISTORY_KEY);
-    if (history) {
-      setSearchHistory(JSON.parse(history));
-    }
+    fetchBlockedUsers();
   }, []);
 
-  // Сохранение поискового запроса в историю
-  const saveToHistory = useCallback((searchQuery: string) => {
-    if (!searchQuery.trim()) return;
-    
-    const newHistory = [searchQuery, ...searchHistory.filter(q => q !== searchQuery)]
-      .slice(0, MAX_HISTORY_ITEMS);
-    
-    setSearchHistory(newHistory);
-    localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(newHistory));
-  }, [searchHistory]);
-
-  // Очистка истории поиска
-  const clearHistory = useCallback(() => {
-    localStorage.removeItem(SEARCH_HISTORY_KEY);
-    setSearchHistory([]);
-  }, []);
-
-  const searchUsers = useCallback(async (searchQuery: string, token: string | null = null) => {
-    const now = Date.now();
-    if (now - lastSearchTimeRef.current < SEARCH_DELAY) {
-      return;
-    }
-    lastSearchTimeRef.current = now;
-
+  const searchUsers = async (searchQuery: string, token: string | null = null) => {
     try {
       setLoading(true);
       setError(null);
-
-      const response = await fetch(
-        `/api/user/search?q=${encodeURIComponent(searchQuery)}${
-          token ? `&pageToken=${token}` : ''
-        }`
-      );
-
-      if (!response.ok) {
-        if (response.status === 429) {
-          const data = await response.json();
-          setError(`Too many requests. Please wait ${data.retryAfter} seconds`);
-        } else {
-          throw new Error('Failed to fetch users');
-        }
-        return;
-      }
-
-      const text = await response.text();
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch (e) {
-        console.error('Failed to parse response:', text);
-        throw new Error('Invalid response from server');
-      }
-
-      if (!data || !Array.isArray(data.users)) {
-        throw new Error('Invalid response format');
-      }
-
-      setUsers(prev => (token ? [...prev, ...data.users] : data.users));
+      
+      const params = new URLSearchParams();
+      if (searchQuery) params.append('q', searchQuery);
+      if (token) params.append('pageToken', token);
+      
+      const response = await fetch(`/api/user/search?${params.toString()}`);
+      if (!response.ok) throw new Error('Failed to fetch users');
+      
+      const data = await response.json();
+      setUsers(data.users);
       setPageToken(data.pageToken);
-      setHasMore(!!data.pageToken);
-      if (searchQuery.trim()) {
-        saveToHistory(searchQuery);
-      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError('Error searching users');
+      console.error('Search error:', err);
     } finally {
       setLoading(false);
     }
-  }, [saveToHistory]);
-
-  // Обработка изменения поискового запроса
-  const handleQueryChange = (newQuery: string) => {
-    setQuery(newQuery);
-    
-    // Очищаем предыдущий таймаут
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
-
-    // Устанавливаем новый таймаут
-    searchTimeoutRef.current = setTimeout(() => {
-      router.push(`/search?q=${encodeURIComponent(newQuery)}`);
-      searchUsers(newQuery);
-    }, SEARCH_DELAY);
   };
 
-  // Начальный поиск при загрузке страницы
   useEffect(() => {
-    const initialQuery = searchParams.get('q');
-    if (initialQuery) {
-      setQuery(initialQuery);
-      searchUsers(initialQuery);
-    } else if (isInitialLoad.current) {
-      // При первом входе на страницу без поискового запроса
-      searchUsers('');
-      isInitialLoad.current = false;
-    }
-  }, [searchParams, searchUsers]);
+    searchUsers(debouncedQuery);
+  }, [debouncedQuery]);
 
-  const handleLoadMore = () => {
-    if (!hasMore || loading || !pageToken) return;
-    searchUsers(query, pageToken);
+  const loadMore = () => {
+    if (pageToken) {
+      searchUsers(debouncedQuery, pageToken);
+    }
   };
 
-  // Загрузка следующей страницы при скролле
-  useEffect(() => {
-    if (inView && hasMore && !loading && query) {
-      searchUsers(query, pageToken);
+  const handleBlock = async (user: User) => {
+    try {
+      setError(null);
+      const response = await fetch('/api/blacklist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userIds: [user.uid] })
+      });
+
+      if (!response.ok) throw new Error('Failed to add user to blacklist');
+      
+      setBlockedUsers(prev => {
+        const next = new Set(prev);
+        next.add(user.uid);
+        return next;
+      });
+    } catch (err) {
+      setError('Error adding user to blacklist');
+      console.error('Block user error:', err);
     }
-  }, [inView, hasMore, loading, query, pageToken, searchUsers]);
+  };
+
+  const handleUnblock = async (user: User) => {
+    try {
+      setError(null);
+      const response = await fetch('/api/blacklist', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userIds: [user.uid] })
+      });
+
+      if (!response.ok) throw new Error('Failed to remove user from blacklist');
+      
+      setBlockedUsers(prev => {
+        const next = new Set(prev);
+        next.delete(user.uid);
+        return next;
+      });
+    } catch (err) {
+      setError('Error removing user from blacklist');
+      console.error('Unblock user error:', err);
+    }
+  };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex gap-4 mb-8">
-        <div className="flex-1">
-          <Input
-            type="text"
-            placeholder="Search by email or UID..."
-            value={query}
-            onChange={(e) => handleQueryChange(e.target.value)}
-            className="w-full"
-            startContent={<SearchIcon className="text-default-400" />}
-          />
-        </div>
+    <div className="container mx-auto p-4 max-w-4xl">
+      <div className="mb-6">
+        <Input
+          type="text"
+          placeholder="Search users..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="w-full"
+        />
       </div>
-
-      {searchHistory.length > 0 && (
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-2">
-            <h2 className="text-lg font-semibold">Recent Searches</h2>
-            <Button
-              size="sm"
-              color="danger"
-              variant="light"
-              onClick={clearHistory}
-            >
-              Clear History
-            </Button>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {searchHistory.map((item, index) => (
-              <button
-                key={index}
-                onClick={() => handleQueryChange(item)}
-                className="px-3 py-1 bg-default-100 rounded-full text-sm hover:bg-default-200"
-              >
-                {item}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       {error && (
-        <div className="mb-4 p-4 bg-danger-50 text-danger-500 rounded-lg">
-          {error}
-        </div>
+        <div className="text-danger mb-4">{error}</div>
       )}
 
-      <div className="space-y-4">
-        {users.map((user) => (
-          <UserCard key={user.uid} user={user} />
-        ))}
-      </div>
-
-      {hasMore && !loading && users.length > 0 && (
-        <div className="mt-8 text-center">
+      {selectedUser ? (
+        <div className="space-y-4">
           <Button
-            onClick={handleLoadMore}
-            color="primary"
-            variant="ghost"
-            isLoading={loading}
+            variant="light"
+            onPress={() => setSelectedUser(null)}
           >
-            Load More
+            ← Back to results
           </Button>
+          <UserFullProfile
+            user={selectedUser}
+            isBlocked={blockedUsers.has(selectedUser.uid)}
+            onBlock={handleBlock}
+            onUnblock={handleUnblock}
+          />
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {loading ? (
+            <div className="flex justify-center py-8">
+              <Spinner size="lg" />
+            </div>
+          ) : users.length > 0 ? (
+            <>
+              {users.map((user) => (
+                <UserCard
+                  key={user.uid}
+                  user={user}
+                  isBlocked={blockedUsers.has(user.uid)}
+                  onBlock={handleBlock}
+                  onUnblock={handleUnblock}
+                />
+              ))}
+              
+              {pageToken && (
+                <Button
+                  variant="light"
+                  className="w-full"
+                  onPress={loadMore}
+                >
+                  Load more
+                </Button>
+              )}
+            </>
+          ) : (
+            <Card>
+              <CardBody className="text-center py-8">
+                <p className="text-default-500">
+                  {query ? 'No users found' : 'Start searching'}
+                </p>
+              </CardBody>
+            </Card>
+          )}
         </div>
       )}
-
-      {!loading && users.length === 0 && query && (
-        <div className="text-center text-default-500">
-          No users found
-        </div>
-      )}
-
-      <div ref={ref} className="h-10" />
     </div>
   );
 } 

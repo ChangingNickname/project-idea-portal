@@ -7,8 +7,15 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('q') || '';
     const pageToken = searchParams.get('pageToken') || undefined;
+    const deletemyself = searchParams.get('deletemyself') !== 'true'; // по умолчанию true
 
-    console.log('Search request:', { query, pageToken });
+    console.log('Search request:', { query, pageToken, deletemyself });
+
+    // Получаем текущего пользователя из заголовка
+    let currentUserId: string | null = null;
+    if (deletemyself) {
+      currentUserId = request.headers.get('x-user-id');
+    }
 
     // Если запрос пустой, возвращаем последних пользователей
     if (!query.trim()) {
@@ -16,37 +23,39 @@ export async function GET(request: Request) {
       const listUsersResult = await auth.listUsers(10, pageToken);
       console.log('Fetched users count:', listUsersResult.users.length);
       
-      const mappedUsers = listUsersResult.users.map(user => ({
-        uid: user.uid,
-        email: user.email || null,
-        emailVerified: user.emailVerified || false,
-        displayName: user.displayName || null,
-        photoURL: user.photoURL || null,
-        phoneNumber: user.phoneNumber || null,
-        disabled: user.disabled || false,
-        isAnonymous: !user.providerData || user.providerData.length === 0,
-        providerData: (user.providerData || []).map(provider => ({
-          providerId: provider.providerId,
-          uid: provider.uid,
-          displayName: provider.displayName || null,
-          email: provider.email || null,
-          phoneNumber: provider.phoneNumber || null,
-          photoURL: provider.photoURL || null
-        })),
-        customClaims: user.customClaims || null,
-        metadata: {
-          creationTime: user.metadata?.creationTime || null,
-          lastSignInTime: user.metadata?.lastSignInTime || null,
-          lastRefreshTime: user.metadata?.lastRefreshTime || null
-        },
-        tenantId: user.tenantId || null,
-        multiFactor: user.multiFactor?.enrolledFactors?.map(factor => ({
-          uid: factor.uid,
-          factorId: factor.factorId,
-          displayName: factor.displayName || null,
-          enrollmentTime: factor.enrollmentTime
-        })) || []
-      }));
+      const mappedUsers = listUsersResult.users
+        .filter(user => !deletemyself || user.uid !== currentUserId) // Фильтруем текущего пользователя
+        .map(user => ({
+          uid: user.uid,
+          email: user.email || null,
+          emailVerified: user.emailVerified || false,
+          displayName: user.displayName || null,
+          photoURL: user.photoURL || null,
+          phoneNumber: user.phoneNumber || null,
+          disabled: user.disabled || false,
+          isAnonymous: !user.providerData || user.providerData.length === 0,
+          providerData: (user.providerData || []).map(provider => ({
+            providerId: provider.providerId,
+            uid: provider.uid,
+            displayName: provider.displayName || null,
+            email: provider.email || null,
+            phoneNumber: provider.phoneNumber || null,
+            photoURL: provider.photoURL || null
+          })),
+          customClaims: user.customClaims || null,
+          metadata: {
+            creationTime: user.metadata?.creationTime || null,
+            lastSignInTime: user.metadata?.lastSignInTime || null,
+            lastRefreshTime: user.metadata?.lastRefreshTime || null
+          },
+          tenantId: user.tenantId || null,
+          multiFactor: user.multiFactor?.enrolledFactors?.map(factor => ({
+            uid: factor.uid,
+            factorId: factor.factorId,
+            displayName: factor.displayName || null,
+            enrollmentTime: factor.enrollmentTime
+          })) || []
+        }));
 
       console.log('Mapped users successfully');
       return NextResponse.json({
@@ -83,37 +92,40 @@ export async function GET(request: Request) {
     console.log('Total found users:', allUsers.length);
 
     // Возвращаем только первые 10 результатов
-    const mappedUsers = allUsers.slice(0, 10).map(user => ({
-      uid: user.uid,
-      email: user.email || null,
-      emailVerified: user.emailVerified || false,
-      displayName: user.displayName || null,
-      photoURL: user.photoURL || null,
-      phoneNumber: user.phoneNumber || null,
-      disabled: user.disabled || false,
-      isAnonymous: !user.providerData || user.providerData.length === 0,
-      providerData: (user.providerData || []).map(provider => ({
-        providerId: provider.providerId,
-        uid: provider.uid,
-        displayName: provider.displayName || null,
-        email: provider.email || null,
-        phoneNumber: provider.phoneNumber || null,
-        photoURL: provider.photoURL || null
-      })),
-      customClaims: user.customClaims || null,
-      metadata: {
-        creationTime: user.metadata?.creationTime || null,
-        lastSignInTime: user.metadata?.lastSignInTime || null,
-        lastRefreshTime: user.metadata?.lastRefreshTime || null
-      },
-      tenantId: user.tenantId || null,
-      multiFactor: user.multiFactor?.enrolledFactors?.map(factor => ({
-        uid: factor.uid,
-        factorId: factor.factorId,
-        displayName: factor.displayName || null,
-        enrollmentTime: factor.enrollmentTime
-      })) || []
-    }));
+    const mappedUsers = allUsers
+      .filter(user => !deletemyself || user.uid !== currentUserId) // Фильтруем текущего пользователя
+      .slice(0, 10)
+      .map(user => ({
+        uid: user.uid,
+        email: user.email || null,
+        emailVerified: user.emailVerified || false,
+        displayName: user.displayName || null,
+        photoURL: user.photoURL || null,
+        phoneNumber: user.phoneNumber || null,
+        disabled: user.disabled || false,
+        isAnonymous: !user.providerData || user.providerData.length === 0,
+        providerData: (user.providerData || []).map(provider => ({
+          providerId: provider.providerId,
+          uid: provider.uid,
+          displayName: provider.displayName || null,
+          email: provider.email || null,
+          phoneNumber: provider.phoneNumber || null,
+          photoURL: provider.photoURL || null
+        })),
+        customClaims: user.customClaims || null,
+        metadata: {
+          creationTime: user.metadata?.creationTime || null,
+          lastSignInTime: user.metadata?.lastSignInTime || null,
+          lastRefreshTime: user.metadata?.lastRefreshTime || null
+        },
+        tenantId: user.tenantId || null,
+        multiFactor: user.multiFactor?.enrolledFactors?.map(factor => ({
+          uid: factor.uid,
+          factorId: factor.factorId,
+          displayName: factor.displayName || null,
+          enrollmentTime: factor.enrollmentTime
+        })) || []
+      }));
 
     console.log('Mapped users successfully');
     return NextResponse.json({

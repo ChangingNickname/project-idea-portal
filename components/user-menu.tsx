@@ -98,15 +98,26 @@ export function UserMenu() {
               )}
             </div>
             {!user.isAnonymous && (
-              <button
-                onClick={() => {
-                  setIsOpen(false);
-                  router.push('/profile');
-                }}
-                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              >
-                My Profile
-              </button>
+              <>
+                <button
+                  onClick={() => {
+                    setIsOpen(false);
+                    router.push('/profile');
+                  }}
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  My Profile
+                </button>
+                <button
+                  onClick={() => {
+                    setIsOpen(false);
+                    router.push('/blacklist');
+                  }}
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  Blacklist
+                </button>
+              </>
             )}
             <button
               onClick={handleLogout}

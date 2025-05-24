@@ -4,12 +4,19 @@ import { User } from '@/types/user';
 import { UserAvatar } from './UserAvatar';
 import { Card, CardBody } from '@heroui/card';
 import { Button } from '@heroui/button';
+import { useState } from 'react';
+import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from '@heroui/dropdown';
 
 interface UserFullProfileProps {
   user: User;
+  isBlocked?: boolean;
+  onBlock?: (user: User) => Promise<void>;
+  onUnblock?: (user: User) => Promise<void>;
 }
 
-export const UserFullProfile = ({ user }: UserFullProfileProps) => {
+export const UserFullProfile = ({ user, isBlocked, onBlock, onUnblock }: UserFullProfileProps) => {
+  const [loading, setLoading] = useState(false);
+
   const handleCopy = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -21,6 +28,23 @@ export const UserFullProfile = ({ user }: UserFullProfileProps) => {
   const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleString();
+  };
+
+  const handleBlockAction = async () => {
+    if (!onBlock || !onUnblock) return;
+    
+    try {
+      setLoading(true);
+      if (isBlocked) {
+        await onUnblock(user);
+      } else {
+        await onBlock(user);
+      }
+    } catch (err) {
+      console.error('Failed to update blacklist:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const avatarUser = {
@@ -37,58 +61,99 @@ export const UserFullProfile = ({ user }: UserFullProfileProps) => {
         <div className="flex items-start gap-4">
           <UserAvatar user={avatarUser} size="lg" />
           <div className="flex-1">
-            {user.displayName && (
-              <h2 className="text-2xl font-bold mb-2">{user.displayName}</h2>
-            )}
-            {user.email && (
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-default-500">{user.email}</span>
-                <Button
-                  isIconOnly
-                  size="sm"
-                  variant="light"
-                  onClick={() => handleCopy(user.email!)}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+            <div className="flex justify-between items-start">
+              <div>
+                {user.displayName && (
+                  <h2 className="text-2xl font-bold mb-2">{user.displayName}</h2>
+                )}
+                {user.email && (
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-default-500">{user.email}</span>
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      variant="light"
+                      onPress={() => handleCopy(user.email!)}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                        <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                      </svg>
+                    </Button>
+                  </div>
+                )}
+                <div className="flex items-center gap-2">
+                  <span className="text-default-500 font-mono">{user.uid}</span>
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    variant="light"
+                    onPress={() => handleCopy(user.uid)}
                   >
-                    <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-                  </svg>
-                </Button>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                      <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                    </svg>
+                  </Button>
+                </div>
               </div>
-            )}
-            <div className="flex items-center gap-2">
-              <span className="text-default-500 font-mono">{user.uid}</span>
-              <Button
-                isIconOnly
-                size="sm"
-                variant="light"
-                onClick={() => handleCopy(user.uid)}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                  <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-                </svg>
-              </Button>
+              {onBlock && onUnblock && (
+                <Dropdown>
+                  <DropdownTrigger>
+                    <Button
+                      isIconOnly
+                      variant="light"
+                      className="p-1"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <circle cx="12" cy="12" r="1" />
+                        <circle cx="12" cy="5" r="1" />
+                        <circle cx="12" cy="19" r="1" />
+                      </svg>
+                    </Button>
+                  </DropdownTrigger>
+                  <DropdownMenu aria-label="User actions">
+                    <DropdownItem
+                      key="block"
+                      color={isBlocked ? "danger" : "default"}
+                      onPress={handleBlockAction}
+                      isLoading={loading}
+                    >
+                      {isBlocked ? 'Unblock User' : 'Block User'}
+                    </DropdownItem>
+                  </DropdownMenu>
+                </Dropdown>
+              )}
             </div>
           </div>
         </div>
@@ -128,6 +193,12 @@ export const UserFullProfile = ({ user }: UserFullProfileProps) => {
                 <span className="text-default-500">Anonymous:</span>{' '}
                 {user.isAnonymous ? 'Yes' : 'No'}
               </div>
+              {onBlock && onUnblock && (
+                <div>
+                  <span className="text-default-500">Blocked:</span>{' '}
+                  {isBlocked ? 'Yes' : 'No'}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -158,7 +229,7 @@ export const UserFullProfile = ({ user }: UserFullProfileProps) => {
                   isIconOnly
                   size="sm"
                   variant="light"
-                  onClick={() => handleCopy(user.phoneNumber!)}
+                  onPress={() => handleCopy(user.phoneNumber!)}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
