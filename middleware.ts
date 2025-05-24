@@ -9,13 +9,52 @@ const publicPaths = [
   '/register',
 ]
 
+// Paths that should bypass rate limiting
+const bypassRateLimitPaths = [
+  '/api/user/', // API запросы к профилю пользователя
+]
+
+// Константы для rate limiting
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1 минута
+const MAX_REQUESTS_PER_WINDOW = 60; // 60 запросов в минуту
+
 // Хранилище для отслеживания запросов
-interface RequestData {
-  timestamp: number;
-  url: string;
+class RateLimitStore {
+  private store: Map<string, { count: number; resetTime: number }>;
+
+  constructor() {
+    this.store = new Map();
+  }
+
+  isRateLimited(key: string): boolean {
+    const now = Date.now();
+    const record = this.store.get(key);
+
+    if (!record) {
+      this.store.set(key, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+      return false;
+    }
+
+    if (now > record.resetTime) {
+      this.store.set(key, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+      return false;
+    }
+
+    if (record.count >= MAX_REQUESTS_PER_WINDOW) {
+      return true;
+    }
+
+    record.count++;
+    return false;
+  }
+
+  getResetTime(key: string): number {
+    const record = this.store.get(key);
+    return record ? record.resetTime : Date.now() + RATE_LIMIT_WINDOW;
+  }
 }
 
-const requestStore = new Map<string, RequestData>();
+const rateLimitStore = new RateLimitStore();
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -28,37 +67,34 @@ export async function middleware(request: NextRequest) {
   // Получаем IP адрес клиента из заголовков
   const forwardedFor = request.headers.get('x-forwarded-for');
   const ip = forwardedFor ? forwardedFor.split(',')[0] : 'unknown';
-  const now = Date.now();
 
-  // Получаем или создаем запись для IP
-  const requestData = requestStore.get(ip);
-  const currentUrl = request.nextUrl.pathname + request.nextUrl.search;
+  // Проверяем, нужно ли применять rate limiting
+  const shouldRateLimit = !bypassRateLimitPaths.some(path => pathname.startsWith(path));
 
-  // Проверяем, был ли уже такой запрос в последнюю секунду
-  if (requestData && 
-      requestData.url === currentUrl && 
-      now - requestData.timestamp < 1000) {
-    return new NextResponse(
-      JSON.stringify({
-        error: 'Too many requests',
-        message: 'Please wait at least 1 second between identical requests',
-        retryAfter: 1,
-      }),
-      {
-        status: 429,
-        headers: {
-          'Content-Type': 'application/json',
-          'Retry-After': '1',
-        },
-      }
-    );
+  if (shouldRateLimit) {
+    const rateLimitKey = `${ip}:${pathname}`;
+    
+    if (rateLimitStore.isRateLimited(rateLimitKey)) {
+      const resetTime = rateLimitStore.getResetTime(rateLimitKey);
+      const retryAfter = Math.ceil((resetTime - Date.now()) / 1000);
+      
+      return new NextResponse(
+        JSON.stringify({
+          error: 'Too many requests',
+          message: `Rate limit exceeded. Please try again in ${retryAfter} seconds.`,
+          retryAfter,
+        }),
+        {
+          status: 429,
+          headers: {
+            'Content-Type': 'application/json',
+            'Retry-After': retryAfter.toString(),
+            'X-RateLimit-Reset': resetTime.toString(),
+          },
+        }
+      );
+    }
   }
-
-  // Сохраняем информацию о запросе
-  requestStore.set(ip, {
-    timestamp: now,
-    url: currentUrl,
-  });
 
   // Get the token from the cookie
   const token = request.cookies.get('firebase_token')?.value

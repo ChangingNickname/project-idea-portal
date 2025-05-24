@@ -4,12 +4,10 @@ import { useEffect, useState } from 'react';
 import { User } from '@/types/user';
 import { UserFullProfile } from '@/components/user/UserFullProfile';
 import { Card, CardHeader, CardBody } from "@heroui/card";
+import { useParams } from 'next/navigation';
 
-interface ProfilePageProps {
-  params: Promise<{ id: string }>;
-}
-
-export default function UserProfilePage({ params }: ProfilePageProps) {
+export default function UserProfilePage() {
+  const params = useParams();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -19,7 +17,11 @@ export default function UserProfilePage({ params }: ProfilePageProps) {
 
     async function fetchUserData() {
       try {
-        const { id } = await params;
+        const id = params.id as string;
+        if (!id) {
+          throw new Error('User ID is required');
+        }
+
         const response = await fetch(`/api/user/${id}`);
         if (!response.ok) {
           if (response.status === 404) {
@@ -47,7 +49,7 @@ export default function UserProfilePage({ params }: ProfilePageProps) {
     return () => {
       isMounted = false;
     };
-  }, [params]);
+  }, [params.id]);
 
   if (loading) {
     return (
