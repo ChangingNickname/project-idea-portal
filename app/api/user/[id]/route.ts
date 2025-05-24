@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/firebase/admin';
+import { User } from '@/types/user';
 
 export async function GET(
   request: Request,
@@ -8,7 +9,7 @@ export async function GET(
   try {
     const userRecord = await auth.getUser(params.id);
 
-    const userData = {
+    const userData: User = {
       uid: userRecord.uid,
       email: userRecord.email,
       emailVerified: userRecord.emailVerified,

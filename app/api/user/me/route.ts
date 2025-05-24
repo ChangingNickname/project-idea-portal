@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/firebase/admin';
 import { cookies } from 'next/headers';
+import { User } from '@/types/user';
 
 export async function GET() {
   try {
@@ -14,7 +15,7 @@ export async function GET() {
     const decodedToken = await auth.verifySessionCookie(sessionCookie);
     const userRecord = await auth.getUser(decodedToken.uid);
 
-    const userData = {
+    const userData: User = {
       uid: userRecord.uid,
       email: userRecord.email,
       emailVerified: userRecord.emailVerified,
