@@ -1,13 +1,11 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { User } from '@/types/user';
 import { Input } from "@heroui/input";
 import { Button } from "@heroui/button";
-import { Card, CardBody } from "@heroui/card";
 import { Checkbox } from "@heroui/checkbox";
 import { Spinner } from "@heroui/spinner";
-import { useDebounce } from '@/hooks/useDebounce';
 import { UserCard } from '@/components/user/UserCard';
 
 interface UserSearchProps {
@@ -22,7 +20,7 @@ export const UserSearch: React.FC<UserSearchProps> = ({
   onSelect,
   selectedUsers = [],
   maxUsers = 10,
-  placeholder = 'Поиск пользователей...',
+  placeholder = 'Search users...',
   excludeUsers = []
 }) => {
   const [query, setQuery] = useState('');
@@ -30,15 +28,21 @@ export const UserSearch: React.FC<UserSearchProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pageToken, setPageToken] = useState<string | null>(null);
-  const debouncedQuery = useDebounce(query, 300);
+  const searchTimeoutRef = useRef<NodeJS.Timeout>();
 
   const searchUsers = useCallback(async (searchQuery: string, token: string | null = null) => {
+    if (!searchQuery.trim()) {
+      setUsers([]);
+      setPageToken(null);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
       
       const params = new URLSearchParams();
-      if (searchQuery) params.append('q', searchQuery);
+      params.append('q', searchQuery);
       if (token) params.append('pageToken', token);
       
       const response = await fetch(`/api/user/search?${params.toString()}`);
@@ -46,19 +50,49 @@ export const UserSearch: React.FC<UserSearchProps> = ({
       
       const data = await response.json();
       const filteredUsers = data.users.filter((user: User) => !excludeUsers.includes(user.uid));
-      setUsers(filteredUsers);
+      
+      if (token) {
+        setUsers(prev => [...prev, ...filteredUsers]);
+      } else {
+        setUsers(filteredUsers);
+      }
       setPageToken(data.pageToken);
     } catch (err) {
-      setError('Ошибка при поиске пользователей');
+      setError('Error searching users');
       console.error('Search error:', err);
     } finally {
       setLoading(false);
     }
   }, [excludeUsers]);
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newQuery = e.target.value;
+    setQuery(newQuery);
+
+    // Очищаем предыдущий таймер
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    // Устанавливаем новый таймер
+    if (newQuery.trim()) {
+      searchTimeoutRef.current = setTimeout(() => {
+        searchUsers(newQuery);
+      }, 1500);
+    } else {
+      setUsers([]);
+      setPageToken(null);
+    }
+  };
+
+  // Очищаем таймер при размонтировании
   useEffect(() => {
-    searchUsers(debouncedQuery);
-  }, [debouncedQuery, searchUsers]);
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleUserSelect = (user: User) => {
     const isSelected = selectedUsers.some(u => u.uid === user.uid);
@@ -68,7 +102,7 @@ export const UserSearch: React.FC<UserSearchProps> = ({
       newSelectedUsers = selectedUsers.filter(u => u.uid !== user.uid);
     } else {
       if (selectedUsers.length >= maxUsers) {
-        setError(`Можно выбрать не более ${maxUsers} пользователей`);
+        setError(`You can select up to ${maxUsers} users`);
         return;
       }
       newSelectedUsers = [...selectedUsers, user];
@@ -79,8 +113,8 @@ export const UserSearch: React.FC<UserSearchProps> = ({
   };
 
   const loadMore = () => {
-    if (pageToken) {
-      searchUsers(debouncedQuery, pageToken);
+    if (pageToken && query) {
+      searchUsers(query, pageToken);
     }
   };
 
@@ -90,7 +124,7 @@ export const UserSearch: React.FC<UserSearchProps> = ({
         type="text"
         placeholder={placeholder}
         value={query}
-        onChange={(e) => setQuery(e.target.value)}
+        onChange={handleInputChange}
         className="w-full"
       />
 
@@ -98,69 +132,46 @@ export const UserSearch: React.FC<UserSearchProps> = ({
         <div className="text-danger text-sm">{error}</div>
       )}
 
-      <div className="space-y-2">
+      <div className="space-y-4">
         {loading ? (
           <div className="flex justify-center py-4">
             <Spinner size="sm" />
           </div>
         ) : users.length > 0 ? (
           <>
-            {users.map((user) => (
-              <div key={user.uid} className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
-                  <Checkbox
-                    isSelected={selectedUsers.some(u => u.uid === user.uid)}
-                    onValueChange={() => handleUserSelect(user)}
-                  />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {users.map((user) => (
+                <div key={user.uid} className="relative">
+                  <div className="absolute left-4 top-4 z-10">
+                    <Checkbox
+                      isSelected={selectedUsers.some(u => u.uid === user.uid)}
+                      onValueChange={() => handleUserSelect(user)}
+                    />
+                  </div>
+                  <div className="pl-12">
+                    <UserCard user={user} />
+                  </div>
                 </div>
-                <div className="pl-12">
-                  <UserCard user={user} />
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
             
             {pageToken && (
               <Button
                 variant="light"
                 className="w-full"
                 onPress={loadMore}
+                isLoading={loading}
               >
-                Загрузить еще
+                Load more
               </Button>
             )}
           </>
         ) : (
           <div className="text-center text-default-500 py-4">
-            {query ? 'Пользователи не найдены' : 'Начните поиск'}
+            {query ? 'No users found' : 'Start typing to search'}
           </div>
         )}
       </div>
-
-      {selectedUsers.length > 0 && (
-        <div className="mt-4">
-          <div className="text-sm font-medium mb-2">
-            Выбрано пользователей: {selectedUsers.length}
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {selectedUsers.map((user) => (
-              <div
-                key={user.uid}
-                className="flex items-center gap-2 bg-default-100 px-2 py-1 rounded-full"
-              >
-                <UserCard user={user} />
-                <Button
-                  size="sm"
-                  variant="light"
-                  className="p-1"
-                  onPress={() => handleUserSelect(user)}
-                >
-                  ×
-                </Button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }; 
