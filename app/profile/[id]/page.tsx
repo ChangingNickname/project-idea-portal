@@ -23,12 +23,12 @@ export default function UserProfilePage({ params }: PageProps) {
   const resolvedParams = React.use(params);
 
   const fetchUser = async () => {
-    try {
+      try {
       setLoading(true);
       setError(null);
       const response = await fetch(`/api/user/${resolvedParams.id}`);
       if (!response.ok) throw new Error('Failed to fetch user');
-      
+
       const userData = await response.json();
       console.log('API Response:', userData);
 
@@ -37,13 +37,13 @@ export default function UserProfilePage({ params }: PageProps) {
       }
 
       setUser(userData);
-    } catch (err) {
+      } catch (err) {
       console.error('Fetch user error:', err);
       setError(err instanceof Error ? err.message : 'Failed to load user profile');
-    } finally {
-      setLoading(false);
-    }
-  };
+      } finally {
+        setLoading(false);
+      }
+    };
 
   const fetchBlockedUsers = async () => {
     try {
@@ -122,8 +122,8 @@ export default function UserProfilePage({ params }: PageProps) {
             <Button
               variant="light"
               onPress={() => router.back()}
-            >
-              Go Back
+        >
+          Go Back
             </Button>
           </CardBody>
         </Card>
