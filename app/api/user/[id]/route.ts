@@ -4,10 +4,11 @@ import { User } from '@/types/user';
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userRecord = await auth.getUser(params.id);
+    const { id } = await context.params;
+    const userRecord = await auth.getUser(id);
 
     const userData: User = {
       uid: userRecord.uid,
