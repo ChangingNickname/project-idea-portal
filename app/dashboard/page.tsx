@@ -80,23 +80,22 @@ export default function Dashboard() {
             href={`/posts/${post.id}`}
             className="flex flex-col w-64 bg-white rounded-lg shadow-sm border overflow-hidden min-h-[130px] hover:shadow-md transition"
           >
-            <div className="flex flex-row items-center gap-4 p-4">
-              <div className="relative w-20 h-20 flex-shrink-0 bg-gray-200 rounded">
-                {post.image ? (
+            <div className={`p-4 flex ${post.image ? 'flex-row items-center gap-4' : 'flex-col'}`}>
+              {post.image && (
+                <div className="relative w-20 h-20 flex-shrink-0 bg-gray-200 rounded">
                   <Image
                     src={post.image}
                     alt="Post image"
                     fill
                     className="object-cover"
                   />
-                ) : (
-                  <span className="text-sm text-gray-500">No image</span>
-                )}
-              </div>
+                </div>
+              )}
               <h2 className="text-base font-semibold text-gray-800">
                 {post.title}
               </h2>
             </div>
+
             <p className="text-sm text-gray-600 px-4 pb-4">
               {post.shortDesc}
             </p>
