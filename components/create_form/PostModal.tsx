@@ -51,14 +51,17 @@ const STORAGE_KEY = 'post_editor_content';
 interface PostModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialData?: Partial<Post>;
+  isEdit?: boolean;
 }
 
-export const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose }) => {
-  const [name, setName] = useState('');
-  const [shortDesc, setShortDesc] = useState('');
-  const [fullDesc, setFullDesc] = useState('');
-  const [tags, setTags] = useState<string[]>([]);
-  const [image, setImage] = useState<string>('');
+
+export const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, initialData, isEdit }) => {
+  const [name, setName] = useState(initialData?.title || '');
+  const [fullDesc, setFullDesc] = useState(initialData?.fullDesc || '');
+  const [shortDesc, setShortDesc] = useState(initialData?.shortDesc || '');
+  const [image, setImage] = useState(initialData?.image || '');
+  const [tags, setTags] = useState(initialData?.tags || []);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [shortDescEdited, setShortDescEdited] = useState(false);
@@ -132,7 +135,6 @@ export const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose }) => {
   };
 
   const handleSubmit = async () => {
-    
     if (!validateFields()) {
       addToast({
         title: "Validation Error",
@@ -165,32 +167,36 @@ export const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose }) => {
         tags,
         image,
         authorId: user.uid,
-        createdAt: new Date().toISOString(),
-        status: 'Open'
+        createdAt: initialData?.createdAt || new Date().toISOString(),
+        status: initialData?.status || 'Open'
       };
 
+      // ✅ Determine endpoint and method based on mode
+      const endpoint = isEdit
+        ? `/api/posts/${initialData?.id}` // edit mode
+        : '/api/posts';                  // create mode
 
-      const response = await fetch('/api/posts', {
-        method: 'POST',
+      const method = isEdit ? 'PATCH' : 'POST';
+
+      const response = await fetch(endpoint, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(post),
       });
 
-      const responseText = await response.text(); // Log full server message
+      const responseText = await response.text();
       console.log('🧾 Server response:', responseText);
 
       if (!response.ok) {
-        throw new Error(responseText || 'Failed to create post');
+        throw new Error(responseText || 'Failed to submit post');
       }
-
 
       addToast({
         title: "Success",
-        description: "Post created successfully",
+        description: isEdit ? "Post updated successfully" : "Post created successfully",
         color: "success"
       });
 
-      // Clear form
       setName('');
       setShortDesc('');
       setFullDesc('');
@@ -200,17 +206,17 @@ export const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose }) => {
       localStorage.removeItem(STORAGE_KEY);
       onClose();
     } catch (error: any) {
-      const text = await error?.response?.text?.() ?? '';
-      console.error('🔥 Post creation error:', error, text);
+      console.error('🔥 Post error:', error);
       addToast({
         title: "Error",
-        description: error.message || 'Failed to create post',
+        description: error.message || 'Failed to submit post',
         color: "danger"
       });
     } finally {
       setIsLoading(false);
     }
   };
+
 
   const editorPlugins = [
     toolbarPlugin({
@@ -266,7 +272,7 @@ export const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose }) => {
       <div onClick={handleModalClick} className="relative">
         <ModalContent>
           <ModalHeader className="sticky top-0 bg-white z-[1002] border-b">
-            Create New Post
+            {isEdit ? 'Edit Post' : 'Create Post'}
           </ModalHeader>
           <ModalBody className="overflow-y-auto">
             <div className="space-y-6 pb-4">
@@ -405,7 +411,7 @@ export const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose }) => {
               onPress={handleSubmit}
               isLoading={isLoading}
             >
-              Create Post
+              {isEdit ? 'Save' : 'Create Post'}
             </Button>
           </ModalFooter>
         </ModalContent>
