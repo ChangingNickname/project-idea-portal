@@ -68,6 +68,20 @@ export async function GET(
       deletedAt: doc.data().deletedAt ? safeToDate(doc.data().deletedAt) : null
     }));
 
+    // Отмечаем сообщения как прочитанные текущим пользователем
+    const batch = db.batch();
+    messagesSnapshot.docs.forEach(doc => {
+      const data = doc.data();
+      const readers = data.reader_by_ids || [];
+      const alreadyRead = readers.some((reader: any) => reader.uid === userRecord.uid);
+      if (!alreadyRead) {
+        batch.update(doc.ref, {
+          reader_by_ids: [...readers, { uid: userRecord.uid }]
+        });
+      }
+    });
+    await batch.commit();
+
     // TODO: Теперь первое (приветственное) сообщение всегда внизу, остальные идут по дате сверху вниз
     // Проблема: TypeScript не видит поле is_welcome в типе сообщения
     // Решение: Добавить поле в интерфейс Message и обновить типизацию в маппинге
