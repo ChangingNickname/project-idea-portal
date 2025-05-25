@@ -22,6 +22,7 @@ interface UserCardProps {
   showCheckbox?: boolean;
   onCheckboxChange?: (checked: boolean) => void;
   isChecked?: boolean;
+  showActions?: boolean;
 }
 
 export function UserCard({ 
@@ -33,7 +34,8 @@ export function UserCard({
   onUnblock,
   showCheckbox = false,
   onCheckboxChange,
-  isChecked = false
+  isChecked = false,
+  showActions = true
 }: UserCardProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);

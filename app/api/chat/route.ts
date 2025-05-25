@@ -271,11 +271,22 @@ export async function POST(req: Request) {
       messages: []
     });
 
-    batch.set(messageRef, newMessage);
+    batch.set(messageRef, {
+      ...newMessage,
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString()
+    });
 
     await batch.commit();
 
-    return NextResponse.json(newChat);
+    return NextResponse.json({
+      ...newChat,
+      messages: [{
+        ...newMessage,
+        createdAt: now.toISOString(),
+        updatedAt: now.toISOString()
+      }]
+    });
   } catch (error: any) {
     console.error('Error creating chat:', error);
     if (error.code === 'auth/invalid-session-cookie') {

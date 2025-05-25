@@ -4,6 +4,8 @@ import { User } from '@/types/user';
 import { Chat } from '@/types/chat';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { format } from 'date-fns';
+import { enUS } from 'date-fns/locale';
 
 interface ChatCardProps {
   chat: Chat;
@@ -12,7 +14,7 @@ interface ChatCardProps {
 
 export function ChatCard({ chat, currentUser }: ChatCardProps) {
   const router = useRouter();
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(chat.unreadCount || 0);
 
   useEffect(() => {
     const fetchUnreadCount = async () => {
@@ -28,7 +30,7 @@ export function ChatCard({ chat, currentUser }: ChatCardProps) {
     };
 
     fetchUnreadCount();
-    // Обновляем счетчик каждые 30 секунд
+    // Update counter every 30 seconds
     const interval = setInterval(fetchUnreadCount, 30000);
     return () => clearInterval(interval);
   }, [chat.id]);
@@ -37,47 +39,61 @@ export function ChatCard({ chat, currentUser }: ChatCardProps) {
     router.push(`/chat/${chat.id}`);
   };
 
-  // Получаем других участников чата (кроме текущего пользователя)
+  // Get other chat members (excluding current user)
   const otherMembers = chat.members.filter(member => member.uid !== currentUser.uid);
 
-  // Формируем название чата
-  const chatName = otherMembers.length === 1
-    ? otherMembers[0].displayName || otherMembers[0].email || 'User'
-    : otherMembers.map(member => member.displayName || member.email || 'User').join(', ');
+  // Format chat name
+  const chatName = chat.name || (chat.isGroupChat
+    ? otherMembers.map(member => member.displayName || member.email || 'User').join(', ')
+    : otherMembers[0]?.displayName || otherMembers[0]?.email || 'User');
 
   return (
     <Card 
-      className="cursor-pointer hover:bg-default-100 transition-colors"
-      onPress={handleClick}
+      className="transition-colors"
     >
-      <CardBody className="flex items-center justify-between p-4">
+      <CardBody className="flex items-center justify-between p-4 cursor-pointer" onClick={handleClick}>
         <div className="flex items-center gap-4">
-          <div className="relative">
-            <div className="flex -space-x-2">
-              {otherMembers.slice(0, 3).map((member) => (
-                <div key={member.uid} className="relative group">
-                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                    {member.displayName || member.email || 'Unknown User'}
+          <div className="relative overflow-visible">
+            {chat.photoURL ? (
+              <UserAvatar user={{ ...otherMembers[0], photoURL: chat.photoURL }} size="md" />
+            ) : (
+              <div className="flex -space-x-2 overflow-visible">
+                {otherMembers.slice(0, 3).map((member, index) => (
+                  <div 
+                    key={`${chat.id}-${member.uid}-${index}`} 
+                    className="relative group overflow-visible"
+                  >
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
+                      {member.displayName || member.email || 'Unknown User'}
+                    </div>
+                    <div className="border-2 border-white rounded-full">
+                      <UserAvatar user={member} size="sm" />
+                    </div>
                   </div>
-                  <div className="border-2 border-white rounded-full">
-                    <UserAvatar user={member} size="sm" />
+                ))}
+                {otherMembers.length > 3 && (
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 border-2 border-white text-sm font-medium">
+                    +{otherMembers.length - 3}
                   </div>
-                </div>
-              ))}
-              {otherMembers.length > 3 && (
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 border-2 border-white text-sm font-medium">
-                  +{otherMembers.length - 3}
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </div>
           <div className="space-y-1">
             <h3 className="text-lg font-semibold truncate max-w-[200px]">
               {chatName}
             </h3>
-            <p className="text-default-500 text-sm">
-              {otherMembers.length} {otherMembers.length === 1 ? 'participant' : 'participants'}
-            </p>
+            {chat.lastMessage && (
+              <div className="flex items-center gap-2 text-default-500 text-sm">
+                <span className="truncate max-w-[200px]">
+                  {chat.lastMessage.sender.uid === currentUser.uid ? 'You: ' : ''}
+                  {chat.lastMessage.content}
+                </span>
+                <span className="text-xs">
+                  {format(new Date(chat.lastMessage.createdAt), 'HH:mm', { locale: enUS })}
+                </span>
+              </div>
+            )}
           </div>
         </div>
         {unreadCount > 0 && (

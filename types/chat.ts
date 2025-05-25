@@ -1,7 +1,31 @@
-import { User } from './user';
-import { Post } from './posts';
+export interface User {
+  uid: string;
+  email: string | null;
+  emailVerified: boolean;
+  displayName: string | null;
+  photoURL: string | null;
+  phoneNumber: string | null;
+  disabled: boolean;
+  isAnonymous: boolean;
+  providerData: {
+    providerId: string;
+    uid: string;
+    displayName: string | null;
+    email: string | null;
+    phoneNumber: string | null;
+    photoURL: string | null;
+  }[];
+  customClaims: Record<string, any> | null;
+  metadata: {
+    creationTime: string | null;
+    lastSignInTime: string | null;
+    lastRefreshTime: string | null;
+  };
+  tenantId: string | null;
+  multiFactor: any[];
+}
 
-export type Message = {
+export interface Message {
   id: string;
   content: string;
   sender: User;
@@ -10,24 +34,41 @@ export type Message = {
   updatedAt: Date;
   deletedAt: Date | null;
   is_deleted: boolean;
-};
+}
 
 export type MessageComment = Message & {
-  parentMessageId: string;
+  parentId: string;
 };
 
-export type PostComment = Message & {
-  postId: string;
-};
-
-export type Comment = MessageComment | PostComment;
-
-export type Chat = {
+export type PostComment = {
   id: string;
-  messages: Message[];
+  content: string;
+  author: User;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
   is_deleted: boolean;
-  members: User[];  
+  parentId: string;
 };
+
+export type Comment = MessageComment | PostComment;
+
+export interface Chat {
+  id: string;
+  messages: Message[];
+  members: User[];
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+  is_deleted: boolean;
+  // Additional fields for ChatCard display
+  lastMessage?: {
+    content: string;
+    sender: User;
+    createdAt: Date;
+  };
+  unreadCount?: number;
+  isGroupChat: boolean;
+  name?: string;
+  photoURL?: string | null;
+}
