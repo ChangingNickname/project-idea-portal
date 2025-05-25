@@ -3,10 +3,14 @@ import { getAuth } from 'firebase-admin/auth';
 import { notFound } from 'next/navigation';
 import PostPageClient from './PostPageClient';
 
-export default async function Page({ params }: { params: { id: string } }) {
-  const doc = await db.collection('posts').doc(params.id).get();
-  if (!doc.exists) return notFound();
+export default async function Page(props: { params: { uid: string } }) {
+  const { uid } = await props.params;
+  // or if it's not a Promise, just:
+  // const { uid } = props.params;
 
+  const doc = await db.collection('posts').doc(uid).get();
+  if (!doc.exists) return notFound();
+  
   const rawData = doc.data();
   const post = {
     id: doc.id,
@@ -14,7 +18,6 @@ export default async function Page({ params }: { params: { id: string } }) {
     createdAt: rawData.createdAt?.toDate?.().toISOString?.() ?? '',
     updatedAt: rawData.updatedAt?.toDate?.().toISOString?.() ?? '',
   };
-
 
   let authorName = 'Unknown Author';
   if (post.authorId) {
@@ -26,7 +29,6 @@ export default async function Page({ params }: { params: { id: string } }) {
     }
   }
 
-  return (
-    <PostPageClient post={{ ...post, authorName }} />
-  );
+  return <PostPageClient post={{ ...post, authorName }} />;
 }
+
