@@ -1,29 +1,4 @@
-export interface User {
-  uid: string;
-  email: string | null;
-  emailVerified: boolean;
-  displayName: string | null;
-  photoURL: string | null;
-  phoneNumber: string | null;
-  disabled: boolean;
-  isAnonymous: boolean;
-  providerData: {
-    providerId: string;
-    uid: string;
-    displayName: string | null;
-    email: string | null;
-    phoneNumber: string | null;
-    photoURL: string | null;
-  }[];
-  customClaims: Record<string, any> | null;
-  metadata: {
-    creationTime: string | null;
-    lastSignInTime: string | null;
-    lastRefreshTime: string | null;
-  };
-  tenantId: string | null;
-  multiFactor: any[];
-}
+import type { User } from './user';
 
 export interface Message {
   id: string;
