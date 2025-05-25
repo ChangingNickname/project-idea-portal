@@ -157,40 +157,40 @@ export default function ChatsPage() {
           />
         ))}
       </div>
-      <Modal
-        isOpen={showUserSearch}
-        onClose={() => setShowUserSearch(false)}
-      >
-        <ModalContent>
-          <ModalHeader>New Chat</ModalHeader>
-          <ModalBody>
-            <div className="p-4 space-y-4">
-              {createError && <div className="text-danger text-sm">{createError}</div>}
-              <UserSearch
-                onSelect={setSelectedUsers}
-                selectedUsers={selectedUsers}
-                excludeUsers={[user.uid]}
-              />
-              <div className="flex justify-end gap-2">
-                <Button
-                  variant="light"
-                  onClick={() => setShowUserSearch(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  color="primary"
-                  isLoading={isCreatingChat}
-                  isDisabled={!selectedUsers.length || isCreatingChat}
-                  onClick={handleCreateChat}
-                >
-                  Create Chat
-                </Button>
-              </div>
+      {showUserSearch && (
+        <Card className="mb-6">
+          <CardHeader>
+            <h2 className="text-lg font-semibold">New Chat</h2>
+          </CardHeader>
+          <CardBody>
+            {createError && (
+              <div className="text-danger mb-4">{createError}</div>
+            )}
+            <UserSearch
+              onSelect={setSelectedUsers}
+              selectedUsers={selectedUsers}
+              placeholder="Search users to add to chat..."
+              excludeUsers={[user.uid]}
+            />
+            <div className="flex justify-end gap-2 mt-4">
+              <Button
+                variant="light"
+                onClick={() => setShowUserSearch(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                color="primary"
+                isLoading={isCreatingChat}
+                isDisabled={!selectedUsers.length || isCreatingChat}
+                onClick={handleCreateChat}
+              >
+                Create Chat
+              </Button>
             </div>
-          </ModalBody>
-        </ModalContent>
-      </Modal>
+          </CardBody>
+        </Card>
+      )}
     </div>
   );
 } 
