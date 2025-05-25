@@ -5,6 +5,8 @@ import type { NextRequest } from 'next/server'
 const publicPaths = [
   '/api/auth/login',
   '/api/auth/register',
+  '/api/auth/session',
+  '/api/auth/verify',
   '/login',
   '/register',
 ]
@@ -96,11 +98,10 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Get the token from the cookie
-  const token = request.cookies.get('firebase_token')?.value
+  // Get the session cookie
   const sessionCookie = request.cookies.get('session')?.value
 
-  if (!token || !sessionCookie) {
+  if (!sessionCookie) {
     // Return 401 for API requests
     if (pathname.startsWith('/api/')) {
       return new NextResponse(
@@ -121,46 +122,26 @@ export async function middleware(request: NextRequest) {
   }
 
   try {
-    // Verify token through Firebase Auth REST API
-    const verifyResponse = await fetch(
-      `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${process.env.NEXT_PUBLIC_FIREBASE_API_KEY}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ idToken: token }),
+    // Verify session cookie through Firebase Admin
+    const verifyResponse = await fetch(`${request.nextUrl.origin}/api/auth/verify`, {
+      method: 'GET',
+      headers: {
+        'Cookie': `session=${sessionCookie}`
       }
-    );
+    });
 
     if (!verifyResponse.ok) {
-      throw new Error('Invalid token');
+      throw new Error('Invalid session');
     }
 
-    const userData = await verifyResponse.json();
-    const userId = userData.users?.[0]?.localId;
-
-    if (!userId) {
-      throw new Error('User ID not found');
-    }
-
-    // Add user info to headers for the application to use
-    const requestHeaders = new Headers(request.headers)
-    requestHeaders.set('x-user-token', token)
-    requestHeaders.set('x-user-id', userId)
-
-    return NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      },
-    })
+    return NextResponse.next()
   } catch (error) {
-    console.error('Token verification failed:', error)
+    console.error('Session verification failed:', error)
     // Return 401 for API requests
     if (pathname.startsWith('/api/')) {
       return new NextResponse(
         JSON.stringify({
-          error: 'Invalid token',
+          error: 'Invalid session',
           message: 'Authentication failed',
         }),
         {
@@ -173,7 +154,6 @@ export async function middleware(request: NextRequest) {
     }
     // Redirect to login for other requests
     const response = NextResponse.redirect(new URL('/login', request.url))
-    response.cookies.delete('firebase_token')
     response.cookies.delete('session')
     return response
   }
