@@ -1,112 +1,105 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { auth } from '@/lib/firebase/client';
-import { PostModal } from '@/components/create_form/PostModal';
-import { Button } from '@heroui/button';
-import { Modal, ModalBody, ModalFooter, ModalHeader, ModalContent } from '@heroui/modal';
-import { addToast } from '@heroui/toast';
-import Link from 'next/link';
-import { PostAddButton } from '@/components/create_form/callbutton';
+import { Post } from '@/types/posts';
+import { PostContainer } from '@/components/posts/PostContainer';
+import { Card, CardHeader, CardBody } from "@heroui/card";
+import { Button } from "@heroui/button";
+import { Spinner } from "@heroui/spinner";
 
 export default function MyPostsPage() {
-  const [posts, setPosts] = useState<any[]>([]);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [editPost, setEditPost] = useState<any | null>(null);
-  const [deletePost, setDeletePost] = useState<any | null>(null);
-  const [confirmText, setConfirmText] = useState('');
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [pageToken, setPageToken] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
+  // Initial load
   useEffect(() => {
-    const unsub = auth.onAuthStateChanged(async (user) => {
-        if (user && !user.isAnonymous) {
-        setUserId(user.uid);
-        const res = await fetch(`/api/user-posts/${user.uid}`);
-        const data = await res.json();
-
-        if (Array.isArray(data)) {
-            setPosts(data);
-        } else {
-            console.error('❌ Expected array but got:', data);
-            setPosts([]); // fallback to empty
+    const fetchPosts = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch('/api/posts/my-posts?limit=3', { cache: 'no-store' });
+        if (!response.ok) {
+          throw new Error('Failed to load posts');
         }
-        }
-    });
+        const data = await response.json();
+        setPosts(data.posts);
+        setPageToken(data.pageToken || null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPosts();
+  }, []);
 
-    return () => unsub();
-    }, []);
+  // Load more posts
+  const fetchMore = async () => {
+    if (!pageToken) return;
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/posts/my-posts?limit=3&pageToken=${pageToken}`, { cache: 'no-store' });
+      if (!response.ok) {
+        throw new Error('Failed to load more posts');
+      }
+      const data = await response.json();
+      const newPosts = data.posts.filter((newPost: Post) => !posts.some(existingPost => existingPost.id === newPost.id));
+      setPosts(prev => [...prev, ...newPosts]);
+      setPageToken(data.pageToken || null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  if (!userId) return <p className="text-center text-gray-500">Loading...</p>;
+  const handleDelete = (id: string) => {
+    setPosts((prev) => prev.filter((p) => p.id !== id));
+  };
+
+  if (loading && posts.length === 0) {
+    return (
+      <div className="container mx-auto p-4">
+        <Card>
+          <CardBody className="flex justify-center items-center min-h-[200px]">
+            <Spinner size="lg" />
+          </CardBody>
+        </Card>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto p-4">
+        <Card>
+          <CardHeader>
+            <h1 className="text-xl font-semibold text-red-600">Error</h1>
+          </CardHeader>
+          <CardBody>
+            <p>{error}</p>
+          </CardBody>
+        </Card>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-2xl mx-auto px-6 py-10">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold">📝 My Posts</h1>
-        <PostAddButton />
-      </div>
+    <div className="min-h-screen px-6 py-10">
+      <h1 className="text-3xl text-center mb-10">My Posts</h1>
 
-      {posts.length === 0 ? (
-        <p className="text-center text-gray-500">You have no posts yet.</p>
-      ) : (
-        posts.map((post) => (
-          <div key={post.id} className="bg-white border rounded p-4 mb-4 shadow-sm">
-            <h2 className="font-bold text-lg">{post.title}</h2>
-            <p className="text-sm text-gray-600 mb-3">{post.shortDesc}</p>
-            <div className="flex gap-3">
-              <Button color="primary" onPress={() => setEditPost(post)}>Edit Post</Button>
-              <Button color="danger" variant="light" onPress={() => {
-                setDeletePost(post);
-                setConfirmText('');
-              }}>Delete Post</Button>
-            </div>
-          </div>
-        ))
-      )}
-
-      {editPost && (
-        <PostModal
-          isOpen={!!editPost}
-          onClose={() => setEditPost(null)}
-          initialData={editPost}
-          isEdit
-        />
-      )}
-
-      {deletePost && (
-        <Modal isOpen={true} onClose={() => setDeletePost(null)}>
-          <ModalContent>
-            <ModalHeader>Confirm Deletion</ModalHeader>
-            <ModalBody>
-              <p className="mb-2">
-                To confirm deletion, type the post title: <strong>{deletePost.title}</strong>
-              </p>
-              <input
-                type="text"
-                className="w-full border p-2 rounded"
-                placeholder="Type title here..."
-                value={confirmText}
-                onChange={(e) => setConfirmText(e.target.value)}
-              />
-            </ModalBody>
-            <ModalFooter>
-              <Button variant="light" onPress={() => setDeletePost(null)}>Cancel</Button>
-              <Button
-                color="danger"
-                onPress={async () => {
-                  if (confirmText === deletePost.title) {
-                    await fetch(`/api/posts/${deletePost.id}`, { method: 'DELETE' });
-                    setPosts(posts.filter((p) => p.id !== deletePost.id));
-                    addToast({ title: "Post Deleted", color: "success" });
-                    setDeletePost(null);
-                  } else {
-                    addToast({ title: "Incorrect title", color: "danger" });
-                  }
-                }}
-              >
-                Confirm Delete
-              </Button>
-            </ModalFooter>
-          </ModalContent>
-        </Modal>
+      <PostContainer posts={posts} editable={true} onDelete={handleDelete} />
+      {pageToken && (
+        <div className="flex justify-center mt-8">
+          <Button
+            className="px-6 py-2 rounded bg-primary text-primary-foreground hover:bg-primary-600 transition"
+            onClick={fetchMore}
+            disabled={loading}
+          >
+            {loading ? 'Loading...' : 'Load more'}
+          </Button>
+        </div>
       )}
     </div>
   );

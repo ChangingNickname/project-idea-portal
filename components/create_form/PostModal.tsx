@@ -46,7 +46,7 @@ import { getAuth } from 'firebase/auth';
 import { auth } from '@/lib/firebase/client';
 
 
-const STORAGE_KEY = 'post_editor_content';
+const getStorageKey = (postId?: string) => postId ? `post_editor_content_${postId}` : 'post_editor_content_new';
 
 interface PostModalProps {
   isOpen: boolean;
@@ -55,9 +55,8 @@ interface PostModalProps {
   isEdit?: boolean;
 }
 
-
 export const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, initialData, isEdit }) => {
-  const [name, setName] = useState(initialData?.title || '');
+  const [name, setName] = useState(initialData?.name || '');
   const [fullDesc, setFullDesc] = useState(initialData?.fullDesc || '');
   const [shortDesc, setShortDesc] = useState(initialData?.shortDesc || '');
   const [image, setImage] = useState(initialData?.image || '');
@@ -66,16 +65,25 @@ export const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, initialDa
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [shortDescEdited, setShortDescEdited] = useState(false);
 
-  useEffect(() => {
-    if (isOpen) {
-      const savedContent = localStorage.getItem(STORAGE_KEY);
-      if (savedContent) setFullDesc(savedContent);
-    }
-  }, [isOpen]);
+  const storageKey = getStorageKey(initialData?.id);
 
   useEffect(() => {
-    if (fullDesc) localStorage.setItem(STORAGE_KEY, fullDesc);
-  }, [fullDesc]);
+    if (isOpen) {
+      setName(initialData?.name || '');
+      setFullDesc(initialData?.fullDesc || '');
+      setShortDesc(initialData?.shortDesc || '');
+      setImage(initialData?.image || '');
+      setTags(initialData?.tags || []);
+      setErrors({});
+      setShortDescEdited(false);
+      const savedContent = localStorage.getItem(storageKey);
+      if (savedContent) setFullDesc(savedContent);
+    }
+  }, [isOpen, initialData, storageKey]);
+
+  useEffect(() => {
+    if (fullDesc) localStorage.setItem(storageKey, fullDesc);
+  }, [fullDesc, storageKey]);
 
   useEffect(() => {
     if (!shortDescEdited) {
@@ -161,7 +169,7 @@ export const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, initialDa
       }
 
       const post = {
-        title: name.trim(),
+        name: name.trim(),
         shortDesc: shortDesc.trim(),
         fullDesc: fullDesc.trim(),
         tags,
@@ -203,7 +211,7 @@ export const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, initialDa
       setTags([]);
       setImage('');
       setErrors({});
-      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(storageKey);
       onClose();
     } catch (error: any) {
       console.error('🔥 Post error:', error);

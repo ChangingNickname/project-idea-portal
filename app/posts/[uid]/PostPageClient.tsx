@@ -20,7 +20,7 @@ export default function PostPageClient({ post }: { post: any }) {
   }, [post.authorId]);
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-10">
+    <div className="mx-auto px-6 py-10">
       <Link href="/dashboard" className="text-sm text-blue-600 underline mb-4 inline-block">
         ← Back to Dashboard
       </Link>

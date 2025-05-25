@@ -1,7 +1,8 @@
 import { db } from '@/lib/firebase/admin';
 import { getAuth } from 'firebase-admin/auth';
 import { notFound } from 'next/navigation';
-import PostPageClient from './PostPageClient';
+import { FullPost } from '@/components/posts/FullPost';
+import { Post } from '@/types/posts';
 
 export default async function Page(props: { params: { uid: string } }) {
   const { uid } = await props.params;
@@ -12,23 +13,26 @@ export default async function Page(props: { params: { uid: string } }) {
   if (!doc.exists) return notFound();
   
   const rawData = doc.data();
-  const post = {
+  if (!rawData) return notFound();
+
+  const post: Post = {
     id: doc.id,
-    ...rawData,
+    name: rawData.name,
+    shortDesc: rawData.shortDesc,
+    fullDesc: rawData.fullDesc,
+    tags: rawData.tags || [],
+    image: rawData.image,
+    authorId: rawData.authorId,
+    status: rawData.status,
+    email: rawData.email,
     createdAt: rawData.createdAt?.toDate?.().toISOString?.() ?? '',
-    updatedAt: rawData.updatedAt?.toDate?.().toISOString?.() ?? '',
+    updatedAt: rawData.updatedAt?.toDate?.().toISOString?.() ?? undefined,
   };
 
-  let authorName = 'Unknown Author';
-  if (post.authorId) {
-    try {
-      const userRecord = await getAuth().getUser(post.authorId);
-      authorName = userRecord.displayName || userRecord.email || 'Anonymous';
-    } catch (err) {
-      console.warn('⚠️ Failed to fetch author info for UID:', post.authorId, err);
-    }
-  }
-
-  return <PostPageClient post={{ ...post, authorName }} />;
+  return (
+    <div className="w-full min-h-screen px-0 py-10 bg-white dark:bg-gray-900">
+      <FullPost post={post} />
+    </div>
+  );
 }
 

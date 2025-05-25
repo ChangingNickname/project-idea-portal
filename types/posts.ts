@@ -7,7 +7,10 @@ export interface Post {
   fullDesc: string;
   tags: string[];
   image: string; // base64
-  createdAt?: ISODateString;
+  authorId: string;
+  status: 'Open' | 'Closed' | 'In Progress';
+  email?: string;
+  createdAt: ISODateString;
   updatedAt?: ISODateString;
 }
 
@@ -24,7 +27,10 @@ export function isPost(value: unknown): value is Post {
     Array.isArray(post.tags) &&
     post.tags.every(tag => typeof tag === 'string') &&
     typeof post.image === 'string' &&
-    (!post.createdAt || typeof post.createdAt === 'string') &&
+    typeof post.authorId === 'string' &&
+    (post.status === 'Open' || post.status === 'Closed' || post.status === 'In Progress') &&
+    (!post.email || typeof post.email === 'string') &&
+    typeof post.createdAt === 'string' &&
     (!post.updatedAt || typeof post.updatedAt === 'string')
   );
 } 
