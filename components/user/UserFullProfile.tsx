@@ -12,10 +12,12 @@ interface UserFullProfileProps {
   isBlocked?: boolean;
   onBlock?: (user: User) => Promise<void>;
   onUnblock?: (user: User) => Promise<void>;
+  onStartChat?: (user: User) => Promise<void>;
 }
 
-export const UserFullProfile = ({ user, isBlocked, onBlock, onUnblock }: UserFullProfileProps) => {
+export const UserFullProfile = ({ user, isBlocked, onBlock, onUnblock, onStartChat }: UserFullProfileProps) => {
   const [loading, setLoading] = useState(false);
+  const [chatLoading, setChatLoading] = useState(false);
 
   const handleCopy = async (text: string) => {
     try {
@@ -44,6 +46,19 @@ export const UserFullProfile = ({ user, isBlocked, onBlock, onUnblock }: UserFul
       console.error('Failed to update blacklist:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleStartChat = async () => {
+    if (!onStartChat) return;
+    
+    try {
+      setChatLoading(true);
+      await onStartChat(user);
+    } catch (err) {
+      console.error('Failed to start chat:', err);
+    } finally {
+      setChatLoading(false);
     }
   };
 
@@ -117,42 +132,54 @@ export const UserFullProfile = ({ user, isBlocked, onBlock, onUnblock }: UserFul
                   </Button>
                 </div>
               </div>
-              {onBlock && onUnblock && (
-                <Dropdown>
-                  <DropdownTrigger>
-                    <Button
-                      isIconOnly
-                      variant="light"
-                      className="p-1"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
+              <div className="flex items-center gap-2">
+                {onStartChat && (
+                  <Button
+                    color="primary"
+                    isLoading={chatLoading}
+                    isDisabled={isBlocked}
+                    onPress={handleStartChat}
+                  >
+                    {isBlocked ? 'User Blocked' : 'Start Chat'}
+                  </Button>
+                )}
+                {onBlock && onUnblock && (
+                  <Dropdown>
+                    <DropdownTrigger>
+                      <Button
+                        isIconOnly
+                        variant="light"
+                        className="p-1"
                       >
-                        <circle cx="12" cy="12" r="1" />
-                        <circle cx="12" cy="5" r="1" />
-                        <circle cx="12" cy="19" r="1" />
-                      </svg>
-                    </Button>
-                  </DropdownTrigger>
-                  <DropdownMenu aria-label="User actions">
-                    <DropdownItem
-                      key="block"
-                      color={isBlocked ? "danger" : "default"}
-                      onPress={handleBlockAction}
-                    >
-                      {isBlocked ? 'Unblock User' : 'Block User'}
-                    </DropdownItem>
-                  </DropdownMenu>
-                </Dropdown>
-              )}
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <circle cx="12" cy="12" r="1" />
+                          <circle cx="12" cy="5" r="1" />
+                          <circle cx="12" cy="19" r="1" />
+                        </svg>
+                      </Button>
+                    </DropdownTrigger>
+                    <DropdownMenu aria-label="User actions">
+                      <DropdownItem
+                        key="block"
+                        color={isBlocked ? "danger" : "default"}
+                        onPress={handleBlockAction}
+                      >
+                        {isBlocked ? 'Unblock User' : 'Block User'}
+                      </DropdownItem>
+                    </DropdownMenu>
+                  </Dropdown>
+                )}
+              </div>
             </div>
           </div>
         </div>

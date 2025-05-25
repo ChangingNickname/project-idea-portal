@@ -80,6 +80,11 @@ export function UserMenu() {
         onClick: () => router.push('/profile')
       },
       {
+        key: 'chats',
+        content: 'Chats',
+        onClick: () => router.push('/chats')
+      },
+      {
         key: 'blacklist',
         content: 'Blacklist',
         onClick: () => router.push('/blacklist')

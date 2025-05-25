@@ -4,7 +4,6 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { User } from '@/types/user';
 import { Input } from "@heroui/input";
 import { Button } from "@heroui/button";
-import { Checkbox } from "@heroui/checkbox";
 import { Spinner } from "@heroui/spinner";
 import { UserCard } from '@/components/user/UserCard';
 
@@ -141,16 +140,13 @@ export const UserSearch: React.FC<UserSearchProps> = ({
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {users.map((user) => (
-                <div key={user.uid} className="relative">
-                  <div className="absolute left-4 top-4 z-10">
-                    <Checkbox
-                      isSelected={selectedUsers.some(u => u.uid === user.uid)}
-                      onValueChange={() => handleUserSelect(user)}
-                    />
-                  </div>
-                  <div className="pl-12">
-                    <UserCard user={user} />
-                  </div>
+                <div key={user.uid}>
+                  <UserCard 
+                    user={user} 
+                    showCheckbox={true}
+                    isChecked={selectedUsers.some(u => u.uid === user.uid)}
+                    onCheckboxChange={() => handleUserSelect(user)}
+                  />
                 </div>
               ))}
             </div>

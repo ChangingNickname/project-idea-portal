@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 
 interface PageProps {
   params: Promise<{
-    id: string;
+    uid: string;
   }>;
 }
 
@@ -23,11 +23,16 @@ export default function UserProfilePage({ params }: PageProps) {
   const resolvedParams = React.use(params);
 
   const fetchUser = async () => {
-      try {
+    try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`/api/user/${resolvedParams.id}`);
-      if (!response.ok) throw new Error('Failed to fetch user');
+      const response = await fetch(`/api/user/${resolvedParams.uid}`);
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('User not found');
+        }
+        throw new Error('Failed to fetch user');
+      }
 
       const userData = await response.json();
       console.log('API Response:', userData);
@@ -37,13 +42,13 @@ export default function UserProfilePage({ params }: PageProps) {
       }
 
       setUser(userData);
-      } catch (err) {
+    } catch (err) {
       console.error('Fetch user error:', err);
       setError(err instanceof Error ? err.message : 'Failed to load user profile');
-      } finally {
-        setLoading(false);
-      }
-    };
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchBlockedUsers = async () => {
     try {
@@ -59,7 +64,7 @@ export default function UserProfilePage({ params }: PageProps) {
   useEffect(() => {
     fetchUser();
     fetchBlockedUsers();
-  }, [resolvedParams.id]);
+  }, [resolvedParams.uid]);
 
   const handleBlock = async (user: User) => {
     try {
@@ -105,6 +110,34 @@ export default function UserProfilePage({ params }: PageProps) {
     }
   };
 
+  const handleStartChat = async (user: User) => {
+    try {
+      setError(null);
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          members: [user.uid],
+          message: 'Hello!'
+        }),
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create chat');
+      }
+
+      const data = await response.json();
+      router.push(`/chat/${data.chat.id}`);
+    } catch (err: any) {
+      setError(err.message || 'Error creating chat');
+      console.error('Create chat error:', err);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-[calc(100vh-64px)]">
@@ -122,8 +155,8 @@ export default function UserProfilePage({ params }: PageProps) {
             <Button
               variant="light"
               onPress={() => router.back()}
-        >
-          Go Back
+            >
+              Go Back
             </Button>
           </CardBody>
         </Card>
@@ -147,6 +180,7 @@ export default function UserProfilePage({ params }: PageProps) {
         isBlocked={blockedUsers.has(user.uid)}
         onBlock={handleBlock}
         onUnblock={handleUnblock}
+        onStartChat={handleStartChat}
       />
     </div>
   );

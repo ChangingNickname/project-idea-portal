@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { adminAuth } from '@/config/firebase-admin'
 import { auth } from '@/lib/firebase/admin'
 
 export async function GET(request: NextRequest) {
@@ -11,7 +10,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'No session' }, { status: 401 })
     }
 
-    await adminAuth.verifySessionCookie(session, true)
+    await auth.verifySessionCookie(session, true)
     return NextResponse.json({ status: 'success' })
   } catch (error) {
     console.error('Verify error:', error)

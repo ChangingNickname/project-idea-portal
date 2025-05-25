@@ -5,10 +5,12 @@ import { User } from '@/types/user';
 import { UserAvatar } from './UserAvatar';
 import { Card, CardBody } from '@heroui/card';
 import { Button } from '@heroui/button';
-import { ExternalLinkIcon } from '@/components/icons';
+import { ExternalLinkIcon, MessageIcon } from '@/components/icons';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from '@heroui/dropdown';
+import { CreateChatModal } from './CreateChatModal';
+import { Checkbox } from '@heroui/checkbox';
 
 interface UserCardProps {
   user: User;
@@ -17,6 +19,9 @@ interface UserCardProps {
   onSelect?: () => void;
   onBlock?: (user: User) => void;
   onUnblock?: (user: User) => void;
+  showCheckbox?: boolean;
+  onCheckboxChange?: (checked: boolean) => void;
+  isChecked?: boolean;
 }
 
 export function UserCard({ 
@@ -25,10 +30,14 @@ export function UserCard({
   isSelected = false,
   onSelect,
   onBlock,
-  onUnblock 
+  onUnblock,
+  showCheckbox = false,
+  onCheckboxChange,
+  isChecked = false
 }: UserCardProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [isCreateChatModalOpen, setIsCreateChatModalOpen] = useState(false);
 
   const handleCopy = async (text: string) => {
     try {
@@ -55,33 +64,94 @@ export function UserCard({
     router.push(`/profile/${user.uid}`);
   };
 
+  const handleCreateChat = async (message: string) => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          members: [user.uid],
+          message
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create chat');
+      }
+
+      const chat = await response.json();
+      router.push(`/chat/${chat.id}`);
+    } catch (error) {
+      console.error('Error creating chat:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <Card className="relative">
-      <Button
-        isIconOnly
-        variant="light"
-        onPress={handleViewProfile}
-        title="View Profile"
-        className="absolute top-2 right-2 z-10"
-      >
-        <ExternalLinkIcon className="w-4 h-4" />
-      </Button>
-      <CardBody className="flex items-center justify-between p-4">
-        <div className="flex items-center gap-4">
-          <UserAvatar user={user} size="lg" />
-          <div className="space-y-1">
-            <h3 className="text-lg font-semibold">
-              {user.displayName || user.email || 'User'}
-            </h3>
-            {user.email && (
+    <>
+      <Card className="relative">
+        <Button
+          isIconOnly
+          variant="light"
+          onPress={handleViewProfile}
+          title="View Profile"
+          className="absolute top-2 right-2 z-10"
+        >
+          <ExternalLinkIcon className="w-4 h-4" />
+        </Button>
+        <CardBody className="flex items-center justify-between p-4">
+          <div className="flex items-center gap-4">
+            {showCheckbox && (
+              <Checkbox
+                isSelected={isChecked}
+                onValueChange={onCheckboxChange}
+              />
+            )}
+            <UserAvatar user={user} size="lg" />
+            <div className="space-y-1">
+              <h3 className="text-lg font-semibold">
+                {user.displayName || user.email || 'User'}
+              </h3>
+              {user.email && (
+                <div className="flex items-center gap-2">
+                  <p className="text-default-500 text-sm">{user.email}</p>
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    variant="light"
+                    onPress={() => user.email && handleCopy(user.email)}
+                    title="Copy email"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                      <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                    </svg>
+                  </Button>
+                </div>
+              )}
               <div className="flex items-center gap-2">
-                <p className="text-default-500 text-sm">{user.email}</p>
+                <p className="text-default-500 text-sm font-mono">{formatUid(user.uid)}</p>
                 <Button
                   isIconOnly
                   size="sm"
                   variant="light"
-                  onPress={() => user.email && handleCopy(user.email)}
-                  title="Copy email"
+                  onPress={() => handleCopy(user.uid)}
+                  title="Copy UID"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -99,61 +169,52 @@ export function UserCard({
                   </svg>
                 </Button>
               </div>
-            )}
-            <div className="flex items-center gap-2">
-              <p className="text-default-500 text-sm font-mono">{formatUid(user.uid)}</p>
-              <Button
-                isIconOnly
-                size="sm"
-                variant="light"
-                onPress={() => handleCopy(user.uid)}
-                title="Copy UID"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                  <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-                </svg>
-              </Button>
             </div>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          {isBlocked ? (
-            <Button
-              color="danger"
-              variant="light"
-              onPress={handleUnblock}
-            >
-              Unblock
-            </Button>
-          ) : onBlock ? (
-            <Button
-              color="danger"
-              onPress={handleBlock}
-            >
-              Block
-            </Button>
-          ) : onSelect ? (
-            <Button
-              color={isSelected ? "primary" : "default"}
-              variant={isSelected ? "solid" : "light"}
-              onPress={onSelect}
-            >
-              {isSelected ? 'Selected' : 'Select'}
-            </Button>
-          ) : null}
-        </div>
-      </CardBody>
-    </Card>
+          <div className="flex items-center gap-2">
+            {isBlocked ? (
+              <Button
+                color="danger"
+                variant="light"
+                onPress={handleUnblock}
+              >
+                Unblock
+              </Button>
+            ) : onBlock ? (
+              <Button
+                color="danger"
+                onPress={handleBlock}
+              >
+                Block
+              </Button>
+            ) : onSelect ? (
+              <Button
+                color={isSelected ? "primary" : "default"}
+                variant={isSelected ? "solid" : "light"}
+                onPress={onSelect}
+              >
+                {isSelected ? 'Selected' : 'Select'}
+              </Button>
+            ) : (
+              <Button
+                color="primary"
+                variant="light"
+                onPress={() => setIsCreateChatModalOpen(true)}
+                startContent={<MessageIcon className="w-4 h-4" />}
+              >
+                Chat
+              </Button>
+            )}
+          </div>
+        </CardBody>
+      </Card>
+
+      <CreateChatModal
+        isOpen={isCreateChatModalOpen}
+        onClose={() => setIsCreateChatModalOpen(false)}
+        onConfirm={handleCreateChat}
+        user={user}
+      />
+    </>
   );
 } 
