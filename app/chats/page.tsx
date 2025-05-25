@@ -25,6 +25,7 @@ export default function ChatsPage() {
   const [showUserSearch, setShowUserSearch] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
   const [isCreatingChat, setIsCreatingChat] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchUserData() {
@@ -72,6 +73,7 @@ export default function ChatsPage() {
   const handleCreateChat = async () => {
     if (!selectedUsers.length || !user) return;
     setIsCreatingChat(true);
+    setCreateError(null);
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -88,9 +90,18 @@ export default function ChatsPage() {
         setChats(prev => [...prev, newChat]);
         setShowUserSearch(false);
         setSelectedUsers([]);
-        router.push(`/chat/${newChat.id}`);
+        const chatId = newChat.id || newChat.chat?.id;
+        if (chatId) {
+          router.push(`/chat/${chatId}`);
+        } else {
+          setCreateError('Failed to get chat id');
+        }
+      } else {
+        const error = await response.json();
+        setCreateError(error.error || 'Failed to create chat');
       }
     } catch (error) {
+      setCreateError('Network error');
       console.error('Error creating chat:', error);
     } finally {
       setIsCreatingChat(false);
@@ -149,6 +160,7 @@ export default function ChatsPage() {
         title="New Chat"
       >
         <div className="p-4 space-y-4">
+          {createError && <div className="text-danger text-sm">{createError}</div>}
           <UserSearch
             onSelect={setSelectedUsers}
             selectedUsers={selectedUsers}

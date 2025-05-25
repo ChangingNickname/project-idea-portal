@@ -47,7 +47,7 @@ export async function GET(
     // Получаем сообщения
     const messagesRef = chatRef.collection('messages');
     const messagesSnapshot = await messagesRef
-      .orderBy('createdAt', 'desc')
+      .orderBy('createdAt', 'asc')
       .limit(50)
       .get();
 
@@ -94,7 +94,7 @@ export async function GET(
 
     return NextResponse.json({
       id: chatDoc.id,
-      messages: messages.reverse(),
+      messages: messages,
       members: membersData,
       createdAt: chatData.createdAt.toDate(),
       updatedAt: chatData.updatedAt.toDate(),

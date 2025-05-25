@@ -2,8 +2,7 @@ import { UserAvatar } from '@/components/user/UserAvatar';
 import { Message as MessageType, User } from '@/types/chat';
 import { format } from 'date-fns';
 import { enUS } from 'date-fns/locale';
-import { MDXEditor } from '@mdxeditor/editor';
-import '@mdxeditor/editor/style.css';
+import ReactMarkdown from 'react-markdown';
 
 interface MessageProps {
   message: MessageType;
@@ -22,7 +21,7 @@ export function Message({ message, currentUser }: MessageProps) {
       
       <div className={`flex flex-col ${isCurrentUser ? 'items-end' : 'items-start'} max-w-[70%]`}>
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-sm font-medium text-gray-700">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
             {message.sender.displayName || message.sender.email}
           </span>
           <span className="text-xs text-gray-500">
@@ -33,13 +32,16 @@ export function Message({ message, currentUser }: MessageProps) {
         <div className={`rounded-lg p-3 ${
           isCurrentUser 
             ? 'bg-primary text-white' 
-            : 'bg-gray-100 text-gray-900'
+            : 'bg-gray-100 dark:bg-content2 text-gray-900 dark:text-gray-100'
         }`}>
-          <MDXEditor 
-            markdown={message.content}
-            readOnly
-            className="!bg-transparent !border-none"
-          />
+          <div
+            className="prose max-w-full min-h-[32px] text-gray-900 dark:text-gray-100 break-words overflow-x-auto"
+            style={{ wordBreak: 'break-word', whiteSpace: 'pre-line' }}
+          >
+            <ReactMarkdown>
+              {message.content}
+            </ReactMarkdown>
+          </div>
         </div>
 
         {unreadBy.length > 0 && (
