@@ -6,34 +6,16 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { enUS } from 'date-fns/locale';
+import { Chip } from '@heroui/chip';
 
 interface ChatCardProps {
   chat: Chat;
   currentUser: User;
+  unreadCount?: number;
 }
 
-export function ChatCard({ chat, currentUser }: ChatCardProps) {
+export function ChatCard({ chat, currentUser, unreadCount = 0 }: ChatCardProps) {
   const router = useRouter();
-  const [unreadCount, setUnreadCount] = useState(chat.unreadCount || 0);
-
-  useEffect(() => {
-    const fetchUnreadCount = async () => {
-      try {
-        const response = await fetch(`/api/chat/${chat.id}/unread`);
-        if (response.ok) {
-          const data = await response.json();
-          setUnreadCount(data.unreadCount);
-        }
-      } catch (error) {
-        console.error('Error fetching unread count:', error);
-      }
-    };
-
-    fetchUnreadCount();
-    // Update counter every 30 seconds
-    const interval = setInterval(fetchUnreadCount, 30000);
-    return () => clearInterval(interval);
-  }, [chat.id]);
 
   const handleClick = () => {
     router.push(`/chat/${chat.id}`);
@@ -97,9 +79,14 @@ export function ChatCard({ chat, currentUser }: ChatCardProps) {
           </div>
         </div>
         {unreadCount > 0 && (
-          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white text-sm font-medium">
+          <Chip
+            color="primary"
+            variant="solid"
+            size="sm"
+            className="font-medium"
+          >
             {unreadCount}
-          </div>
+          </Chip>
         )}
       </CardBody>
     </Card>

@@ -6,6 +6,7 @@ import { logout } from '@/lib/firebase/auth';
 import { Button } from "@heroui/button";
 import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@heroui/dropdown";
 import { UserAvatar } from '@/components/user/UserAvatar';
+import { Chip } from "@heroui/chip";
 
 interface StoredUser {
   email: string | null;
@@ -22,6 +23,7 @@ interface StoredUser {
 export function UserMenu() {
   const router = useRouter();
   const [user, setUser] = useState<StoredUser | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     const checkUser = () => {
@@ -37,6 +39,26 @@ export function UserMenu() {
     window.addEventListener('storage', checkUser);
     return () => window.removeEventListener('storage', checkUser);
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchUnreadCount = async () => {
+      try {
+        const response = await fetch('/api/chat/unread');
+        if (response.ok) {
+          const data = await response.json();
+          setUnreadCount(data.totalUnreadCount);
+        }
+      } catch (error) {
+        console.error('Error fetching unread count:', error);
+      }
+    };
+
+    fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 30000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   const handleLogout = async () => {
     await logout();
@@ -81,7 +103,21 @@ export function UserMenu() {
       },
       {
         key: 'chats',
-        content: 'Chats',
+        content: (
+          <div className="flex items-center justify-between w-full">
+            <span>Chats</span>
+            {unreadCount > 0 && (
+              <Chip
+                color="primary"
+                variant="solid"
+                size="sm"
+                className="font-medium"
+              >
+                {unreadCount}
+              </Chip>
+            )}
+          </div>
+        ),
         onClick: () => router.push('/chats')
       },
       {
@@ -105,9 +141,19 @@ export function UserMenu() {
         <Button
           isIconOnly
           variant="light"
-          className="w-8 h-8 rounded-full"
+          className="w-8 h-8 rounded-full relative overflow-visible"
         >
           <UserAvatar user={user} size="sm" />
+          {unreadCount > 0 && (
+            <Chip
+              color="primary"
+              variant="solid"
+              size="sm"
+              className="absolute -top-1 -right-1 font-medium"
+            >
+              {unreadCount}
+            </Chip>
+          )}
         </Button>
       </DropdownTrigger>
       <DropdownMenu aria-label="User menu">
