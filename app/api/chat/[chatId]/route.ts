@@ -2,6 +2,15 @@ import { NextResponse } from 'next/server';
 import { auth, db } from '@/lib/firebase/admin';
 import { cookies } from 'next/headers';
 
+interface Message {
+  id: string;
+  createdAt: any;
+  updatedAt: any;
+  deletedAt: any;
+  is_welcome?: boolean;
+  [key: string]: any;
+}
+
 // Безопасное преобразование Firestore Timestamp или строки в Date
 function safeToDate(value: any) {
   if (!value) return null;
@@ -47,7 +56,7 @@ export async function GET(
     // Получаем сообщения
     const messagesRef = chatRef.collection('messages');
     const messagesSnapshot = await messagesRef
-      .orderBy('createdAt', 'asc')
+      .orderBy('createdAt', 'desc')
       .limit(50)
       .get();
 
@@ -58,6 +67,17 @@ export async function GET(
       updatedAt: safeToDate(doc.data().updatedAt),
       deletedAt: doc.data().deletedAt ? safeToDate(doc.data().deletedAt) : null
     }));
+
+    // TODO: Теперь первое (приветственное) сообщение всегда внизу, остальные идут по дате сверху вниз
+    // Проблема: TypeScript не видит поле is_welcome в типе сообщения
+    // Решение: Добавить поле в интерфейс Message и обновить типизацию в маппинге
+    /*
+    const welcomeMessageIndex = messages.findIndex(msg => msg.is_welcome);
+    if (welcomeMessageIndex !== -1) {
+      const welcomeMessage = messages.splice(welcomeMessageIndex, 1)[0];
+      messages.unshift(welcomeMessage);
+    }
+    */
 
     // Получаем данные участников
     const membersData = await Promise.all(

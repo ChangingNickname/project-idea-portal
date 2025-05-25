@@ -109,7 +109,7 @@ export async function POST(
       id: messageRef.id,
       content,
       sender: currentUserData,
-      reader_by_ids: membersData,
+      reader_by_ids: [currentUserData],
       createdAt: now,
       updatedAt: now,
       deletedAt: null,

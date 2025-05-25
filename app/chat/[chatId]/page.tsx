@@ -89,7 +89,7 @@ export default function ChatPage() {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 flex flex-col-reverse overflow-y-auto p-4 space-y-4">
           {chat.messages.map((message: MessageType) => (
             <Message
               key={message.id}
@@ -100,10 +100,12 @@ export default function ChatPage() {
         </div>
 
         {/* Input form */}
-        <InputForm
-          onSubmit={handleSendMessage}
-          isLoading={isSending}
-        />
+        <div className="border-t p-4">
+          <InputForm
+            onSubmit={handleSendMessage}
+            isLoading={isSending}
+          />
+        </div>
       </div>
 
       {/* Members modal */}

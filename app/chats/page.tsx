@@ -26,6 +26,7 @@ export default function ChatsPage() {
   const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
   const [isCreatingChat, setIsCreatingChat] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+  const [unreadByChat, setUnreadByChat] = useState<{ [chatId: string]: number }>({});
 
   useEffect(() => {
     async function fetchUserData() {
@@ -52,21 +53,32 @@ export default function ChatsPage() {
       router.replace('/login');
       return;
     }
-    const fetchChats = async () => {
+
+    const fetchData = async () => {
       try {
-        const response = await fetch('/api/chat');
-        if (response.ok) {
-          const data = await response.json();
+        const [chatsResponse, unreadResponse] = await Promise.all([
+          fetch('/api/chat'),
+          fetch('/api/chat/unread')
+        ]);
+
+        if (chatsResponse.ok) {
+          const data = await chatsResponse.json();
           setChats(data.chats);
         }
+
+        if (unreadResponse.ok) {
+          const data = await unreadResponse.json();
+          setUnreadByChat(data.unreadByChat);
+        }
       } catch (error) {
-        console.error('Error fetching chats:', error);
+        console.error('Error fetching data:', error);
       } finally {
         setIsLoading(false);
       }
     };
-    fetchChats();
-    const interval = setInterval(fetchChats, 30000);
+
+    fetchData();
+    const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
   }, [user, userLoading, router]);
 
@@ -154,6 +166,7 @@ export default function ChatsPage() {
             key={chat.id}
             chat={chat}
             currentUser={user}
+            unreadCount={unreadByChat[chat.id] || 0}
           />
         ))}
       </div>
