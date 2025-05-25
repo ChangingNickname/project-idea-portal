@@ -9,212 +9,201 @@ import { Spinner } from "@heroui/spinner";
 import { UserSearch } from '@/components/user-search';
 import { ChatCard } from '@/components/chat/ChatCard';
 import { UserAvatar } from '@/components/user/UserAvatar';
+import { useRouter } from 'next/navigation';
+import { Input } from '@heroui/input';
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from '@heroui/modal';
+import { UserCard } from '@/components/user/UserCard';
 
 export default function ChatsPage() {
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+  const [userLoading, setUserLoading] = useState(true);
+  const [userError, setUserError] = useState<string | null>(null);
   const [chats, setChats] = useState<Chat[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [showSearch, setShowSearch] = useState(false);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showUserSearch, setShowUserSearch] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
-  const [showAllSelected, setShowAllSelected] = useState(false);
-
-  const fetchCurrentUser = async () => {
-    try {
-      const response = await fetch('/api/user/me');
-      if (!response.ok) throw new Error('Failed to fetch current user');
-      const data = await response.json();
-      setCurrentUser(data);
-    } catch (err) {
-      console.error('Failed to fetch current user:', err);
-    }
-  };
-
-  const fetchChats = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await fetch('/api/chat');
-      if (!response.ok) throw new Error('Failed to fetch chats');
-      const data = await response.json();
-      setChats(data.chats || []);
-    } catch (err) {
-      setError('Error loading chats');
-      console.error('Chats error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [isCreatingChat, setIsCreatingChat] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [unreadByChat, setUnreadByChat] = useState<{ [chatId: string]: number }>({});
 
   useEffect(() => {
-    fetchCurrentUser();
-    fetchChats();
+    async function fetchUserData() {
+      try {
+        const response = await fetch('/api/user/me');
+        if (!response.ok) {
+          throw new Error('Unauthorized');
+        }
+        const data = await response.json();
+        setUser(data);
+      } catch (err) {
+        setUserError('Unauthorized');
+        setUser(null);
+      } finally {
+        setUserLoading(false);
+      }
+    }
+    fetchUserData();
   }, []);
 
-  const handleAddUsers = async (users: User[]) => {
-    setSelectedUsers(users);
-  };
+  useEffect(() => {
+    if (userLoading) return;
+    if (!user) {
+      router.replace('/login');
+      return;
+    }
 
-  const handleConfirmAddUsers = async () => {
-    try {
-      setError(null);
-      
-      // Фильтруем текущего пользователя из списка
-      const filteredUsers = selectedUsers.filter(user => user.uid !== currentUser?.uid);
-      
-      if (filteredUsers.length === 0) {
-        setError('You cannot create a chat with yourself');
-        return;
+    const fetchData = async () => {
+      try {
+        const [chatsResponse, unreadResponse] = await Promise.all([
+          fetch('/api/chat'),
+          fetch('/api/chat/unread')
+        ]);
+
+        if (chatsResponse.ok) {
+          const data = await chatsResponse.json();
+          setChats(data.chats);
+        }
+
+        if (unreadResponse.ok) {
+          const data = await unreadResponse.json();
+          setUnreadByChat(data.unreadByChat);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setIsLoading(false);
       }
+    };
 
+    fetchData();
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
+  }, [user, userLoading, router]);
+
+  const handleCreateChat = async () => {
+    if (!selectedUsers.length || !user) return;
+    setIsCreatingChat(true);
+    setCreateError(null);
+    try {
       const response = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json'
+        headers: {
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          members: [...filteredUsers.map(u => u.uid), currentUser?.uid].filter(Boolean),
-          message: 'Hello!'
+        body: JSON.stringify({
+          members: selectedUsers.map(u => u.uid),
+          message: 'Hello! 👋'
         }),
-        credentials: 'include'
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create chat');
+      if (response.ok) {
+        const newChat = await response.json();
+        setChats(prev => [...prev, newChat]);
+        setShowUserSearch(false);
+        setSelectedUsers([]);
+        const chatId = newChat.id || newChat.chat?.id;
+        if (chatId) {
+          router.push(`/chat/${chatId}`);
+        } else {
+          setCreateError('Failed to get chat id');
+        }
+      } else {
+        const error = await response.json();
+        setCreateError(error.error || 'Failed to create chat');
       }
-      
-      await fetchChats();
-      setShowSearch(false);
-      setSelectedUsers([]);
-    } catch (err: any) {
-      setError(err.message || 'Error creating chat');
-      console.error('Create chat error:', err);
+    } catch (error) {
+      setCreateError('Network error');
+      console.error('Error creating chat:', error);
+    } finally {
+      setIsCreatingChat(false);
     }
   };
 
-  if (loading) {
+  const handleUserSelect = (user: User) => {
+    setSelectedUsers(prev => {
+      const isSelected = prev.some(u => u.uid === user.uid);
+      if (isSelected) {
+        return prev.filter(u => u.uid !== user.uid);
+      }
+      return [...prev, user];
+    });
+  };
+
+  if (userLoading || isLoading) {
     return (
-      <div className="flex justify-center items-center h-[calc(100vh-64px)]">
+      <div className="flex items-center justify-center h-screen">
         <Spinner size="lg" />
       </div>
     );
   }
 
+  if (userError) {
+    return null;
+  }
+
+  if (!user) {
+    return null;
+  }
+
   return (
     <div className="container mx-auto p-4 max-w-4xl">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Chats</h1>
         <Button
           color="primary"
-          onPress={() => setShowSearch(!showSearch)}
+          onClick={() => {
+            console.log('Button clicked');
+            setShowUserSearch(true);
+          }}
         >
-          {showSearch ? 'Cancel' : 'New Chat'}
+          New Chat
         </Button>
       </div>
-
-      {error && (
-        <div className="text-danger mb-4">{error}</div>
-      )}
-
-      {showSearch && (
+      <div className="space-y-4 overflow-visible">
+        {chats.map(chat => (
+          <ChatCard
+            key={chat.id}
+            chat={chat}
+            currentUser={user}
+            unreadCount={unreadByChat[chat.id] || 0}
+          />
+        ))}
+      </div>
+      {showUserSearch && (
         <Card className="mb-6">
           <CardHeader>
-            <h2 className="text-lg font-semibold">Create New Chat</h2>
+            <h2 className="text-lg font-semibold">New Chat</h2>
           </CardHeader>
           <CardBody>
-            <UserSearch
-              onSelect={handleAddUsers}
-              selectedUsers={selectedUsers}
-              maxUsers={10}
-              placeholder="Search users to start a chat..."
-              excludeUsers={[...selectedUsers.map(u => u.uid), currentUser?.uid].filter(Boolean) as string[]}
-            />
-            {selectedUsers.length > 0 && (
-              <div className="mt-4">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">Selected Users:</span>
-                    <div className="flex -space-x-2">
-                      {selectedUsers.slice(0, 5).map((user) => (
-                        <div key={user.uid} className="relative group">
-                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                            {user.displayName || user.email || 'Unknown User'}
-                          </div>
-                          <div className="border-2 border-white rounded-full">
-                            <UserAvatar user={user} size="sm" />
-                          </div>
-                        </div>
-                      ))}
-                      {selectedUsers.length > 5 && (
-                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 border-2 border-white text-sm font-medium">
-                          +{selectedUsers.length - 5}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {selectedUsers.length > 5 && (
-                      <Button
-                        variant="light"
-                        size="sm"
-                        onPress={() => setShowAllSelected(!showAllSelected)}
-                      >
-                        {showAllSelected ? 'Show Less' : 'Show All'}
-                      </Button>
-                    )}
-                    <Button
-                      color="primary"
-                      onPress={handleConfirmAddUsers}
-                    >
-                      Create Chat with {selectedUsers.length} {selectedUsers.length === 1 ? 'User' : 'Users'}
-                    </Button>
-                  </div>
-                </div>
-                {showAllSelected && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
-                    {selectedUsers.map((user) => (
-                      <div key={user.uid} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                        <UserAvatar user={user} size="sm" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">
-                            {user.displayName || user.email || 'Unknown User'}
-                          </p>
-                        </div>
-                        <Button
-                          variant="light"
-                          size="sm"
-                          onPress={() => handleAddUsers(selectedUsers.filter(u => u.uid !== user.uid))}
-                        >
-                          Remove
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+            {createError && (
+              <div className="text-danger mb-4">{createError}</div>
             )}
+            <UserSearch
+              onSelect={setSelectedUsers}
+              selectedUsers={selectedUsers}
+              placeholder="Search users to add to chat..."
+              excludeUsers={[user.uid]}
+            />
+            <div className="flex justify-end gap-2 mt-4">
+              <Button
+                variant="light"
+                onClick={() => setShowUserSearch(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                color="primary"
+                isLoading={isCreatingChat}
+                isDisabled={!selectedUsers.length || isCreatingChat}
+                onClick={handleCreateChat}
+              >
+                Create Chat
+              </Button>
+            </div>
           </CardBody>
         </Card>
       )}
-
-      <div className="space-y-4">
-        {chats.length === 0 ? (
-          <Card>
-            <CardBody className="text-center py-8">
-              <p className="text-default-500">No chats yet</p>
-            </CardBody>
-          </Card>
-        ) : (
-          chats.map((chat) => (
-            <ChatCard
-              key={chat.id}
-              chat={chat}
-              currentUser={currentUser!}
-            />
-          ))
-        )}
-      </div>
     </div>
   );
 } 

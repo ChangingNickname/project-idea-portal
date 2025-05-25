@@ -1,3 +1,13 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Светлая тема */
+.mdxeditor-popup-container .cm-content {
+  color: #1e293b !important; /* ваш foreground из tailwind */
+}
+
+/* Тёмная тема */
+.dark .mdxeditor-popup-container .cm-content {
+  color: #f4f4f5 !important; /* ваш foreground из tailwind */
+}

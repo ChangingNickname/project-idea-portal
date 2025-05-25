@@ -131,7 +131,8 @@ export default function UserProfilePage({ params }: PageProps) {
       }
 
       const data = await response.json();
-      router.push(`/chat/${data.chat.id}`);
+      const chatId = data.chat?.id || data.id;
+      router.push(`/chat/${chatId}`);
     } catch (err: any) {
       setError(err.message || 'Error creating chat');
       console.error('Create chat error:', err);

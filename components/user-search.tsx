@@ -29,6 +29,10 @@ export const UserSearch: React.FC<UserSearchProps> = ({
   const [pageToken, setPageToken] = useState<string | null>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
 
+  // Получаем uid текущего пользователя из localStorage или window (если есть)
+  const currentUserUid = typeof window !== 'undefined' ? localStorage.getItem('currentUserUid') : null;
+  const effectiveExcludeUsers = excludeUsers.length > 0 ? excludeUsers : (currentUserUid ? [currentUserUid] : []);
+
   const searchUsers = useCallback(async (searchQuery: string, token: string | null = null) => {
     if (!searchQuery.trim()) {
       setUsers([]);
@@ -48,7 +52,7 @@ export const UserSearch: React.FC<UserSearchProps> = ({
       if (!response.ok) throw new Error('Failed to fetch users');
       
       const data = await response.json();
-      const filteredUsers = data.users.filter((user: User) => !excludeUsers.includes(user.uid));
+      const filteredUsers = data.users.filter((user: User) => !effectiveExcludeUsers.includes(user.uid));
       
       if (token) {
         setUsers(prev => [...prev, ...filteredUsers]);
@@ -62,7 +66,7 @@ export const UserSearch: React.FC<UserSearchProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [excludeUsers]);
+  }, [effectiveExcludeUsers]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newQuery = e.target.value;

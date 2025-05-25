@@ -18,23 +18,10 @@ export async function GET(
     const decodedToken = await auth.verifySessionCookie(sessionCookie);
     const currentUser = await auth.getUser(decodedToken.uid);
 
-    // Get user's blacklist
-    const blacklistRef = db.collection('blacklists');
-    const q = blacklistRef.where('user.uid', '==', currentUser.uid);
-    const querySnapshot = await q.get();
-
-    let blockedUserIds: string[] = [];
-    if (!querySnapshot.empty) {
-      const blacklist = querySnapshot.docs[0].data();
-      blockedUserIds = blacklist.blocked_users.map((user: any) => user.uid);
-    }
-
-    // Get chat messages
     const { chatId } = await context.params;
     const chatRef = db.collection('chats').doc(chatId);
     const messagesRef = chatRef.collection('messages');
     
-    // Get messages that are not read by current user and not from blocked users
     const messagesSnapshot = await messagesRef
       .where('reader_by_ids', 'array-contains', currentUser.uid)
       .get();
@@ -45,11 +32,13 @@ export async function GET(
         ...doc.data()
       } as Message))
       .filter(message => 
-        !blockedUserIds.includes(message.sender.uid) &&
         !message.reader_by_ids.some((reader) => reader.uid === currentUser.uid)
       );
 
-    return NextResponse.json({ unreadMessages });
+    return NextResponse.json({ 
+      unreadCount: unreadMessages.length,
+      unreadMessages 
+    });
   } catch (error: any) {
     console.error('Error getting unread messages:', error);
     if (error.code === 'auth/invalid-session-cookie') {

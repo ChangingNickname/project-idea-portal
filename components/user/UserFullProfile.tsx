@@ -51,7 +51,6 @@ export const UserFullProfile = ({ user, isBlocked, onBlock, onUnblock, onStartCh
 
   const handleStartChat = async () => {
     if (!onStartChat) return;
-    
     try {
       setChatLoading(true);
       await onStartChat(user);
