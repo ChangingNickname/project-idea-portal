@@ -11,7 +11,7 @@ import { ChatCard } from '@/components/chat/ChatCard';
 import { UserAvatar } from '@/components/user/UserAvatar';
 import { useRouter } from 'next/navigation';
 import { Input } from '@heroui/input';
-import { Modal } from '@heroui/modal';
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from '@heroui/modal';
 import { UserCard } from '@/components/user/UserCard';
 
 export default function ChatsPage() {
@@ -140,7 +140,10 @@ export default function ChatsPage() {
         <h1 className="text-2xl font-bold">Chats</h1>
         <Button
           color="primary"
-          onPress={() => setShowUserSearch(true)}
+          onClick={() => {
+            console.log('Button clicked');
+            setShowUserSearch(true);
+          }}
         >
           New Chat
         </Button>
@@ -157,32 +160,36 @@ export default function ChatsPage() {
       <Modal
         isOpen={showUserSearch}
         onClose={() => setShowUserSearch(false)}
-        title="New Chat"
       >
-        <div className="p-4 space-y-4">
-          {createError && <div className="text-danger text-sm">{createError}</div>}
-          <UserSearch
-            onSelect={setSelectedUsers}
-            selectedUsers={selectedUsers}
-            excludeUsers={[user.uid]}
-          />
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="light"
-              onPress={() => setShowUserSearch(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              color="primary"
-              isLoading={isCreatingChat}
-              isDisabled={!selectedUsers.length || isCreatingChat}
-              onPress={handleCreateChat}
-            >
-              Create Chat
-            </Button>
-          </div>
-        </div>
+        <ModalContent>
+          <ModalHeader>New Chat</ModalHeader>
+          <ModalBody>
+            <div className="p-4 space-y-4">
+              {createError && <div className="text-danger text-sm">{createError}</div>}
+              <UserSearch
+                onSelect={setSelectedUsers}
+                selectedUsers={selectedUsers}
+                excludeUsers={[user.uid]}
+              />
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="light"
+                  onClick={() => setShowUserSearch(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  color="primary"
+                  isLoading={isCreatingChat}
+                  isDisabled={!selectedUsers.length || isCreatingChat}
+                  onClick={handleCreateChat}
+                >
+                  Create Chat
+                </Button>
+              </div>
+            </div>
+          </ModalBody>
+        </ModalContent>
       </Modal>
     </div>
   );
