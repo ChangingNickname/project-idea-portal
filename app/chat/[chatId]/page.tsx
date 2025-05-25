@@ -1,3 +1,4 @@
+'use client';
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Message } from '@/components/chat/Message';

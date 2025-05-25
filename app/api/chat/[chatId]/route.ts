@@ -2,11 +2,20 @@ import { NextResponse } from 'next/server';
 import { auth, db } from '@/lib/firebase/admin';
 import { cookies } from 'next/headers';
 
+// Безопасное преобразование Firestore Timestamp или строки в Date
+function safeToDate(value: any) {
+  if (!value) return null;
+  if (typeof value.toDate === 'function') return value.toDate();
+  if (typeof value === 'string' || value instanceof Date) return new Date(value);
+  return value;
+}
+
 export async function GET(
   request: Request,
-  { params }: { params: { chatId: string } }
+  { params }: { params: Promise<{ chatId: string }> }
 ) {
   try {
+    const { chatId } = await params;
     const cookieStore = await cookies();
     const sessionCookie = cookieStore.get('session')?.value;
     
@@ -18,7 +27,7 @@ export async function GET(
     const userRecord = await auth.getUser(decodedToken.uid);
 
     // Получаем чат
-    const chatRef = db.collection('chats').doc(params.chatId);
+    const chatRef = db.collection('chats').doc(chatId);
     const chatDoc = await chatRef.get();
 
     if (!chatDoc.exists) {
@@ -45,9 +54,9 @@ export async function GET(
     const messages = messagesSnapshot.docs.map(doc => ({
       ...doc.data(),
       id: doc.id,
-      createdAt: doc.data().createdAt.toDate(),
-      updatedAt: doc.data().updatedAt.toDate(),
-      deletedAt: doc.data().deletedAt?.toDate() || null
+      createdAt: safeToDate(doc.data().createdAt),
+      updatedAt: safeToDate(doc.data().updatedAt),
+      deletedAt: doc.data().deletedAt ? safeToDate(doc.data().deletedAt) : null
     }));
 
     // Получаем данные участников

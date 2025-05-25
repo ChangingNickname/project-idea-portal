@@ -23,6 +23,7 @@ interface UserCardProps {
   onCheckboxChange?: (checked: boolean) => void;
   isChecked?: boolean;
   showActions?: boolean;
+  isCurrentUser?: boolean;
 }
 
 export function UserCard({ 
@@ -35,7 +36,8 @@ export function UserCard({
   showCheckbox = false,
   onCheckboxChange,
   isChecked = false,
-  showActions = true
+  showActions = true,
+  isCurrentUser = false
 }: UserCardProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -96,7 +98,7 @@ export function UserCard({
 
   return (
     <>
-      <Card className="relative">
+      <Card className={`relative${isCurrentUser ? ' bg-gray-100' : ''}`}>
         <Button
           isIconOnly
           variant="light"
@@ -118,6 +120,7 @@ export function UserCard({
             <div className="space-y-1">
               <h3 className="text-lg font-semibold">
                 {user.displayName || user.email || 'User'}
+                {isCurrentUser && <span className="ml-2 text-xs text-gray-500">(Вы)</span>}
               </h3>
               {user.email && (
                 <div className="flex items-center gap-2">

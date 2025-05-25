@@ -12,12 +12,13 @@ import { UserAvatar } from '@/components/user/UserAvatar';
 import { useRouter } from 'next/navigation';
 import { Input } from '@heroui/input';
 import { Modal } from '@heroui/modal';
-import { useAuth } from '@/hooks/useAuth';
 import { UserCard } from '@/components/user/UserCard';
 
 export default function ChatsPage() {
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const [user, setUser] = useState<User | null>(null);
+  const [userLoading, setUserLoading] = useState(true);
+  const [userError, setUserError] = useState<string | null>(null);
   const [chats, setChats] = useState<Chat[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -26,13 +27,30 @@ export default function ChatsPage() {
   const [isCreatingChat, setIsCreatingChat] = useState(false);
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.replace('/login');
+    async function fetchUserData() {
+      try {
+        const response = await fetch('/api/user/me');
+        if (!response.ok) {
+          throw new Error('Unauthorized');
+        }
+        const data = await response.json();
+        setUser(data);
+      } catch (err) {
+        setUserError('Unauthorized');
+        setUser(null);
+      } finally {
+        setUserLoading(false);
+      }
     }
-  }, [loading, user, router]);
+    fetchUserData();
+  }, []);
 
   useEffect(() => {
-    if (!user) return;
+    if (userLoading) return;
+    if (!user) {
+      router.replace('/login');
+      return;
+    }
     const fetchChats = async () => {
       try {
         const response = await fetch('/api/chat');
@@ -46,16 +64,13 @@ export default function ChatsPage() {
         setIsLoading(false);
       }
     };
-
     fetchChats();
-    // Update chats every 30 seconds
     const interval = setInterval(fetchChats, 30000);
     return () => clearInterval(interval);
-  }, [user]);
+  }, [user, userLoading, router]);
 
   const handleCreateChat = async () => {
     if (!selectedUsers.length || !user) return;
-
     setIsCreatingChat(true);
     try {
       const response = await fetch('/api/chat', {
@@ -68,13 +83,11 @@ export default function ChatsPage() {
           message: 'Hello! 👋'
         }),
       });
-
       if (response.ok) {
         const newChat = await response.json();
         setChats(prev => [...prev, newChat]);
         setShowUserSearch(false);
         setSelectedUsers([]);
-        // Navigate to the new chat
         router.push(`/chat/${newChat.id}`);
       }
     } catch (error) {
@@ -94,12 +107,20 @@ export default function ChatsPage() {
     });
   };
 
-  if (loading || !user) {
+  if (userLoading || isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <Spinner size="lg" />
       </div>
     );
+  }
+
+  if (userError) {
+    return null;
+  }
+
+  if (!user) {
+    return null;
   }
 
   return (
@@ -113,8 +134,7 @@ export default function ChatsPage() {
           New Chat
         </Button>
       </div>
-
-      <div className="space-y-4">
+      <div className="space-y-4 overflow-visible">
         {chats.map(chat => (
           <ChatCard
             key={chat.id}
@@ -123,30 +143,17 @@ export default function ChatsPage() {
           />
         ))}
       </div>
-
       <Modal
         isOpen={showUserSearch}
         onClose={() => setShowUserSearch(false)}
         title="New Chat"
       >
         <div className="p-4 space-y-4">
-          <Input
-            placeholder="Search users..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
+          <UserSearch
+            onSelect={setSelectedUsers}
+            selectedUsers={selectedUsers}
+            excludeUsers={[user.uid]}
           />
-
-          <div className="space-y-2">
-            {selectedUsers.map(user => (
-              <UserCard
-                key={user.uid}
-                user={user}
-                showActions={false}
-                showCheckbox={false}
-              />
-            ))}
-          </div>
-
           <div className="flex justify-end gap-2">
             <Button
               variant="light"

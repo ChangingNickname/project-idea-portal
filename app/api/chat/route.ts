@@ -141,7 +141,9 @@ export async function POST(req: Request) {
 
     const { members, message } = await req.json();
 
-    if (!members || !Array.isArray(members) || members.length < 2) {
+    // Гарантируем, что массив участников содержит только уникальные uid (включая текущего пользователя)
+    const allMembers = Array.from(new Set([...members, currentUser.uid]));
+    if (allMembers.length < 2) {
       return NextResponse.json(
         { error: 'Chat must have at least 2 participants' },
         { status: 400 }
@@ -157,7 +159,6 @@ export async function POST(req: Request) {
 
     // Check if chat with these participants already exists
     const chatsRef = db.collection('chats');
-    const allMembers = [...members, currentUser.uid];
     const existingChats = await chatsRef
       .where('members', 'array-contains', currentUser.uid)
       .get();
@@ -259,7 +260,8 @@ export async function POST(req: Request) {
       updatedAt: now,
       deletedAt: null,
       is_deleted: false,
-      members: membersData
+      members: membersData,
+      isGroupChat: allMembers.length > 2
     };
 
     // Create chat and message in a batch

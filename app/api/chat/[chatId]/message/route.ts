@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 
 export async function POST(
   request: Request,
-  { params }: { params: { chatId: string } }
+  { params }: { params: Promise<{ chatId: string }> }
 ) {
   try {
     const cookieStore = await cookies();
@@ -17,8 +17,8 @@ export async function POST(
     const decodedToken = await auth.verifySessionCookie(sessionCookie);
     const currentUser = await auth.getUser(decodedToken.uid);
 
-    // Получаем чат
-    const chatRef = db.collection('chats').doc(params.chatId);
+    const { chatId } = await params;
+    const chatRef = db.collection('chats').doc(chatId);
     const chatDoc = await chatRef.get();
 
     if (!chatDoc.exists) {
@@ -30,12 +30,10 @@ export async function POST(
       return new NextResponse('Chat data is empty', { status: 404 });
     }
 
-    // Проверяем, является ли пользователь участником чата
     if (!chatData.members.includes(currentUser.uid)) {
       return new NextResponse('Forbidden', { status: 403 });
     }
 
-    // Получаем данные сообщения
     const { content } = await request.json();
 
     if (!content || typeof content !== 'string' || content.trim().length === 0) {
@@ -45,7 +43,6 @@ export async function POST(
       );
     }
 
-    // Получаем данные всех участников чата
     const membersData = await Promise.all(
       chatData.members.map(async (uid: string) => {
         const user = await auth.getUser(uid);
@@ -78,7 +75,6 @@ export async function POST(
       })
     );
 
-    // Создаем сообщение
     const messageRef = chatRef.collection('messages').doc();
     const now = new Date();
 
@@ -122,7 +118,6 @@ export async function POST(
 
     await messageRef.set(newMessage);
 
-    // Обновляем время последнего обновления чата
     await chatRef.update({
       updatedAt: now
     });

@@ -6,6 +6,7 @@ export interface UserProfile {
   displayName: string | null;
   photoURL: string | null;
   isAnonymous: boolean;
+  isCurrentUser?: boolean;
   metadata: {
     creationTime: string;
     lastSignInTime: string;
@@ -27,6 +28,7 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
       displayName: userData?.displayName || null,
       photoURL: userData?.photoURL || null,
       isAnonymous: userData?.isAnonymous || false,
+      isCurrentUser: userData?.isCurrentUser || false,
       metadata: {
         creationTime: userData?.metadata?.creationTime || '',
         lastSignInTime: userData?.metadata?.lastSignInTime || ''
