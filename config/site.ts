@@ -1,51 +1,45 @@
-export type SiteConfig = typeof siteConfig;
+import { type SiteConfig } from "@/types";
 
-export const siteConfig = {
-  name: "Next.js + HeroUI",
-  description: "Make beautiful websites regardless of your design experience.",
+export const siteConfig: SiteConfig = {
+  name: "PIP",
+  description: "Project Idea Platform",
+  mainNav: [
+    {
+      title: "Home",
+      href: "/",
+    },
+  ],
+  links: {
+    twitter: "https://twitter.com/shadcn",
+    github: "https://github.com/shadcn-ui/ui",
+    docs: "https://ui.shadcn.com",
+  },
   navItems: [
     {
       label: "Home",
       href: "/",
     },
-    
     {
       label: "Dashboard",
       href: "/dashboard",
     },
     {
-      label: "About",
-      href: "/about",
-    },
-    {
-      label: "Docs",
-      href: "/docs",
+      label: "Article Builder",
+      href: "/articlebuilder",
     },
   ],
   navMenuItems: [
     {
-      label: "Profile",
-      href: "/profile",
+      label: "Home",
+      href: "/",
     },
     {
       label: "Dashboard",
       href: "/dashboard",
     },
     {
-      label: "Settings",
-      href: "/settings",
-    },
-    {
-      label: "Help & Feedback",
-      href: "/help-feedback",
-    },
-    {
-      label: "Logout",
-      href: "/logout",
+      label: "Article Builder",
+      href: "/articlebuilder",
     },
   ],
-  links: {
-    github: "https://github.com/ChangingNickname/project-idea-portal",
-    docs: "https://heroui.com",
-  },
 };

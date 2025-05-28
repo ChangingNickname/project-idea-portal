@@ -8,7 +8,7 @@ export interface Post {
   tags: string[];
   image: string; // base64
   authorId: string;
-  status: 'Open' | 'Closed' | 'In Progress';
+  status: 'Open' | 'Closed' | 'In Progress' | 'draft';
   email?: string;
   createdAt: ISODateString;
   updatedAt?: ISODateString;
@@ -28,7 +28,7 @@ export function isPost(value: unknown): value is Post {
     post.tags.every(tag => typeof tag === 'string') &&
     typeof post.image === 'string' &&
     typeof post.authorId === 'string' &&
-    (post.status === 'Open' || post.status === 'Closed' || post.status === 'In Progress') &&
+    (post.status === 'Open' || post.status === 'Closed' || post.status === 'In Progress' || post.status === 'draft') &&
     (!post.email || typeof post.email === 'string') &&
     typeof post.createdAt === 'string' &&
     (!post.updatedAt || typeof post.updatedAt === 'string')

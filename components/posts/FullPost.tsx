@@ -4,6 +4,7 @@ import { Post } from '../../types/posts';
 import { UserAvatar } from '../user/UserAvatar';
 import { PostModal } from '../create_form/PostModal';
 import { Button } from '@heroui/button';
+import { Chip } from '@heroui/chip';
 import { addToast } from '@heroui/toast';
 import ReactMarkdown from 'react-markdown';
 import { getAuth } from 'firebase/auth';
@@ -71,7 +72,14 @@ export function FullPost({ post, onDelete }: FullPostProps) {
       </div>
       <div className="flex flex-wrap gap-2 mb-4">
         {post.tags && post.tags.map((tag, i) => (
-          <span key={i} className="bg-gray-200 text-xs px-2 py-1 rounded-full">{tag}</span>
+          <Chip
+            key={i}
+            variant="bordered"
+            color="primary"
+            size="sm"
+          >
+            {tag}
+          </Chip>
         ))}
       </div>
       <div className="mb-6 prose dark:prose-invert max-w-none">
