@@ -11,3 +11,11 @@
 .dark .mdxeditor-popup-container .cm-content {
   color: #f4f4f5 !important; /* ваш foreground из tailwind */
 }
+
+.dark .markdown-body {
+  background: transparent !important;
+}
+
+.dark .cm-line {
+  background: transparent !important;
+}

@@ -76,6 +76,23 @@ export default function Editor() {
     setIsInitialized(true);
   }, []);
 
+  // Listen for localStorage changes
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.storageArea === localStorage) {
+        // Update editor content when localStorage changes
+        setTitle(localStorage.getItem(STORAGE_KEYS.title) || '');
+        setTags(localStorage.getItem(STORAGE_KEYS.tags) || '');
+        setShortDesc(localStorage.getItem(STORAGE_KEYS.shortDesc) || '');
+        setImage(localStorage.getItem(STORAGE_KEYS.image) || '');
+        setContent(localStorage.getItem(STORAGE_KEYS.content) || '');
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
   const updateStorage = (key: string, value: string) => {
     localStorage.setItem(key, value);
     window.dispatchEvent(new Event(PREVIEW_UPDATE_EVENT));

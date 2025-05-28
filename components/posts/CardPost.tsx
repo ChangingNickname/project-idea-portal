@@ -5,9 +5,18 @@ import { UserAvatar } from '../user/UserAvatar';
 import { useEffect, useState } from 'react';
 import { getUserProfileById } from '../../utils/client/user';
 import { Post } from '../../types/posts';
-import { PostModal } from '../create_form/PostModal';
 import { Button } from '@heroui/button';
 import { addToast } from '@heroui/toast';
+import { useRouter } from 'next/navigation';
+
+const STORAGE_KEYS = {
+  title: 'article-builder-title',
+  tags: 'article-builder-tags',
+  shortDesc: 'article-builder-short-desc',
+  image: 'article-builder-image',
+  content: 'article-builder-content',
+  postId: 'article-builder-post-id'
+};
 
 type CardPostProps = {
   post: Post;
@@ -22,7 +31,9 @@ export function CardPost({ post, editable, onDelete }: CardPostProps) {
     email: string | null;
     isAnonymous: boolean;
   } | null>(null);
-  const [editOpen, setEditOpen] = useState(false);
+  const router = useRouter();
+  const isDraft = post.status === 'draft';
+
   useEffect(() => {
     let ignore = false;
     getUserProfileById(post.authorId).then((user) => {
@@ -51,10 +62,25 @@ export function CardPost({ post, editable, onDelete }: CardPostProps) {
     }
   };
 
+  const handleEdit = (e: React.MouseEvent) => {
+    e.preventDefault();
+    // Save only post id to localStorage
+    localStorage.setItem('article-builder-post-id', post.id);
+    // Redirect to article builder
+    router.push('/articlebuilder');
+  };
+
   return (
     <div className="relative block flex-1 min-w-[280px] max-w-[400px] min-h-[320px] max-h-[480px]">
-      <Link href={`/posts/${post.id}`} className="block h-full">
-        <Card className="p-0 hover:shadow-lg transition-shadow overflow-hidden h-full flex flex-col">
+      <Link href={`/posts/${post.id}`} className={`block h-full ${isDraft ? 'pointer-events-none' : ''}`}>
+        <Card className={`p-0 hover:shadow-lg transition-shadow overflow-hidden h-full flex flex-col relative ${isDraft ? 'opacity-60' : ''}`}>
+          {isDraft && (
+            <div className="absolute inset-0 flex items-center justify-center z-10">
+              <span className="text-4xl font-bold text-red-500 transform -rotate-45 bg-white/90 px-8 py-4 rounded-lg shadow-lg">
+                DRAFT
+              </span>
+            </div>
+          )}
           {post.image && (
             <div className="relative w-full h-48">
               <Image
@@ -85,21 +111,13 @@ export function CardPost({ post, editable, onDelete }: CardPostProps) {
       </Link>
       {editable && (
         <div className="absolute top-2 right-2 flex gap-2 z-10">
-          <Button size="sm" color="primary" onClick={() => setEditOpen(true)}>
+          <Button size="sm" color="primary" onClick={handleEdit}>
             ✏️
           </Button>
           <Button size="sm" color="danger" onClick={handleDelete}>
             🗑️
           </Button>
         </div>
-      )}
-      {editable && (
-        <PostModal
-          isOpen={editOpen}
-          onClose={() => setEditOpen(false)}
-          initialData={post}
-          isEdit={true}
-        />
       )}
     </div>
   );

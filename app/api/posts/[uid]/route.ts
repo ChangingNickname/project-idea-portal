@@ -1,49 +1,56 @@
+import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase/admin';
-import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(_: Request, { params }: { params: { uid: string } }) {
+export async function GET(request: Request, context: { params: { uid: string } }) {
   try {
-    const doc = await db.collection('posts').doc(params.uid).get();
+    const { uid } = await context.params;
+    const doc = await db.collection('posts').doc(uid).get();
+    
     if (!doc.exists) {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ id: doc.id, ...doc.data() });
+    return NextResponse.json(doc.data());
   } catch (error) {
     console.error('Error fetching post:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { uid: string } }) {
+export async function PUT(request: Request, context: { params: { uid: string } }) {
   try {
-    const postId = params.uid;
-    const body = await req.json();
+    const { uid } = await context.params;
+    const doc = await db.collection('posts').doc(uid).get();
+    
+    if (!doc.exists) {
+      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+    }
 
-    await db.collection('posts').doc(postId).update({
-      title: body.title,
-      shortDesc: body.shortDesc,
-      fullDesc: body.fullDesc,
-      image: body.image,
-      tags: body.tags,
-      status: body.status,
-      updatedAt: new Date().toISOString()
-    });
+    const body = await request.json();
+    await db.collection('posts').doc(uid).update(body);
 
-    return NextResponse.json({ message: 'Post updated' });
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error updating post:', error);
-    return NextResponse.json({ error: 'Failed to update post' }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
-export async function DELETE(_: Request, { params }: { params: { uid: string } }) {
+export async function DELETE(request: Request, context: { params: { uid: string } }) {
   try {
-    await db.collection('posts').doc(params.uid).delete();
-    return NextResponse.json({ message: 'Post deleted' }, { status: 200 });
+    const { uid } = await context.params;
+    const doc = await db.collection('posts').doc(uid).get();
+    
+    if (!doc.exists) {
+      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+    }
+
+    await db.collection('posts').doc(uid).delete();
+
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error deleting post:', error);
-    return NextResponse.json({ error: 'Failed to delete post' }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 

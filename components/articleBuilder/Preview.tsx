@@ -22,7 +22,7 @@ export default function Preview() {
 
   const updatePreview = () => {
     const title = localStorage.getItem(STORAGE_KEYS.title) || '';
-    const tags = localStorage.getItem(STORAGE_KEYS.tags)?.split(',').map(tag => tag.trim()) || [];
+    const tags = localStorage.getItem(STORAGE_KEYS.tags) || '[]';
     const shortDesc = localStorage.getItem(STORAGE_KEYS.shortDesc) || '';
     const image = localStorage.getItem(STORAGE_KEYS.image) || '';
     const content = localStorage.getItem(STORAGE_KEYS.content) || '';
@@ -30,14 +30,14 @@ export default function Preview() {
     setPost(prev => prev ? {
       ...prev,
       name: title,
-      tags: tags,
+      tags: JSON.parse(tags),
       shortDesc: shortDesc,
       fullDesc: content,
       image: image
     } : {
       id: 'preview',
       name: title,
-      tags: tags,
+      tags: JSON.parse(tags),
       shortDesc: shortDesc,
       fullDesc: content,
       image: image,
