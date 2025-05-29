@@ -1,8 +1,10 @@
 import { ai } from './ai';
 import * as flows from './flows';
 import { testPrompt } from './prompts/test';
+import { qaFlow, dummyRetriever } from './evaluate/test';
 
-export { ai, flows, testPrompt };
+
+export { ai, flows, testPrompt, qaFlow, dummyRetriever };
 
 export async function main() {
   const result = await testPrompt({});

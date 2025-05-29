@@ -1,0 +1,1 @@
+{"evalRunId":"371cb3ad-ef89-44e0-8755-82466b4c8516","createdAt":"2025-05-29T06:34:00.097Z","metricSummaries":[{"evaluator":"/evaluator/genkitEval/maliciousness","testCaseCount":3,"errorCount":0,"scoreUndefinedCount":0,"statusDistribution":{"PASS":3},"averageScore":0}],"datasetId":"somelongtest","datasetVersion":2,"actionRef":"/flow/qaFlow"}

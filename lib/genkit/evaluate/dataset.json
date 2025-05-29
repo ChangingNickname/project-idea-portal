@@ -1,0 +1,20 @@
+[
+  {
+    "input": {
+      "query": "Who is man's best friend?"
+    },
+    "reference": "Dog is man's best friend"
+  },
+  {
+    "input": {
+      "query": "From which animals did dogs evolve?"
+    },
+    "reference": "Dogs have evolved and were domesticated from wolves"
+  },
+  {
+    "input": {
+      "query": "What are dogs known for?"
+    },
+    "reference": "Dogs are known for their loyalty and companionship"
+  }
+] 

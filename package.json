@@ -9,6 +9,7 @@
     "lint": "eslint --fix"
   },
   "dependencies": {
+    "@genkit-ai/evaluator": "^1.10.0",
     "@genkit-ai/googleai": "^1.10.0",
     "@heroui/alert": "^2.2.19",
     "@heroui/badge": "^2.2.12",
