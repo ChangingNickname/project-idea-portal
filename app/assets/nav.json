@@ -1,0 +1,12 @@
+[
+  {
+    "label": "navigation.home",
+    "icon": "i-lucide-home",
+    "to": "/"
+  },
+  {
+    "label": "navigation.dashboard",
+    "icon": "i-lucide-layout-dashboard",
+    "to": "/dashboard"
+  }
+] 

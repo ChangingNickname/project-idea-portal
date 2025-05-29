@@ -1,8 +1,9 @@
 <template>
     <div>
-        <h1> test </h1>
-        <div>
+        <CommonHeaders class="bg-secondary-600 dark:bg-secondary-400"/>
+        <main class="w-full bg-neutral-900 dark:bg-neutral-100">   
             <slot />
-        </div>
+        </main>
+        <CommonFooter />
     </div>
 </template>
