@@ -1,9 +1,11 @@
 <template>
-    <div>
-        <CommonHeaders class="bg-secondary-600 dark:bg-secondary-400"/>
-        <main class="w-full bg-neutral-900 dark:bg-neutral-100">   
+    <div class="flex flex-col min-h-screen">
+        <CommonHeaders />
+        <div class="w-full h-1 bg-primary-500 dark:bg-primary-600"/>
+        <main class="flex-1">   
             <slot />
         </main>
+        <div class="w-full h-1 bg-primary-500 dark:bg-primary-600"/>
         <CommonFooter />
     </div>
 </template>

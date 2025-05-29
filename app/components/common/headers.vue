@@ -1,12 +1,21 @@
 <template>
-  <header class="w-full bg-neutral-900 dark:bg-neutral-100 flex flex-row items-center">
+  <header 
+  class="w-full 
+  flex 
+  flex-row 
+  items-center
+  p-4">
     <CommonLogo />
-    <UNavigationMenu arrow :items="translatedItems" class="w-full justify-center" />
+    <UNavigationMenu
+      arrow
+      :items="translatedItems"
+      class="w-full justify-center"
+    />
 
-    <UButton data-language-button @click="isLanguageModalOpen = true">
+    <UButton data-language-button @click="isLanguageModalOpen = true" variant="outline">
       <UIcon name="i-lucide-globe" />
     </UButton>
-    <UButton @click="toggleTheme" class="ml-2">
+    <UButton @click="toggleTheme" class="ml-2" variant="outline">
       <UIcon :name="colorMode === 'dark' ? 'i-lucide-sun' : 'i-lucide-moon'" />
     </UButton>
     <SettingsLanguageSelect v-model="isLanguageModalOpen" />

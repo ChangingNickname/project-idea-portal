@@ -1,5 +1,10 @@
 <template>
-  <UApp>
+  <UApp 
+  class="
+  bg-neutral-900 
+  dark:bg-neutral-100 
+  text-neutral-100 
+  dark:text-neutral-900">
     <NuxtLayout> 
       <NuxtPage />
     </NuxtLayout>

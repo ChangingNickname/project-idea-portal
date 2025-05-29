@@ -1,7 +1,6 @@
 <template>
     <footer class="
-    w-full
-    bg-blue-500">
+    w-full">
         <span> test </span>
     </footer>
 </template>
