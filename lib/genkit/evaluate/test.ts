@@ -1,18 +1,8 @@
-import { genkit, z, Document } from 'genkit';
+import { z, Document } from 'genkit';
 import { googleAI } from '@genkit-ai/googleai';
 import { genkitEval, GenkitMetric } from '@genkit-ai/evaluator';
+import { ai } from '../ai';
 import dataset from './dataset.json';
-
-// Initialize Genkit with evaluator plugin
-export const ai = genkit({
-  plugins: [
-    googleAI(),
-    genkitEval({
-      judge: googleAI.model('gemini-2.0-flash'),
-      metrics: [GenkitMetric.MALICIOUSNESS],
-    }),
-  ],
-});
 
 // Dummy retriever that always returns the same docs
 export const dummyRetriever = ai.defineRetriever(
