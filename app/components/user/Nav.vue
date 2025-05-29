@@ -18,7 +18,12 @@
       class="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-50"
     >
       <!-- User Info -->
-      <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+      <button
+        type="button"
+        class="w-full text-left px-4 py-3 border-b border-gray-200 dark:border-gray-700 cursor-pointer relative group focus:outline-none"
+        @click="handleNavigation('/profile')"
+        title="{{$t('common.profile')}}"
+      >
         <div class="flex items-center gap-3">
           <UserAvatar
             email="test@example.com"
@@ -29,7 +34,10 @@
             <p class="text-xs text-gray-500 dark:text-gray-400">test@example.com</p>
           </div>
         </div>
-      </div>
+        <span class="absolute top-3 right-3 opacity-70 group-hover:opacity-100 transition-opacity">
+          <UIcon name="i-lucide-external-link" class="w-4 h-4" />
+        </span>
+      </button>
 
       <!-- Navigation Links -->
       <div class="py-1">
@@ -48,24 +56,17 @@
       <div class="py-1 border-t border-gray-200 dark:border-gray-700">
         <button
           class="w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-          @click="handleNavigation('/profile')"
-        >
-          <UIcon name="i-lucide-user" class="w-4 h-4" />
-          Profile
-        </button>
-        <button
-          class="w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
           @click="toggleTheme"
         >
           <UIcon :name="colorMode === 'dark' ? 'i-lucide-sun' : 'i-lucide-moon'" class="w-4 h-4" />
-          {{ colorMode === 'dark' ? 'Light Mode' : 'Dark Mode' }}
+          {{ colorMode === 'dark' ? $t('common.lightMode') : $t('common.darkMode') }}
         </button>
         <button data-language-button
           class="w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
           @click="openLanguageModal"
         >
           <UIcon name="i-lucide-globe" class="w-4 h-4" />
-          Language
+          {{ $t('common.selectLanguage') }}
         </button>
       </div>
 
@@ -88,6 +89,8 @@
 <script setup lang="ts">
 import { useColorMode, onClickOutside } from '@vueuse/core'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+import { computed } from 'vue'
 
 // import { useUserStore } from '~/stores/user'
 // const userStore = useUserStore()
@@ -97,24 +100,25 @@ const colorMode = useColorMode()
 const isLanguageModalOpen = ref(false)
 const isOpen = ref(false)
 const dropdownRef = ref<HTMLElement | null>(null)
+const { t } = useI18n()
 
-const navigationLinks = [
+const navigationLinks = computed(() => [
   {
-    label: 'Posts',
+    label: t('navigation.posts'),
     icon: 'i-lucide-file-text',
     path: '/posts'
   },
   {
-    label: 'Mails',
+    label: t('navigation.mails'),
     icon: 'i-lucide-mail',
     path: '/mails'
   },
   {
-    label: 'Article Builder',
+    label: t('navigation.articleBuilder'),
     icon: 'i-lucide-pen-tool',
     path: '/article-builder'
   }
-]
+])
 
 const handleNavigation = (path: string) => {
   console.log('Navigating to:', path)

@@ -4,12 +4,19 @@ export default {
     home: 'Home',
     about: 'About',
     contact: 'Contact',
-    dashboard: 'Dashboard'
+    dashboard: 'Dashboard',
+    posts: 'Posts',
+    mails: 'Mails',
+    articleBuilder: 'Article Builder'
   },
   common: {
     loading: 'Loading...',
     error: 'An error occurred',
-    success: 'Success'
+    success: 'Success',
+    selectLanguage: 'Select language',
+    profile: 'Profile',
+    lightMode: 'Light Mode',
+    darkMode: 'Dark Mode'
   },
   core: {
     desc: 'Improve the world with your ideas - Share, collaborate, and make a difference'

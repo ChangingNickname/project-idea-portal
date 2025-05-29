@@ -4,12 +4,19 @@ export default {
     home: 'Басты бет',
     about: 'Біз туралы',
     contact: 'Байланыс',
-    dashboard: 'Басқару панелі'
+    dashboard: 'Басқару панелі',
+    posts: 'Посттар',
+    mails: 'Хаттар',
+    articleBuilder: 'Мақала құрастырушы'
   },
   common: {
     loading: 'Жүктелуде...',
     error: 'Қате орын алды',
-    success: 'Сәтті'
+    success: 'Сәтті',
+    selectLanguage: 'Тілді таңдау',
+    profile: 'Профиль',
+    lightMode: 'Жарық режимі',
+    darkMode: 'Қараңғы режим'
   },
   core: {
     desc: 'Өз идеяларыңызбен әлемді жақсартыңыз - бөлісіңіз, ынтымақтасыңыз және өзгеріс енгізіңіз'

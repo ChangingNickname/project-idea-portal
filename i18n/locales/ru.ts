@@ -4,12 +4,19 @@ export default {
     home: 'Главная',
     about: 'О нас',
     contact: 'Контакты',
-    dashboard: 'Дашборд'
+    dashboard: 'Дашборд',
+    posts: 'Посты',
+    mails: 'Почта',
+    articleBuilder: 'Генератор статей'
   },
   common: {
     loading: 'Загрузка...',
     error: 'Произошла ошибка',
-    success: 'Успешно'
+    success: 'Успешно',
+    selectLanguage: 'Выбрать язык',
+    profile: 'Профиль',
+    lightMode: 'Светлая тема',
+    darkMode: 'Тёмная тема'
   },
   core: {
     desc: 'Улучшайте мир своими идеями - Делитесь, сотрудничайте и меняйте мир к лучшему'

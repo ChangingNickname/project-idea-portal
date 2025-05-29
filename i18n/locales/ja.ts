@@ -4,12 +4,19 @@ export default {
     home: 'ホーム',
     about: '概要',
     contact: 'お問い合わせ',
-    dashboard: 'ダッシュボード'
+    dashboard: 'ダッシュボード',
+    posts: '投稿',
+    mails: 'メール',
+    articleBuilder: '記事ビルダー'
   },
   common: {
     loading: '読み込み中...',
     error: 'エラーが発生しました',
-    success: '成功'
+    success: '成功',
+    selectLanguage: '言語を選択',
+    profile: 'プロフィール',
+    lightMode: 'ライトモード',
+    darkMode: 'ダークモード'
   },
   core: {
     desc: 'あなたのアイデアで世界をより良く - 共有し、協力し、変化を起こしましょう'

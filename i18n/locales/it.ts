@@ -4,12 +4,16 @@ export default {
     home: 'Home',
     about: 'Chi siamo',
     contact: 'Contatti',
-    dashboard: 'Dashboard'
+    dashboard: 'Dashboard',
+    posts: 'Post',
+    mails: 'Mail',
+    articleBuilder: 'Generatore di articoli'
   },
   common: {
     loading: 'Caricamento...',
     error: 'Si è verificato un errore',
-    success: 'Successo'
+    success: 'Successo',
+    selectLanguage: 'Seleziona lingua'
   },
   core: {
     desc: 'Migliora il mondo con le tue idee - Condividi, collabora e fai la differenza'

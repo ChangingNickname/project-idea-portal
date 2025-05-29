@@ -4,12 +4,19 @@ export default {
     home: 'होम',
     about: 'हमारे बारे में',
     contact: 'संपर्क',
-    dashboard: 'डैशबोर्ड'
+    dashboard: 'डैशबोर्ड',
+    posts: 'पोस्ट',
+    mails: 'मेल',
+    articleBuilder: 'आर्टिकल बिल्डर'
   },
   common: {
     loading: 'लोड हो रहा है...',
     error: 'एक त्रुटि हुई',
-    success: 'सफल'
+    success: 'सफल',
+    selectLanguage: 'भाषा चुनें',
+    profile: 'प्रोफ़ाइल',
+    lightMode: 'लाइट मोड',
+    darkMode: 'डार्क मोड'
   },
   core: {
     desc: 'अपने विचारों से दुनिया को बेहतर बनाएं - साझा करें, सहयोग करें और बदलाव लाएं'

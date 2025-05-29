@@ -4,12 +4,19 @@ export default {
     home: 'Início',
     about: 'Sobre',
     contact: 'Contato',
-    dashboard: 'Painel'
+    dashboard: 'Painel',
+    posts: 'Publicações',
+    mails: 'E-mails',
+    articleBuilder: 'Construtor de artigos'
   },
   common: {
     loading: 'Carregando...',
     error: 'Ocorreu um erro',
-    success: 'Sucesso'
+    success: 'Sucesso',
+    selectLanguage: 'Selecionar idioma',
+    profile: 'Perfil',
+    lightMode: 'Modo claro',
+    darkMode: 'Modo escuro'
   },
   core: {
     desc: 'Melhore o mundo com suas ideias - Compartilhe, colabore e faça a diferença'

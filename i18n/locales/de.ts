@@ -4,12 +4,19 @@ export default {
     home: 'Startseite',
     about: 'Über uns',
     contact: 'Kontakt',
-    dashboard: 'Dashboard'
+    dashboard: 'Dashboard',
+    posts: 'Beiträge',
+    mails: 'Mails',
+    articleBuilder: 'Artikel-Generator'
   },
   common: {
     loading: 'Laden...',
     error: 'Ein Fehler ist aufgetreten',
-    success: 'Erfolg'
+    success: 'Erfolg',
+    selectLanguage: 'Sprache wählen',
+    profile: 'Profil',
+    lightMode: 'Heller Modus',
+    darkMode: 'Dunkler Modus'
   },
   core: {
     desc: 'Verbessern Sie die Welt mit Ihren Ideen - Teilen, zusammenarbeiten und etwas bewegen'

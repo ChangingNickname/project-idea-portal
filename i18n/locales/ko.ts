@@ -4,12 +4,19 @@ export default {
     home: '홈',
     about: '소개',
     contact: '연락처',
-    dashboard: '대시보드'
+    dashboard: '대시보드',
+    posts: '게시물',
+    mails: '메일',
+    articleBuilder: '아티클 빌더'
   },
   common: {
     loading: '로딩 중...',
     error: '오류가 발생했습니다',
-    success: '성공'
+    success: '성공',
+    selectLanguage: '언어 선택',
+    profile: '프로필',
+    lightMode: '라이트 모드',
+    darkMode: '다크 모드'
   },
   core: {
     desc: '당신의 아이디어로 세계를 개선하세요 - 공유하고, 협력하고, 변화를 만드세요'
