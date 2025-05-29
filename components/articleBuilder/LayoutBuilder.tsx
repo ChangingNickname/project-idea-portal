@@ -95,6 +95,14 @@ export default function LayoutBuilder({ visibleWindows }: LayoutBuilderProps) {
         localStorage.removeItem(STORAGE_KEYS.image);
         localStorage.removeItem(STORAGE_KEYS.content);
         localStorage.removeItem(STORAGE_KEYS.postId);
+
+        // Dispatch storage event to notify other components
+        window.dispatchEvent(new StorageEvent('storage', {
+          key: null,
+          newValue: null,
+          oldValue: null,
+          storageArea: localStorage
+        }));
       }
       
       setPostId(null);
