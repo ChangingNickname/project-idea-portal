@@ -27,18 +27,12 @@ import { app } from "@/lib/firebase/client"; // make sure this points to your fi
 
 
 export const Navbar = () => {
-  const [showMyPosts, setShowMyPosts] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     const auth = getAuth(app);
-    const unsub = onAuthStateChanged(auth, async (user) => {
-      if (user && !user.isAnonymous) {
-        const res = await fetch(`/api/user-posts/${user.uid}`);
-        const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
-          setShowMyPosts(true);
-        }
-      }
+    const unsub = onAuthStateChanged(auth, (user) => {
+      setIsAuthenticated(!!user && !user.isAnonymous);
     });
 
     return () => unsub();
@@ -68,19 +62,33 @@ export const Navbar = () => {
               </NextLink>
             </NavbarItem>
           ))}
-          {showMyPosts && (
-            <NavbarItem key="/my-posts">
-              <NextLink
-                className={clsx(
-                  linkStyles({ color: "foreground" }),
-                  "data-[active=true]:text-primary data-[active=true]:font-medium",
-                )}
-                color="foreground"
-                href="/my-posts"
-              >
-                My Posts
-              </NextLink>
-            </NavbarItem>
+          {isAuthenticated && (
+            <>
+              <NavbarItem>
+                <NextLink
+                  className={clsx(
+                    linkStyles({ color: "foreground" }),
+                    "data-[active=true]:text-primary data-[active=true]:font-medium",
+                  )}
+                  color="foreground"
+                  href="/dashboard"
+                >
+                  Dashboard
+                </NextLink>
+              </NavbarItem>
+              <NavbarItem>
+                <NextLink
+                  className={clsx(
+                    linkStyles({ color: "foreground" }),
+                    "data-[active=true]:text-primary data-[active=true]:font-medium",
+                  )}
+                  color="foreground"
+                  href="/my-posts"
+                >
+                  My Posts
+                </NextLink>
+              </NavbarItem>
+            </>
           )}
         </ul>
       </NavbarContent>
@@ -126,12 +134,19 @@ export const Navbar = () => {
               </Link>
             </NavbarMenuItem>
           ))}
-          {showMyPosts && (
-            <NavbarMenuItem key="/my-posts">
-              <Link href="/my-posts" size="lg">
-                My Posts
-              </Link>
-            </NavbarMenuItem>
+          {isAuthenticated && (
+            <>
+              <NavbarMenuItem>
+                <Link href="/dashboard" size="lg">
+                  Dashboard
+                </Link>
+              </NavbarMenuItem>
+              <NavbarMenuItem>
+                <Link href="/my-posts" size="lg">
+                  My Posts
+                </Link>
+              </NavbarMenuItem>
+            </>
           )}
         </div>
       </NavbarMenu>
