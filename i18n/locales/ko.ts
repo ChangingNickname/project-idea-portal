@@ -16,5 +16,12 @@ export default {
   },
   ko: {
     title: 'Project Idea Portal'
+  },
+  index: {
+    title1: '학생',
+    title2: '프로젝트 아이디어 포털',
+    subtitle: '아이디어가 있나요? 올려보세요, 누군가 실현할지도 몰라요!',
+    button1: '시작하기',
+    button2: '우리 AI와 대화하기'
   }
 } 

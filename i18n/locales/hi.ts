@@ -16,5 +16,12 @@ export default {
   },
   hi: {
     title: 'Project Idea Portal'
+  },
+  index: {
+    title1: 'छात्र',
+    title2: 'प्रोजेक्ट आइडिया पोर्टल',
+    subtitle: 'कोई विचार है? साझा करें, कोई इसे बना सकता है!',
+    button1: 'शुरू करें',
+    button2: 'हमारे AI से बात करें'
   }
 } 

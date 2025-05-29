@@ -16,5 +16,12 @@ export default {
   },
   en: {
     title: 'Project Idea Portal'
+  },
+  index: {
+    title1: 'Student',
+    title2: 'Project Idea Portal',
+    subtitle: 'Got an idea? Toss it in. Someone might just build it!',
+    button1: 'Get started by',
+    button2: 'talking to our AI'
   }
 } 

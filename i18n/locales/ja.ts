@@ -16,5 +16,12 @@ export default {
   },
   ja: {
     title: 'Project Idea Portal'
+  },
+  index: {
+    title1: '学生',
+    title2: 'プロジェクトアイデアポータル',
+    subtitle: 'アイデアがありますか？投稿すれば誰かが実現するかも！',
+    button1: 'まずは',
+    button2: 'AIと話してみよう'
   }
 } 

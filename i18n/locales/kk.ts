@@ -16,5 +16,12 @@ export default {
   },
   kk: {
     title: 'Project Idea Portal'
+  },
+  index: {
+    title1: 'Студент',
+    title2: 'Жоба идеялары порталы',
+    subtitle: 'Идеяңыз бар ма? Ұсыныңыз, біреу жүзеге асыруы мүмкін!',
+    button1: 'Бастау',
+    button2: 'AI-мен сөйлесу'
   }
 } 

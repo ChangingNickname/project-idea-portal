@@ -16,5 +16,12 @@ export default {
   },
   ru: {
     title: 'Project Idea Portal'
+  },
+  index: {
+    title1: 'Студент',
+    title2: 'Портал идейных проектов',
+    subtitle: 'Есть идея? Поделись — кто-то может её реализовать!',
+    button1: 'Начни с',
+    button2: 'общения с нашим ИИ'
   }
 } 

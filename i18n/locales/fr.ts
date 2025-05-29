@@ -16,5 +16,12 @@ export default {
   },
   fr: {
     title: 'Project Idea Portal'
+  },
+  index: {
+    title1: 'Étudiant',
+    title2: 'Portail d’idées de projet',
+    subtitle: 'Vous avez une idée ? Partagez-la, quelqu’un pourrait la réaliser !',
+    button1: 'Commencez par',
+    button2: 'parler à notre IA'
   }
 } 

@@ -16,5 +16,12 @@ export default {
   },
   zh: {
     title: 'Project Idea Portal'
+  },
+  index: {
+    title1: '学生',
+    title2: '项目创意门户',
+    subtitle: '有想法吗？分享出来，也许有人会实现！',
+    button1: '开始于',
+    button2: '与我们的AI对话'
   }
 } 
