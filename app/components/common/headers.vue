@@ -1,10 +1,10 @@
 <template>
   <header 
-  class="w-full 
-  flex 
-  flex-row 
-  items-center
-  p-4">
+    class="w-full 
+    flex 
+    flex-row 
+    items-center
+    p-4">
     <CommonLogo />
     <UNavigationMenu
       arrow
@@ -12,13 +12,32 @@
       class="w-full justify-center"
     />
 
-    <UButton data-language-button @click="isLanguageModalOpen = true" variant="outline">
-      <UIcon name="i-lucide-globe" />
-    </UButton>
-    <UButton @click="toggleTheme" class="ml-2" variant="outline">
-      <UIcon :name="colorMode === 'dark' ? 'i-lucide-sun' : 'i-lucide-moon'" />
-    </UButton>
-    <SettingsLanguageSelect v-model="isLanguageModalOpen" />
+    <div class="flex flex-row gap-2">
+      <template v-if="!isAuthenticated">
+        <UButton 
+          data-language-button 
+          @click="isLanguageModalOpen = true" 
+          size="lg" 
+          variant="ghost"
+        >
+          <UIcon name="i-lucide-globe" />
+        </UButton>
+        <UButton 
+          @click="toggleTheme" 
+          size="lg" 
+          variant="ghost"
+        >
+          <UIcon :name="colorMode === 'dark' ? 'i-lucide-sun' : 'i-lucide-moon'" />
+        </UButton>
+        <UButton 
+          size="lg" 
+          variant="solid" 
+          label="Sign In" 
+        />
+        <SettingsLanguageSelect v-model="isLanguageModalOpen" />
+      </template>
+      <UserNav v-else />
+    </div>
   </header>
 </template>
 
@@ -29,11 +48,14 @@ import { computed } from 'vue'
 import { useColorMode } from '@vueuse/core'
 
 const { t } = useI18n()
+const isAuthenticated = ref(true) // TODO: Replace with actual auth check
 const isLanguageModalOpen = ref(false)
 const colorMode = useColorMode()
+
 const toggleTheme = () => {
   colorMode.value = colorMode.value === 'dark' ? 'light' : 'dark'
 }
+
 const translatedItems = computed(() =>
   nav.map(item => ({
     ...item,

@@ -2,7 +2,8 @@
   <div class="relative inline-block">
     <UAvatar
       :src="avatarSrc"
-      :alt="alt"
+      :alt="email"
+      size="md"
       :class="[
         'transition-all duration-200',
         isActive && 'ring-2 ring-primary ring-offset-2'
@@ -11,8 +12,8 @@
     <UChip
       v-if="chipText"
       :text="chipText"
-      size="3xl"
-      class="absolute -top-2 -right-2"
+      size="sm"
+      class="absolute -top-1 -right-1"
     />
   </div>
 </template>
@@ -26,6 +27,7 @@ interface Props {
   alt?: string
   isActive?: boolean
   chipText?: string | number
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -33,7 +35,8 @@ const props = withDefaults(defineProps<Props>(), {
   email: '',
   alt: 'User avatar',
   isActive: false,
-  chipText: ''
+  chipText: '',
+  size: 'md'
 })
 
 const avatarSrc = computed(() => {
