@@ -1,14 +1,12 @@
-import { googleAI } from "@genkit-ai/googleai";
-import { genkit } from 'genkit'
+import { ai } from './ai';
+import * as flows from './flows';
+import { testPrompt } from './prompts/test';
 
+export { ai, flows, testPrompt };
 
-export const ai = genkit({
-    plugins: [googleAI()],
-    model: googleAI.model('gemini-2.0-flash'),
-})
-
-
-async function main() {
-    const result = await ai.generate('Hello, world!')
-    console.log(result)
+export async function main() {
+  const result = await testPrompt({});
+  console.log(result.text);
 }
+
+main();
