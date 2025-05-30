@@ -47,11 +47,16 @@
           size="lg" 
           variant="solid" 
           :label="$t('common.signIn')" 
-          @click="isOpen = true"
+          @click="openLogin"
         />
 
         <UserLogin
-          v-model="isOpen"
+          v-model="showLoginModal"
+          @open-register="openRegister"
+        />
+        <UserRegister
+          v-model="showRegisterModal"
+          @open-login="openLogin"
         />
         <SettingsLanguageSelect v-model="isLanguageModalOpen" />
       </template>
@@ -73,7 +78,8 @@ const route = useRoute()
 const userStore = useUserStore()
 const isLanguageModalOpen = ref(false)
 const colorMode = useColorMode()
-const isOpen = ref(false)
+const showLoginModal = ref(false)
+const showRegisterModal = ref(false)
 const isAuthenticated = computed(() => userStore.isAuthenticated)
 
 const navItems = computed(() => nav)
@@ -84,5 +90,19 @@ const isActiveRoute = (path: string) => {
 
 const toggleTheme = () => {
   colorMode.value = colorMode.value === 'dark' ? 'light' : 'dark'
+}
+
+const openLogin = () => {
+  showRegisterModal.value = false
+  setTimeout(() => {
+    showLoginModal.value = true
+  }, 150)
+}
+
+const openRegister = () => {
+  showLoginModal.value = false
+  setTimeout(() => {
+    showRegisterModal.value = true
+  }, 150)
 }
 </script>
