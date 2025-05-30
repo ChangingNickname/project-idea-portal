@@ -35,7 +35,12 @@ export default {
     unexpectedError: 'An unexpected error occurred.',
     loginSuccess: 'Successfully logged in',
     googleLoginSuccess: 'Successfully logged in with Google',
-    anonymousLoginSuccess: 'Successfully logged in anonymously'
+    anonymousLoginSuccess: 'Successfully logged in anonymously',
+    confirmPassword: 'Confirm Password',
+    confirmPasswordInput: 'Confirm your password',
+    passwordsDoNotMatch: 'Passwords do not match',
+    registerError: 'Failed to register. Please try again.',
+    registerSuccess: 'Successfully registered'
   },
   core: {
     desc: 'Improve the world with your ideas - Share, collaborate, and make a difference'

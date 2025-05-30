@@ -35,7 +35,12 @@ export default {
     unexpectedError: 'Произошла непредвиденная ошибка.',
     loginSuccess: 'Успешный вход в систему',
     googleLoginSuccess: 'Успешный вход через Google',
-    anonymousLoginSuccess: 'Успешный анонимный вход'
+    anonymousLoginSuccess: 'Успешный анонимный вход',
+    confirmPassword: 'Подтвердите пароль',
+    confirmPasswordInput: 'Подтвердите ваш пароль',
+    passwordsDoNotMatch: 'Пароли не совпадают',
+    registerError: 'Не удалось зарегистрироваться. Пожалуйста, попробуйте снова.',
+    registerSuccess: 'Успешная регистрация'
   },
   core: {
     desc: 'Улучшайте мир своими идеями - делитесь, сотрудничайте, создавайте изменения'
