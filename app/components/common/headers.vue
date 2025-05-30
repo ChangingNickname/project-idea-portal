@@ -8,11 +8,23 @@
     <NuxtLink to="/">
       <CommonLogo />
     </NuxtLink>
-    <UNavigationMenu
-      arrow
-      :items="translatedItems"
-      class="w-full justify-center"
-    />
+
+    <div class="flex-1 flex justify-center gap-4">
+      <NuxtLink
+        v-for="item in navItems"
+        :key="item.to"
+        :to="item.to"
+        class="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors"
+        :class="[
+          isActiveRoute(item.to) 
+            ? 'text-primary-500 bg-primary-50 dark:bg-primary-950' 
+            : 'text-gray-600 dark:text-gray-400 hover:text-primary-500 dark:hover:text-primary-400'
+        ]"
+      >
+        <UIcon :name="item.icon" />
+        {{ t(item.label) }}
+      </NuxtLink>
+    </div>
 
     <div class="flex flex-row gap-2">
       <template v-if="!isAuthenticated">
@@ -54,22 +66,23 @@ import { useI18n } from 'vue-i18n'
 import { computed, ref } from 'vue'
 import { useColorMode } from '@vueuse/core'
 import { useUserStore } from '~/stores/user'
+import { useRoute } from 'vue-router'
 
 const { t } = useI18n()
+const route = useRoute()
 const userStore = useUserStore()
 const isLanguageModalOpen = ref(false)
 const colorMode = useColorMode()
 const isOpen = ref(false)
 const isAuthenticated = computed(() => userStore.isAuthenticated)
 
+const navItems = computed(() => nav)
+
+const isActiveRoute = (path: string) => {
+  return route.path.startsWith(path)
+}
+
 const toggleTheme = () => {
   colorMode.value = colorMode.value === 'dark' ? 'light' : 'dark'
 }
-
-const translatedItems = computed(() =>
-  nav.map(item => ({
-    ...item,
-    label: t(item.label)
-  }))
-)
 </script>
