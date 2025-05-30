@@ -16,19 +16,29 @@ export default {
     selectLanguage: 'Selecionar idioma',
     profile: 'Perfil',
     lightMode: 'Modo claro',
-    darkMode: 'Modo escuro'
+    darkMode: 'Modo escuro',
+    logout: 'Sair',
+    signIn: 'Entrar',
+    register: 'Registrar',
+    email: 'E-mail',
+    emailInput: 'Digite seu e-mail',
+    password: 'Senha',
+    passwordInput: 'Digite sua senha',
+    orContinueWith: 'Ou continuar com',
+    google: 'Google',
+    anonymous: 'Anônimo',
   },
   core: {
     desc: 'Melhore o mundo com suas ideias - Compartilhe, colabore e faça a diferença'
   },
   pt: {
-    title: 'Project Idea Portal'
+    title: 'Portal de Ideias de Projetos'
   },
   index: {
-    title1: 'Estudante',
-    title2: 'Portal de Ideias de Projeto',
-    subtitle: 'Tem uma ideia? Compartilhe, alguém pode realizá-la!',
-    button1: 'Comece por',
-    button2: 'falar com nossa IA'
+    title1: 'Portal de',
+    title2: 'Ideias de Projetos',
+    subtitle: 'Tem uma ideia? Compartilhe! Alguém pode realizá-la!',
+    button1: 'Comece',
+    button2: 'falando com nossa IA'
   }
 } 

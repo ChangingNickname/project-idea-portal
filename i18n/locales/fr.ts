@@ -5,30 +5,40 @@ export default {
     about: 'À propos',
     contact: 'Contact',
     dashboard: 'Tableau de bord',
-    posts: 'Articles',
-    mails: 'Mails',
-    articleBuilder: 'Générateur d\'articles'
+    posts: 'Publications',
+    mails: 'Messages',
+    articleBuilder: 'Constructeur d\'articles'
   },
   common: {
     loading: 'Chargement...',
     error: 'Une erreur est survenue',
     success: 'Succès',
-    selectLanguage: 'Choisir la langue',
+    selectLanguage: 'Sélectionner la langue',
     profile: 'Profil',
     lightMode: 'Mode clair',
-    darkMode: 'Mode sombre'
+    darkMode: 'Mode sombre',
+    logout: 'Déconnexion',
+    signIn: 'Connexion',
+    register: 'S\'inscrire',
+    email: 'Email',
+    emailInput: 'Entrez votre email',
+    password: 'Mot de passe',
+    passwordInput: 'Entrez votre mot de passe',
+    orContinueWith: 'Ou continuer avec',
+    google: 'Google',
+    anonymous: 'Anonyme',
   },
   core: {
     desc: 'Améliorez le monde avec vos idées - Partagez, collaborez et faites la différence'
   },
   fr: {
-    title: 'Project Idea Portal'
+    title: 'Portail d\'Idées de Projets'
   },
   index: {
-    title1: 'Étudiant',
-    title2: 'Portail d\'idées de projet',
-    subtitle: 'Vous avez une idée ? Partagez-la, quelqu\'un pourrait la réaliser !',
-    button1: 'Commencez par',
-    button2: 'parler à notre IA'
+    title1: 'Portail',
+    title2: 'd\'Idées de Projets',
+    subtitle: 'Vous avez une idée ? Partagez-la ! Quelqu\'un pourrait la réaliser !',
+    button1: 'Commencez en',
+    button2: 'parlant à notre IA'
   }
 } 

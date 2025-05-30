@@ -5,9 +5,9 @@ export default {
     about: 'Біз туралы',
     contact: 'Байланыс',
     dashboard: 'Басқару панелі',
-    posts: 'Посттар',
+    posts: 'Жазбалар',
     mails: 'Хаттар',
-    articleBuilder: 'Мақала құрастырушы'
+    articleBuilder: 'Мақала құрастырғыш'
   },
   common: {
     loading: 'Жүктелуде...',
@@ -15,20 +15,30 @@ export default {
     success: 'Сәтті',
     selectLanguage: 'Тілді таңдау',
     profile: 'Профиль',
-    lightMode: 'Жарық режимі',
-    darkMode: 'Қараңғы режим'
+    lightMode: 'Ашық тақырып',
+    darkMode: 'Қараңғы тақырып',
+    logout: 'Шығу',
+    signIn: 'Кіру',
+    register: 'Тіркелу',
+    email: 'Email',
+    emailInput: 'Email мекенжайын енгізіңіз',
+    password: 'Құпия сөз',
+    passwordInput: 'Құпия сөзіңізді енгізіңіз',
+    orContinueWith: 'Немесе мынамен жалғастырыңыз',
+    google: 'Google',
+    anonymous: 'Анонимді',
   },
   core: {
-    desc: 'Өз идеяларыңызбен әлемді жақсартыңыз - бөлісіңіз, ынтымақтасыңыз және өзгеріс енгізіңіз'
+    desc: 'Әлемді өз идеяларыңызбен жақсартыңыз - Бөлісіңіз, ынтымақтасыңыз және өзгеріс енгізіңіз'
   },
   kk: {
-    title: 'Project Idea Portal'
+    title: 'Жоба идеялары порталы'
   },
   index: {
-    title1: 'Студент',
+    title1: 'Студенттік',
     title2: 'Жоба идеялары порталы',
-    subtitle: 'Идеяңыз бар ма? Ұсыныңыз, біреу жүзеге асыруы мүмкін!',
-    button1: 'Бастау',
-    button2: 'AI-мен сөйлесу'
+    subtitle: 'Идеяңыз бар ма? Бөлісіңіз. Біреу оны жүзеге асыруы мүмкін!',
+    button1: 'Біздің ЖС-мен',
+    button2: 'сөйлесу арқылы бастаңыз'
   }
 } 

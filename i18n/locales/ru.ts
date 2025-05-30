@@ -4,10 +4,10 @@ export default {
     home: 'Главная',
     about: 'О нас',
     contact: 'Контакты',
-    dashboard: 'Дашборд',
+    dashboard: 'Панель управления',
     posts: 'Посты',
     mails: 'Почта',
-    articleBuilder: 'Генератор статей'
+    articleBuilder: 'Конструктор статей'
   },
   common: {
     loading: 'Загрузка...',
@@ -16,19 +16,35 @@ export default {
     selectLanguage: 'Выбрать язык',
     profile: 'Профиль',
     lightMode: 'Светлая тема',
-    darkMode: 'Тёмная тема'
+    darkMode: 'Темная тема',
+    logout: 'Выйти',
+    signIn: 'Войти',
+    register: 'Регистрация',
+    email: 'Email',
+    emailInput: 'Введите email',
+    password: 'Пароль',
+    passwordInput: 'Введите пароль',
+    orContinueWith: 'или продолжить с',
+    google: 'Google',
+    anonymous: 'Анонимно',
+    alreadyHaveAccount: 'Уже есть аккаунт?',
+    dontHaveAccount: 'Нет аккаунта?',
+    loginError: 'Не удалось войти. Проверьте ваши учетные данные.',
+    googleLoginError: 'Не удалось войти через Google.',
+    anonymousLoginError: 'Не удалось войти анонимно.',
+    unexpectedError: 'Произошла непредвиденная ошибка.'
   },
   core: {
-    desc: 'Улучшайте мир своими идеями - Делитесь, сотрудничайте и меняйте мир к лучшему'
+    desc: 'Улучшайте мир своими идеями - делитесь, сотрудничайте, создавайте изменения'
   },
   ru: {
-    title: 'Project Idea Portal'
+    title: 'Портал идей проектов'
   },
   index: {
-    title1: 'Студент',
-    title2: 'Портал идейных проектов',
-    subtitle: 'Есть идея? Поделись — кто-то может её реализовать!',
-    button1: 'Начни с',
-    button2: 'общения с нашим ИИ'
+    title1: 'Проект',
+    title2: 'Портал идей',
+    subtitle: 'У вас есть идея? Поделитесь ею! Возможно, кто-то её реализует!',
+    button1: 'Начните с',
+    button2: 'разговора с ИИ'
   }
 } 

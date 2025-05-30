@@ -16,7 +16,23 @@ export default {
     selectLanguage: 'Select language',
     profile: 'Profile',
     lightMode: 'Light Mode',
-    darkMode: 'Dark Mode'
+    darkMode: 'Dark Mode',
+    logout: 'Logout',
+    signIn: 'Sign In',
+    register: 'Register',
+    email: 'Email',
+    emailInput: 'Enter your email',
+    password: 'Password',
+    passwordInput: 'Enter your password',
+    orContinueWith: 'Or continue with',   
+    google: 'Google',
+    anonymous: 'Anonymous',
+    alreadyHaveAccount: 'Already have an account?',
+    dontHaveAccount: 'Don\'t have an account?',
+    loginError: 'Failed to login. Please check your credentials.',
+    googleLoginError: 'Failed to login with Google.',
+    anonymousLoginError: 'Failed to login anonymously.',
+    unexpectedError: 'An unexpected error occurred.'
   },
   core: {
     desc: 'Improve the world with your ideas - Share, collaborate, and make a difference'
