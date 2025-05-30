@@ -5,7 +5,9 @@
     flex-row 
     items-center
     p-4">
-    <CommonLogo />
+    <NuxtLink to="/">
+      <CommonLogo />
+    </NuxtLink>
     <UNavigationMenu
       arrow
       :items="translatedItems"
@@ -32,7 +34,12 @@
         <UButton 
           size="lg" 
           variant="solid" 
-          label="Sign In" 
+          :label="$t('common.signIn')" 
+          @click="isOpen = true"
+        />
+
+        <UserLogin
+          v-model="isOpen"
         />
         <SettingsLanguageSelect v-model="isLanguageModalOpen" />
       </template>
@@ -44,13 +51,16 @@
 <script setup lang="ts">
 import nav from '~/assets/nav.json'
 import { useI18n } from 'vue-i18n'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useColorMode } from '@vueuse/core'
+import { useUserStore } from '~/stores/user'
 
 const { t } = useI18n()
-const isAuthenticated = ref(true) // TODO: Replace with actual auth check
+const userStore = useUserStore()
 const isLanguageModalOpen = ref(false)
 const colorMode = useColorMode()
+const isOpen = ref(false)
+const isAuthenticated = computed(() => userStore.isAuthenticated)
 
 const toggleTheme = () => {
   colorMode.value = colorMode.value === 'dark' ? 'light' : 'dark'
