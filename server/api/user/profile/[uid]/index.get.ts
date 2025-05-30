@@ -1,6 +1,6 @@
 import { initializeApp, getApps, cert } from 'firebase-admin/app'
 import { getAuth } from 'firebase-admin/auth'
-import { defineEventHandler, getCookie } from 'h3'
+import { defineEventHandler, getCookie, createError } from 'h3'
 
 // Initialize Firebase Admin if not already initialized
 if (!getApps().length) {
@@ -76,20 +76,31 @@ export default defineEventHandler(async (event): Promise<User> => {
               displayName: factor.displayName || null,
               enrollmentTime: factor.enrollmentTime || null
             }))
-          } : null
+          } : null,
+          contacts: {
+            email: userRecord.email || null,
+            phone: userRecord.phoneNumber || null,
+            telegram: null,
+            whatsapp: null,
+            viber: null,
+            discord: null,
+            linkedin: null,
+            github: null,
+            website: null
+          }
         }
       }
 
-      // For other users, return limited data
+      // For other users, return only id, displayName (or email) and avatar
       return {
         id: userRecord.uid,
-        email: userRecord.email || null,
+        email: null,
         avatar: userRecord.photoURL || null,
-        emailVerified: userRecord.emailVerified,
-        displayName: userRecord.displayName || null,
-        phoneNumber: userRecord.phoneNumber || null,
-        disabled: userRecord.disabled,
-        isAnonymous: userRecord.providerData.length === 0,
+        emailVerified: false,
+        displayName: userRecord.displayName || userRecord.email || null,
+        phoneNumber: null,
+        disabled: false,
+        isAnonymous: false,
         providerData: [],
         customClaims: null,
         metadata: {
@@ -98,7 +109,18 @@ export default defineEventHandler(async (event): Promise<User> => {
           lastRefreshTime: null
         },
         tenantId: null,
-        multiFactor: null
+        multiFactor: null,
+        contacts: {
+          email: null,
+          phone: null,
+          telegram: null,
+          whatsapp: null,
+          viber: null,
+          discord: null,
+          linkedin: null,
+          github: null,
+          website: null
+        }
       }
     } catch (error: any) {
       if (error.code === 'auth/user-not-found') {
@@ -107,13 +129,16 @@ export default defineEventHandler(async (event): Promise<User> => {
           message: 'User not found'
         })
       }
-      throw error
+      throw createError({
+        statusCode: 500,
+        message: error.message || 'Failed to get user data'
+      })
     }
   } catch (error: any) {
     console.error('Error in /api/user/profile/[uid]:', error)
     throw createError({
-      statusCode: 500,
-      message: 'Internal Server Error'
+      statusCode: error.statusCode || 500,
+      message: error.message || 'Internal Server Error'
     })
   }
 }) 

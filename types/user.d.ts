@@ -15,6 +15,19 @@ declare global {
         metadata: Metadata
         tenantId: string | null
         multiFactor: MultiFactor | null
+        contacts: UserContacts
+    }
+
+    interface UserContacts {
+        email: string | null
+        phone: string | null
+        telegram: string | null
+        whatsapp: string | null
+        viber: string | null
+        discord: string | null
+        linkedin: string | null
+        github: string | null
+        website: string | null
     }
 
     interface ProviderData {
