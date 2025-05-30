@@ -1,43 +1,54 @@
 import { defineStore } from 'pinia'
-
+import type { User } from '~/types/user'
+import { checkStoredUser, onAuthStateChanged } from '~/utils/firebase/auth'
 
 export const useUserStore = defineStore('user', {
   state: () => ({
     user: null as User | null,
+    loading: true
   }),
 
+  getters: {
+    isAuthenticated: (state) => !!state.user,
+    isAnonymous: (state) => state.user?.isAnonymous || false
+  },
+
   actions: {
-    setUser(user: User) {
+    async init() {
+      // Check localStorage first
+      const storedUser = checkStoredUser()
+      if (storedUser) {
+        this.user = storedUser
+      }
+
+      // Listen to auth state changes
+      onAuthStateChanged(async (firebaseUser) => {
+        if (firebaseUser) {
+          this.user = {
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            displayName: firebaseUser.displayName,
+            photoURL: firebaseUser.photoURL,
+            emailVerified: firebaseUser.emailVerified,
+            isAnonymous: firebaseUser.isAnonymous,
+            metadata: {
+              creationTime: firebaseUser.metadata.creationTime || null,
+              lastSignInTime: firebaseUser.metadata.lastSignInTime || null
+            }
+          }
+        } else {
+          this.user = null
+        }
+        this.loading = false
+      })
+    },
+
+    setUser(user: User | null) {
       this.user = user
-      // Save to localStorage
-      localStorage.setItem('user', JSON.stringify(user))
-      // Save to sessionStorage
-      sessionStorage.setItem('user', JSON.stringify(user))
     },
 
     clearUser() {
       this.user = null
-      localStorage.removeItem('user')
-      sessionStorage.removeItem('user')
-    },
-
-    // Initialize store from storage
-    initializeFromStorage() {
-      // Try to get from sessionStorage first, then localStorage
-      const storedUser = sessionStorage.getItem('user') || localStorage.getItem('user')
-      if (storedUser) {
-        try {
-          this.user = JSON.parse(storedUser)
-        } catch (e) {
-          console.error('Failed to parse stored user data:', e)
-          this.clearUser()
-        }
-      }
     }
-  },
-
-  getters: {
-    isAuthenticated: (state) => !!state.user,
-    getUser: (state) => state.user,
   }
 }) 
