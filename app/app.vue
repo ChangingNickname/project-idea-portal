@@ -1,5 +1,9 @@
 <template>
   <UApp 
+  :toast="{
+    position: 'top-right',
+    duration: 3000,
+  }"
   class="
   bg-neutral-900 
   dark:bg-neutral-100 
