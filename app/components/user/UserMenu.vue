@@ -37,7 +37,14 @@
       </UButton>
     </template>
 
-    <UserLogin v-model="showLoginModal" />
+    <UserLogin 
+      v-model="showLoginModal" 
+      @open-register="openRegister"
+    />
+    <UserRegister 
+      v-model="showRegisterModal" 
+      @open-login="openLogin"
+    />
   </div>
 </template>
 
@@ -48,6 +55,17 @@ import { signOut } from '~/utils/firebase/auth'
 
 const userStore = useUserStore()
 const showLoginModal = ref(false)
+const showRegisterModal = ref(false)
+
+const openLogin = () => {
+  showRegisterModal.value = false
+  showLoginModal.value = true
+}
+
+const openRegister = () => {
+  showLoginModal.value = false
+  showRegisterModal.value = true
+}
 
 const menuItems = [
   [
