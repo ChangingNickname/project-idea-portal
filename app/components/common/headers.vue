@@ -41,7 +41,14 @@
           size="lg" 
           variant="ghost"
         >
-          <UIcon :name="colorMode === 'dark' ? 'i-lucide-sun' : 'i-lucide-moon'" />
+          <ClientOnly>
+            <template #default>
+              <UIcon :name="colorMode === 'dark' ? 'i-lucide-sun' : 'i-lucide-moon'" />
+            </template>
+            <template #fallback>
+              <UIcon name="i-lucide-moon" />
+            </template>
+          </ClientOnly>
         </UButton>
         <UButton 
           size="lg" 

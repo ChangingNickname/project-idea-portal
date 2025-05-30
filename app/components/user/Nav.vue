@@ -6,8 +6,10 @@
       class="relative"
       @click="isOpen = !isOpen"
     >
-      <UserAvatar
-        :email="userStore.user?.email || ''"
+      <Avatar
+        :src="user?.photoURL"
+        :email="user?.email"
+        :alt="user?.displayName || user?.email || ''"
         :isActive="true"
       />
     </UButton>
@@ -21,17 +23,19 @@
       <button
         type="button"
         class="w-full text-left px-4 py-3 border-b border-gray-200 dark:border-gray-700 cursor-pointer relative group focus:outline-none"
-        @click="handleNavigation('/profile')"
+        @click="handleNavigation(`/user/profile/${user?.uid}`)"
         :title="$t('common.profile')"
       >
         <div class="flex items-center gap-3">
-          <UserAvatar
-            :email="userStore.user?.email || ''"
+          <Avatar
+            :src="user?.photoURL"
+            :email="user?.email"
+            :alt="user?.displayName || user?.email || ''"
             size="sm"
           />
           <div>
-            <p class="text-sm font-medium text-gray-900 dark:text-white">{{ userStore.user?.displayName || 'Anonymous User' }}</p>
-            <p class="text-xs text-gray-500 dark:text-gray-400">{{ truncateEmail(userStore.user?.email) }}</p>
+            <p class="text-sm font-medium text-gray-900 dark:text-white">{{ user?.displayName || 'Anonymous User' }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">{{ truncateEmail(user?.email) }}</p>
           </div>
         </div>
         <span class="absolute top-3 right-3 opacity-70 group-hover:opacity-100 transition-opacity">
@@ -58,8 +62,16 @@
           class="w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
           @click="toggleTheme"
         >
-          <UIcon :name="colorMode === 'dark' ? 'i-lucide-sun' : 'i-lucide-moon'" class="w-4 h-4" />
-          {{ colorMode === 'dark' ? $t('common.lightMode') : $t('common.darkMode') }}
+          <ClientOnly>
+            <template #default>
+              <UIcon :name="isDark ? 'i-lucide-sun' : 'i-lucide-moon'" class="w-4 h-4" />
+              {{ isDark ? $t('common.lightMode') : $t('common.darkMode') }}
+            </template>
+            <template #fallback>
+              <UIcon name="i-lucide-moon" class="w-4 h-4" />
+              {{ $t('common.darkMode') }}
+            </template>
+          </ClientOnly>
         </button>
         <button data-language-button
           class="w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
@@ -93,6 +105,8 @@ import { useI18n } from 'vue-i18n'
 import { computed } from 'vue'
 import { useUserStore } from '~/stores/user'
 import { signOut } from '~/utils/firebase/auth'
+import type { User } from '~/types/user'
+import Avatar from '~/components/user/Avatar.vue'
 
 const router = useRouter()
 const colorMode = useColorMode()
@@ -101,6 +115,10 @@ const isOpen = ref(false)
 const dropdownRef = ref<HTMLElement | null>(null)
 const { t } = useI18n()
 const userStore = useUserStore()
+
+// Используем computed для получения пользователя
+const user = computed<User | null>(() => userStore.user)
+const isDark = computed(() => colorMode.value === 'dark')
 
 const truncateEmail = (email: string | null | undefined, maxLength = 10) => {
   if (!email) return 'No email'
@@ -142,7 +160,7 @@ const handleNavigation = (path: string) => {
 }
 
 const toggleTheme = () => {
-  colorMode.value = colorMode.value === 'dark' ? 'light' : 'dark'
+  colorMode.value = isDark.value ? 'light' : 'dark'
   isOpen.value = false
 }
 
