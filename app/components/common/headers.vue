@@ -27,7 +27,7 @@
     </div>
 
     <div class="flex flex-row gap-2">
-      <template v-if="!isAuthenticated">
+      <template v-if="!isAuthenticated && !userStore.loading">
         <UButton 
           data-language-button 
           @click="isLanguageModalOpen = true" 
@@ -67,6 +67,9 @@
         />
         <SettingsLanguageSelect v-model="isLanguageModalOpen" />
       </template>
+      <template v-else-if="userStore.loading">
+        <USkeleton class="h-10 w-24" />
+      </template>
       <UserNav v-else />
     </div>
   </header>
@@ -75,7 +78,7 @@
 <script setup lang="ts">
 import nav from '~/assets/nav.json'
 import { useI18n } from 'vue-i18n'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useColorMode } from '@vueuse/core'
 import { useUserStore } from '~/stores/user'
 import { useRoute } from 'vue-router'
@@ -87,7 +90,19 @@ const isLanguageModalOpen = ref(false)
 const colorMode = useColorMode()
 const showLoginModal = ref(false)
 const showRegisterModal = ref(false)
-const isAuthenticated = computed(() => userStore.isAuthenticated)
+
+// Watch for authentication state changes
+const isAuthenticated = computed(() => {
+  return userStore.isAuthenticated
+})
+
+// Close modals when authentication state changes
+watch(isAuthenticated, (newValue) => {
+  if (newValue) {
+    showLoginModal.value = false
+    showRegisterModal.value = false
+  }
+})
 
 const navItems = computed(() => nav)
 

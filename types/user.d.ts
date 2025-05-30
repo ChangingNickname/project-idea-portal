@@ -46,7 +46,7 @@ declare global {
     interface Metadata {
         creationTime: string | null
         lastSignInTime: string | null
-        lastRefreshTime: string | null
+        lastRefreshTime?: string | null
     }
 
     interface MultiFactor {

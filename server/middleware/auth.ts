@@ -18,6 +18,7 @@ const SESSION_REFRESH_THRESHOLD = 30 * 60 * 1000 // 30 minutes
 // List of public routes that don't require authentication
 const PUBLIC_ROUTES = [
   '/', // Root page
+  '',
   '/login',
   '/register',
   '/forgot-password',

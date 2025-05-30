@@ -6,21 +6,45 @@ import {
   createUserWithEmailAndPassword as firebaseCreateUserWithEmailAndPassword,
   type User as FirebaseUser
 } from 'firebase/auth'
-import type { User } from '~/types/user'
+
 
 const TOKEN_REFRESH_INTERVAL = 10 * 60 * 1000 // 10 minutes
 let tokenRefreshTimer: NodeJS.Timeout | null = null
 
-const mapFirebaseUser = (firebaseUser: FirebaseUser): User => ({
-  uid: firebaseUser.uid,
+export const mapFirebaseUser = (firebaseUser: FirebaseUser): User => ({
+  id: firebaseUser.uid,
   email: firebaseUser.email || null,
   displayName: firebaseUser.displayName || null,
-  photoURL: firebaseUser.photoURL || null,
+  avatar: firebaseUser.photoURL || null,
   emailVerified: firebaseUser.emailVerified,
   isAnonymous: firebaseUser.isAnonymous,
+  phoneNumber: firebaseUser.phoneNumber || null,
+  disabled: false,
+  providerData: firebaseUser.providerData.map(provider => ({
+    providerId: provider.providerId,
+    uid: provider.uid,
+    displayName: provider.displayName || null,
+    email: provider.email || null,
+    phoneNumber: provider.phoneNumber || null,
+    photoURL: provider.photoURL || null
+  })),
+  customClaims: null,
   metadata: {
     creationTime: firebaseUser.metadata.creationTime || null,
     lastSignInTime: firebaseUser.metadata.lastSignInTime || null
+  },
+  tenantId: null,
+  multiFactor: null,
+  contacts: {
+    email: firebaseUser.email || null,
+    phone: firebaseUser.phoneNumber || null,
+    telegram: null,
+    whatsapp: null,
+    viber: null,
+    discord: null,
+    linkedin: null,
+    github: null,
+    website: null
   }
 })
 
@@ -149,6 +173,8 @@ export const storeUserAndRedirect = async (user: User): Promise<User> => {
  * Check if user is already logged in
  */
 export const checkStoredUser = (): User | null => {
+  if (process.server) return null
+  
   const storedUser = localStorage.getItem('user')
   if (storedUser) {
     startTokenRefresh()
@@ -195,10 +221,11 @@ export const onAuthStateChanged = (callback: (user: User | null) => void): () =>
   return $auth.onAuthStateChanged((firebaseUser) => {
     if (firebaseUser) {
       startTokenRefresh()
+      callback(mapFirebaseUser(firebaseUser))
     } else {
       stopTokenRefresh()
+      callback(null)
     }
-    callback(firebaseUser ? mapFirebaseUser(firebaseUser) : null)
   })
 }
 

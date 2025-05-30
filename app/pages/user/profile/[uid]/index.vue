@@ -48,7 +48,7 @@ const pending = ref(true)
 const isEditMode = ref(false)
 
 const isOwnProfile = computed(() => {
-  return userStore.user?.uid === uid
+  return userStore.user?.id === uid
 })
 
 try {

@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia'
-import type { User } from '~/types/user'
 import { checkStoredUser, onAuthStateChanged } from '~/utils/firebase/auth'
 
 export const useUserStore = defineStore('user', {
@@ -22,23 +21,8 @@ export const useUserStore = defineStore('user', {
       }
 
       // Listen to auth state changes
-      onAuthStateChanged(async (firebaseUser) => {
-        if (firebaseUser) {
-          this.user = {
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            displayName: firebaseUser.displayName,
-            photoURL: firebaseUser.photoURL,
-            emailVerified: firebaseUser.emailVerified,
-            isAnonymous: firebaseUser.isAnonymous,
-            metadata: {
-              creationTime: firebaseUser.metadata.creationTime || null,
-              lastSignInTime: firebaseUser.metadata.lastSignInTime || null
-            }
-          }
-        } else {
-          this.user = null
-        }
+      onAuthStateChanged((user) => {
+        this.user = user
         this.loading = false
       })
     },
