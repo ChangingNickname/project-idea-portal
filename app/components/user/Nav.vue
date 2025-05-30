@@ -7,7 +7,7 @@
       @click="isOpen = !isOpen"
     >
       <UserAvatar
-        email="test@example.com"
+        :email="userStore.user?.email || ''"
         :isActive="true"
       />
     </UButton>
@@ -22,16 +22,16 @@
         type="button"
         class="w-full text-left px-4 py-3 border-b border-gray-200 dark:border-gray-700 cursor-pointer relative group focus:outline-none"
         @click="handleNavigation('/profile')"
-        title="{{$t('common.profile')}}"
+        :title="$t('common.profile')"
       >
         <div class="flex items-center gap-3">
           <UserAvatar
-            email="test@example.com"
+            :email="userStore.user?.email || ''"
             size="sm"
           />
           <div>
-            <p class="text-sm font-medium text-gray-900 dark:text-white">Test User</p>
-            <p class="text-xs text-gray-500 dark:text-gray-400">test@example.com</p>
+            <p class="text-sm font-medium text-gray-900 dark:text-white">{{ userStore.user?.displayName || 'Anonymous User' }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">{{ truncateEmail(userStore.user?.email) }}</p>
           </div>
         </div>
         <span class="absolute top-3 right-3 opacity-70 group-hover:opacity-100 transition-opacity">
@@ -77,7 +77,7 @@
           @click="handleLogout"
         >
           <UIcon name="i-lucide-log-out" class="w-4 h-4" />
-          Logout
+          {{ $t('common.logout') }}
         </button>
       </div>
     </div>
@@ -91,9 +91,8 @@ import { useColorMode, onClickOutside } from '@vueuse/core'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { computed } from 'vue'
-
-// import { useUserStore } from '~/stores/user'
-// const userStore = useUserStore()
+import { useUserStore } from '~/stores/user'
+import { signOut } from '~/utils/firebase/auth'
 
 const router = useRouter()
 const colorMode = useColorMode()
@@ -101,6 +100,23 @@ const isLanguageModalOpen = ref(false)
 const isOpen = ref(false)
 const dropdownRef = ref<HTMLElement | null>(null)
 const { t } = useI18n()
+const userStore = useUserStore()
+
+const truncateEmail = (email: string | null | undefined, maxLength = 10) => {
+  if (!email) return 'No email'
+  if (email.length <= maxLength) return email
+  
+  const atIndex = email.indexOf('@')
+  if (atIndex === -1) return email
+  
+  const username = email.slice(0, atIndex)
+  const domain = email.slice(atIndex)
+  
+  if (username.length <= maxLength - 3) return email
+  
+  const truncatedUsername = username.slice(0, maxLength - 3) + '...'
+  return `${truncatedUsername}${domain}`
+}
 
 const navigationLinks = computed(() => [
   {
@@ -121,29 +137,30 @@ const navigationLinks = computed(() => [
 ])
 
 const handleNavigation = (path: string) => {
-  console.log('Navigating to:', path)
   router.push(path)
   isOpen.value = false
 }
 
 const toggleTheme = () => {
-  console.log('Theme toggle clicked, current mode:', colorMode.value)
   colorMode.value = colorMode.value === 'dark' ? 'light' : 'dark'
-  console.log('New theme mode:', colorMode.value)
   isOpen.value = false
 }
 
 const openLanguageModal = () => {
-  console.log('Language selection clicked')
   isLanguageModalOpen.value = true
   isOpen.value = false
 }
 
-const handleLogout = () => {
-  console.log('Logout clicked')
-  // userStore.clearUser()
-  router.push('/')
-  isOpen.value = false
+const handleLogout = async () => {
+  try {
+    await signOut()
+    userStore.clearUser()
+    router.push('/')
+  } catch (error) {
+    console.error('Error during logout:', error)
+  } finally {
+    isOpen.value = false
+  }
 }
 
 // Close dropdown when clicking outside
