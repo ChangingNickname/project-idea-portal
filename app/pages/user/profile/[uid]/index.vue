@@ -1,7 +1,8 @@
 <template>
   <div class="container mx-auto px-4 py-8">
-    <div v-if="pending" class="flex justify-center">
-      <ULoadingIcon />
+    <div v-if="pending" class="flex flex-col items-center justify-center gap-4 py-12">
+      <UIcon name="i-heroicons-arrow-path" class="w-12 h-12 text-primary animate-spin" />
+      <p class="text-gray-500 dark:text-gray-400">Loading profile...</p>
     </div>
     <div v-else-if="error" class="text-center text-red-500">
       {{ error.message }}
