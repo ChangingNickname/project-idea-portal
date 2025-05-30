@@ -11,7 +11,7 @@ export default {
   },
   common: {
     loading: 'Loading...',
-    error: 'An error occurred',
+    error: 'Error',
     success: 'Success',
     selectLanguage: 'Select language',
     profile: 'Profile',
@@ -32,7 +32,10 @@ export default {
     loginError: 'Failed to login. Please check your credentials.',
     googleLoginError: 'Failed to login with Google.',
     anonymousLoginError: 'Failed to login anonymously.',
-    unexpectedError: 'An unexpected error occurred.'
+    unexpectedError: 'An unexpected error occurred.',
+    loginSuccess: 'Successfully logged in',
+    googleLoginSuccess: 'Successfully logged in with Google',
+    anonymousLoginSuccess: 'Successfully logged in anonymously'
   },
   core: {
     desc: 'Improve the world with your ideas - Share, collaborate, and make a difference'

@@ -11,8 +11,8 @@ export default {
   },
   common: {
     loading: 'Загрузка...',
-    error: 'Произошла ошибка',
-    success: 'Успешно',
+    error: 'Ошибка',
+    success: 'Успех',
     selectLanguage: 'Выбрать язык',
     profile: 'Профиль',
     lightMode: 'Светлая тема',
@@ -32,7 +32,10 @@ export default {
     loginError: 'Не удалось войти. Проверьте ваши учетные данные.',
     googleLoginError: 'Не удалось войти через Google.',
     anonymousLoginError: 'Не удалось войти анонимно.',
-    unexpectedError: 'Произошла непредвиденная ошибка.'
+    unexpectedError: 'Произошла непредвиденная ошибка.',
+    loginSuccess: 'Успешный вход в систему',
+    googleLoginSuccess: 'Успешный вход через Google',
+    anonymousLoginSuccess: 'Успешный анонимный вход'
   },
   core: {
     desc: 'Улучшайте мир своими идеями - делитесь, сотрудничайте, создавайте изменения'
