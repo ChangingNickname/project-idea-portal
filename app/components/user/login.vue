@@ -33,7 +33,7 @@
               </template>
 
               <UForm
-                :state="formRefs"
+                :state="{ email, password }"
                 @submit="handleEmailLogin"
                 class="space-y-4"
               >
@@ -42,7 +42,7 @@
                   name="email"
                 >
                   <UInput
-                    v-model="formState.email"
+                    v-model="email"
                     type="email"
                     :placeholder="$t('common.emailInput')"
                     required
@@ -56,7 +56,7 @@
                   name="password"
                 >
                   <UInput
-                    v-model="formState.password"
+                    v-model="password"
                     type="password"
                     :placeholder="$t('common.passwordInput')"
                     required
@@ -86,33 +86,10 @@
                 </div>
               </div>
 
-              <div class="grid grid-cols-2 gap-3">
-                <UButton
-                  color="neutral"
-                  variant="soft"
-                  @click="handleGoogleLogin"
-                  :loading="loading"
-                  class="w-full"
-                >
-                  <template #leading>
-                    <i class="i-simple-icons-google text-lg" />
-                  </template>
-                  {{ $t('common.google') }}
-                </UButton>
-                
-                <UButton
-                  color="neutral"
-                  variant="soft"
-                  @click="handleAnonymousLogin"
-                  :loading="loading"
-                  class="w-full"
-                >
-                  <template #leading>
-                    <i class="i-heroicons-user text-lg" />
-                  </template>
-                  {{ $t('common.anonymous') }}
-                </UButton>
-              </div>
+              <UserAuthProviders
+                :loading="loading"
+                @provider="handleProviderLogin"
+              />
 
               <template #footer>
                 <div class="flex justify-center">
@@ -143,6 +120,7 @@ import {
 } from '~/utils/firebase/auth'
 
 const { t } = useI18n()
+const toast = useToast()
 
 const props = defineProps<{
   modelValue: boolean
@@ -161,7 +139,7 @@ const formState = reactive({
   password: ''
 })
 
-const formRefs = toRefs(formState)
+const { email, password } = toRefs(formState)
 
 const error = ref('')
 const loading = ref(false)
@@ -174,53 +152,82 @@ const handleEmailLogin = async () => {
     const user = await signInWithEmail(formState.email, formState.password)
     if (!user) {
       error.value = t('common.loginError')
+      toast.add({
+        title: t('common.error'),
+        description: t('common.loginError'),
+        color: 'error'
+      })
       return
     }
     
     await storeUserAndRedirect(user)
+    toast.add({
+      title: t('common.success'),
+      description: t('common.loginSuccess'),
+      color: 'success'
+    })
     closeModal()
   } catch (err) {
     error.value = t('common.unexpectedError')
+    toast.add({
+      title: t('common.error'),
+      description: t('common.unexpectedError'),
+      color: 'error'
+    })
   } finally {
     loading.value = false
   }
 }
 
-const handleGoogleLogin = async () => {
+const handleProviderLogin = async (provider: 'google' | 'anonymous') => {
   error.value = ''
   loading.value = true
   
   try {
-    const user = await signInWithGoogle()
-    if (!user) {
-      error.value = t('common.googleLoginError')
-      return
+    let user = null
+    
+    if (provider === 'google') {
+      user = await signInWithGoogle()
+      if (!user) {
+        error.value = t('common.googleLoginError')
+        toast.add({
+          title: t('common.error'),
+          description: t('common.googleLoginError'),
+          color: 'error'
+        })
+        return
+      }
+    } else if (provider === 'anonymous') {
+      user = await signInAnonymouslyUser()
+      if (!user) {
+        error.value = t('common.anonymousLoginError')
+        toast.add({
+          title: t('common.error'),
+          description: t('common.anonymousLoginError'),
+          color: 'error'
+        })
+        return
+      }
     }
     
-    await storeUserAndRedirect(user)
-    closeModal()
-  } catch (err) {
-    error.value = t('common.unexpectedError')
-  } finally {
-    loading.value = false
-  }
-}
-
-const handleAnonymousLogin = async () => {
-  error.value = ''
-  loading.value = true
-  
-  try {
-    const user = await signInAnonymouslyUser()
-    if (!user) {
-      error.value = t('common.anonymousLoginError')
-      return
+    if (user) {
+      await storeUserAndRedirect(user)
+      toast.add({
+        title: t('common.success'),
+        description: provider === 'google' 
+          ? t('common.googleLoginSuccess')
+          : t('common.anonymousLoginSuccess'),
+        color: 'success'
+      })
+      closeModal()
     }
-    
-    await storeUserAndRedirect(user)
-    closeModal()
   } catch (err) {
     error.value = t('common.unexpectedError')
+    toast.add({
+      title: t('common.error'),
+      description: t('common.unexpectedError'),
+      color: 'error'
+    })
   } finally {
     loading.value = false
   }
