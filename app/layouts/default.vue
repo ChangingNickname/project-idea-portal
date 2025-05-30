@@ -9,3 +9,17 @@
         <CommonFooter />
     </div>
 </template>
+
+<script setup lang="ts">
+import { useUserStore } from '~/stores/user'
+
+// Initialize user store
+const userStore = useUserStore()
+
+// Initialize store on client side only
+onMounted(async () => {
+    if (process.client) {
+        await userStore.init()
+    }
+})
+</script>
