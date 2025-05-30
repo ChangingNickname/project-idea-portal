@@ -1,0 +1,107 @@
+@startuml
+!theme plain
+skinparam componentStyle rectangle
+skinparam linetype ortho
+skinparam nodesep 120
+skinparam ranksep 150
+skinparam padding 20
+skinparam margin 20
+
+' Main components
+package "Frontend Components" {
+    [Article Viewer] as viewer
+    [Article Builder] as builder
+    [User Profile] as profile
+    [Chat System] as chat
+    [AI Agent Interface] as ai
+    [Notification Center] as notifications
+}
+
+' User states
+package "User States" {
+    [Guest] as guest
+    [Registered User] as registered
+}
+
+' Actions and flows
+package "User Actions" {
+    [Browse Articles] as browse
+    [Create Article] as create
+    [Manage Profile] as manage
+    [Communicate] as communicate
+    [Interact with AI] as interact
+}
+
+' Connections - Guest flows
+guest --> browse : "can"
+guest --> interact : "limited"
+interact --> registered : "redirects to"
+
+' Connections - Registered User flows
+registered --> browse : "can"
+registered --> create : "can"
+registered --> manage : "can"
+registered --> communicate : "can"
+registered --> interact : "full access"
+
+' Component interactions
+browse --> viewer : "uses"
+create --> builder : "uses"
+manage --> profile : "uses"
+communicate --> chat : "uses"
+interact --> ai : "uses"
+
+' Cross-component interactions
+viewer --> chat : "comment"
+viewer --> profile : "view author"
+builder --> chat : "discuss with executors"
+builder --> ai : "get help"
+profile --> chat : "message"
+profile --> viewer : "view articles"
+ai --> notifications : "suggestions"
+chat --> notifications : "new messages"
+builder --> notifications : "updates"
+
+note right of guest
+  Limited access:
+  - Browse articles
+  - Basic AI interaction
+end note
+
+note right of registered
+  Full access:
+  - Create content
+  - Manage profile
+  - Full AI features
+  - Communication
+end note
+
+note right of viewer
+  Article features:
+  - Read content
+  - View comments
+  - See author info
+end note
+
+note right of builder
+  Creation features:
+  - Write articles
+  - Assign executors
+  - Track progress
+end note
+
+note right of chat
+  Communication:
+  - Direct messages
+  - Article discussions
+  - Executor coordination
+end note
+
+note right of ai
+  AI features:
+  - Content assistance
+  - Recommendations
+  - Search help
+end note
+
+@enduml

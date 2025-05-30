@@ -14,24 +14,27 @@ if (!getApps().length) {
 }
 
 export default defineEventHandler(async (event) => {
-  try {
-    const session = getCookie(event, 'session')
-    
-    if (!session) {
-      throw createError({
-        statusCode: 401,
-        message: 'No session'
-      })
-    }
+  const sessionCookie = getCookie(event, 'session')
 
-    // Verify the session cookie
-    await getAuth().verifySessionCookie(session, true)
-    return { status: 'success' }
-  } catch (error) {
-    console.error('Verify error:', error)
+  if (!sessionCookie) {
     throw createError({
       statusCode: 401,
-      message: 'Unauthorized'
+      message: 'No session found'
+    })
+  }
+
+  try {
+    const decodedClaims = await getAuth().verifySessionCookie(sessionCookie, true)
+    return {
+      uid: decodedClaims.uid,
+      email: decodedClaims.email,
+      emailVerified: decodedClaims.email_verified
+    }
+  } catch (error) {
+    console.error('Error verifying session:', error)
+    throw createError({
+      statusCode: 401,
+      message: 'Invalid session'
     })
   }
 }) 

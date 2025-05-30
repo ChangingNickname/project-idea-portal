@@ -1,0 +1,70 @@
+@startuml
+!theme plain
+skinparam componentStyle rectangle
+skinparam linetype ortho
+skinparam nodesep 120
+skinparam ranksep 150
+skinparam padding 20
+skinparam margin 20
+
+package "Frontend" {
+    [Vue/Nuxt Application] as frontend
+    [Pinia Store] as pinia
+    [AI Agent (Frontend)] as frontendAI
+}
+
+package "Backend" {
+    [REST API] as api
+    [AI Agent (Backend)] as backendAI
+    [Notification Service] as notifications
+}
+
+cloud "Firebase Cloud" {
+    [Firebase Authentication] as auth
+    [Firebase Database] as database
+    [Gemini AI Service] as gemini
+}
+
+' Frontend connections
+frontend -down-> pinia : "uses"
+frontend -right-> api : "HTTP requests"
+frontend -down-> auth : "authentication"
+frontend -down-> frontendAI : "uses"
+
+' Backend connections
+api -down-> database : "reads/writes"
+api -down-> notifications : "triggers"
+api -down-> backendAI : "uses"
+api -down-> auth : "verifies"
+
+' AI Agent connections
+frontendAI -right-> gemini : "API calls"
+backendAI -right-> gemini : "API calls"
+
+' Authentication flow
+auth -up-> frontend : "auth state"
+auth -up-> api : "token validation"
+
+note right of frontend
+  Vue/Nuxt application with
+  SSR capabilities
+end note
+
+note right of api
+  REST API as the main
+  interface between
+  frontend and backend
+end note
+
+note right of database
+  Firebase Database for
+  persistent storage
+end note
+
+note right of gemini
+  Gemini AI service
+  accessible from both
+  frontend and backend
+end note
+
+@enduml

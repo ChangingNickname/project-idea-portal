@@ -8,6 +8,9 @@ import {
 } from 'firebase/auth'
 import type { User } from '~/types/user'
 
+const TOKEN_REFRESH_INTERVAL = 10 * 60 * 1000 // 10 minutes
+let tokenRefreshTimer: NodeJS.Timeout | null = null
+
 const mapFirebaseUser = (firebaseUser: FirebaseUser): User => ({
   uid: firebaseUser.uid,
   email: firebaseUser.email || null,
@@ -22,13 +25,63 @@ const mapFirebaseUser = (firebaseUser: FirebaseUser): User => ({
 })
 
 /**
+ * Refresh user token and update session
+ */
+const refreshUserToken = async (): Promise<void> => {
+  const { $auth } = useNuxtApp()
+  const currentUser = $auth.currentUser
+
+  if (!currentUser) {
+    stopTokenRefresh()
+    return
+  }
+
+  try {
+    const token = await currentUser.getIdToken(true) // force refresh
+    const user = mapFirebaseUser(currentUser)
+    localStorage.setItem('user', JSON.stringify(user))
+    
+    // Update session cookie on server
+    await $fetch('/api/auth/session', {
+      method: 'POST',
+      body: { token }
+    })
+  } catch (error) {
+    console.error('Error refreshing token:', error)
+    stopTokenRefresh()
+  }
+}
+
+/**
+ * Start token refresh interval
+ */
+const startTokenRefresh = (): void => {
+  if (tokenRefreshTimer) {
+    stopTokenRefresh()
+  }
+  tokenRefreshTimer = setInterval(refreshUserToken, TOKEN_REFRESH_INTERVAL)
+}
+
+/**
+ * Stop token refresh interval
+ */
+const stopTokenRefresh = (): void => {
+  if (tokenRefreshTimer) {
+    clearInterval(tokenRefreshTimer)
+    tokenRefreshTimer = null
+  }
+}
+
+/**
  * Sign in with email and password
  */
 export const signInWithEmail = async (email: string, password: string): Promise<User | null> => {
   const { $auth } = useNuxtApp()
   try {
     const result = await signInWithEmailAndPassword($auth, email, password)
-    return mapFirebaseUser(result.user)
+    const user = mapFirebaseUser(result.user)
+    startTokenRefresh()
+    return user
   } catch (error) {
     console.error('Error signing in with email:', error)
     return null
@@ -43,7 +96,9 @@ export const signInWithGoogle = async (): Promise<User | null> => {
   try {
     const provider = new GoogleAuthProvider()
     const result = await signInWithPopup($auth, provider)
-    return mapFirebaseUser(result.user)
+    const user = mapFirebaseUser(result.user)
+    startTokenRefresh()
+    return user
   } catch (error) {
     console.error('Error signing in with Google:', error)
     return null
@@ -57,7 +112,9 @@ export const signInAnonymouslyUser = async (): Promise<User | null> => {
   const { $auth } = useNuxtApp()
   try {
     const result = await firebaseSignInAnonymously($auth)
-    return mapFirebaseUser(result.user)
+    const user = mapFirebaseUser(result.user)
+    startTokenRefresh()
+    return user
   } catch (error) {
     console.error('Error signing in anonymously:', error)
     return null
@@ -78,6 +135,7 @@ export const storeUserAndRedirect = async (user: User): Promise<User> => {
     }
     
     localStorage.setItem('user', JSON.stringify(user))
+    startTokenRefresh()
     await router.push('/')
   } catch (error) {
     console.error('Error storing user:', error)
@@ -92,7 +150,11 @@ export const storeUserAndRedirect = async (user: User): Promise<User> => {
  */
 export const checkStoredUser = (): User | null => {
   const storedUser = localStorage.getItem('user')
-  return storedUser ? JSON.parse(storedUser) : null
+  if (storedUser) {
+    startTokenRefresh()
+    return JSON.parse(storedUser)
+  }
+  return null
 }
 
 /**
@@ -101,7 +163,15 @@ export const checkStoredUser = (): User | null => {
 export const signOut = async (): Promise<void> => {
   const { $auth } = useNuxtApp()
   try {
+    // Call server logout endpoint first
+    await $fetch('/api/auth/logout', {
+      method: 'POST'
+    })
+    
+    // Then sign out from Firebase
     await $auth.signOut()
+    stopTokenRefresh()
+    localStorage.removeItem('user')
   } catch (error) {
     console.error('Error signing out:', error)
     throw error
@@ -123,6 +193,11 @@ export const getCurrentUser = (): User | null => {
 export const onAuthStateChanged = (callback: (user: User | null) => void): () => void => {
   const { $auth } = useNuxtApp()
   return $auth.onAuthStateChanged((firebaseUser) => {
+    if (firebaseUser) {
+      startTokenRefresh()
+    } else {
+      stopTokenRefresh()
+    }
     callback(firebaseUser ? mapFirebaseUser(firebaseUser) : null)
   })
 }
@@ -131,7 +206,11 @@ export const createUserWithEmailAndPassword = async (email: string, password: st
   const { $auth } = useNuxtApp()
   try {
     const userCredential = await firebaseCreateUserWithEmailAndPassword($auth, email, password)
-    return userCredential.user ? mapFirebaseUser(userCredential.user) : null
+    const user = userCredential.user ? mapFirebaseUser(userCredential.user) : null
+    if (user) {
+      startTokenRefresh()
+    }
+    return user
   } catch (error) {
     console.error('Error creating user with email:', error)
     throw error
