@@ -13,7 +13,7 @@ if (!getApps().length) {
   })
 }
 
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(async (event): Promise<User> => {
   try {
     const uid = event.context.params?.uid
     
@@ -47,42 +47,58 @@ export default defineEventHandler(async (event) => {
       if (isAuthenticated && currentUserId === uid) {
         return {
           id: userRecord.uid,
-          email: userRecord.email,
-          avatar: userRecord.photoURL,
+          email: userRecord.email || null,
+          avatar: userRecord.photoURL || null,
           emailVerified: userRecord.emailVerified,
-          displayName: userRecord.displayName,
-          phoneNumber: userRecord.phoneNumber,
+          displayName: userRecord.displayName || null,
+          phoneNumber: userRecord.phoneNumber || null,
           disabled: userRecord.disabled,
           isAnonymous: userRecord.providerData.length === 0,
           providerData: userRecord.providerData.map(provider => ({
             providerId: provider.providerId,
             uid: provider.uid,
-            displayName: provider.displayName,
-            email: provider.email,
-            phoneNumber: provider.phoneNumber,
-            photoURL: provider.photoURL
+            displayName: provider.displayName || null,
+            email: provider.email || null,
+            phoneNumber: provider.phoneNumber || null,
+            photoURL: provider.photoURL || null
           })),
-          customClaims: userRecord.customClaims,
+          customClaims: userRecord.customClaims || null,
           metadata: {
-            creationTime: userRecord.metadata.creationTime,
-            lastSignInTime: userRecord.metadata.lastSignInTime,
-            lastRefreshTime: userRecord.metadata.lastRefreshTime
+            creationTime: userRecord.metadata.creationTime || null,
+            lastSignInTime: userRecord.metadata.lastSignInTime || null,
+            lastRefreshTime: userRecord.metadata.lastRefreshTime || null
           },
-          tenantId: userRecord.tenantId,
-          multiFactor: userRecord.multiFactor?.enrolledFactors?.map(factor => ({
-            uid: factor.uid,
-            factorId: factor.factorId,
-            displayName: factor.displayName,
-            enrollmentTime: factor.enrollmentTime
-          }))
+          tenantId: userRecord.tenantId || null,
+          multiFactor: userRecord.multiFactor ? {
+            enrolledFactors: userRecord.multiFactor.enrolledFactors.map(factor => ({
+              uid: factor.uid,
+              factorId: factor.factorId,
+              displayName: factor.displayName || null,
+              enrollmentTime: factor.enrollmentTime || null
+            }))
+          } : null
         }
       }
 
-      // For other users, return only email and avatar
+      // For other users, return limited data
       return {
         id: userRecord.uid,
-        email: userRecord.email,
-        avatar: userRecord.photoURL
+        email: userRecord.email || null,
+        avatar: userRecord.photoURL || null,
+        emailVerified: userRecord.emailVerified,
+        displayName: userRecord.displayName || null,
+        phoneNumber: userRecord.phoneNumber || null,
+        disabled: userRecord.disabled,
+        isAnonymous: userRecord.providerData.length === 0,
+        providerData: [],
+        customClaims: null,
+        metadata: {
+          creationTime: null,
+          lastSignInTime: null,
+          lastRefreshTime: null
+        },
+        tenantId: null,
+        multiFactor: null
       }
     } catch (error: any) {
       if (error.code === 'auth/user-not-found') {
