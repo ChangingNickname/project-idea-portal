@@ -1,105 +1,206 @@
 <template>
-  <div class="flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8">
-    <div class="sm:mx-auto sm:w-full sm:max-w-sm">
-      <h2 class="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900 dark:text-white">
-        {{ $t('common.register') }}
-      </h2>
-    </div>
-
-    <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-      <form class="space-y-6" @submit.prevent="handleSubmit">
-        <div>
-          <label for="email" class="block text-sm font-medium leading-6 text-gray-900 dark:text-white">
-            {{ $t('common.email') }}
-          </label>
-          <div class="mt-2">
-            <input
-              id="email"
-              v-model="email"
-              name="email"
-              type="email"
-              autocomplete="email"
-              required
-              class="block w-full rounded-md border-0 py-1.5 text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-700 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm sm:leading-6 bg-white dark:bg-gray-800"
-              :placeholder="$t('common.emailInput')"
-            />
-          </div>
-        </div>
-
-        <div>
-          <div class="flex items-center justify-between">
-            <label for="password" class="block text-sm font-medium leading-6 text-gray-900 dark:text-white">
-              {{ $t('common.password') }}
-            </label>
-          </div>
-          <div class="mt-2">
-            <input
-              id="password"
-              v-model="password"
-              name="password"
-              type="password"
-              autocomplete="new-password"
-              required
-              class="block w-full rounded-md border-0 py-1.5 text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-700 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm sm:leading-6 bg-white dark:bg-gray-800"
-              :placeholder="$t('common.passwordInput')"
-            />
-          </div>
-        </div>
-
-        <div>
-          <button
-            type="submit"
-            :disabled="loading"
-            class="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
+  <div>
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition duration-150 ease-out"
+        enter-from-class="transform scale-95 opacity-0"
+        enter-to-class="transform scale-100 opacity-100"
+        leave-active-class="transition duration-150 ease-in"
+        leave-from-class="transform scale-100 opacity-100"
+        leave-to-class="transform scale-95 opacity-0"
+      >
+        <div v-if="props.modelValue" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-16">
+          <Transition
+            enter-active-class="transition duration-150 ease-out"
+            enter-from-class="opacity-0"
+            enter-to-class="opacity-100"
+            leave-active-class="transition duration-150 ease-in"
+            leave-from-class="opacity-100"
+            leave-to-class="opacity-0"
           >
-            <span v-if="loading" class="flex items-center">
-              <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              {{ $t('common.loading') }}
-            </span>
-            <span v-else>{{ $t('common.register') }}</span>
-          </button>
-        </div>
-      </form>
+            <div
+              v-if="props.modelValue"
+              class="fixed inset-0 bg-black/50"
+              @click="closeModal"
+            />
+          </Transition>
+        
+          <div
+            ref="modalRef"
+            class="relative rounded-lg shadow-xl p-6 w-full max-w-md max-h-[calc(100vh-2rem)] overflow-y-auto"
+          >
+            <UCard class="w-full">
+              <template #header>
+                <div class="flex items-center justify-between">
+                  <h2 class="text-2xl font-bold">{{ $t('common.register') }}</h2>
+                  <UButton
+                    color="neutral"
+                    variant="ghost"
+                    icon="i-heroicons-x-mark"
+                    @click="closeModal"
+                  />
+                </div>
+              </template>
 
-      <p class="mt-10 text-center text-sm text-gray-500 dark:text-gray-400">
-        {{ $t('common.alreadyHaveAccount') }}
-        <NuxtLink to="/auth/login" class="font-semibold leading-6 text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300">
-          {{ $t('common.signIn') }}
-        </NuxtLink>
-      </p>
-    </div>
+              <UForm
+                :state="{ email, password, confirmPassword }"
+                @submit="handleRegister"
+                class="space-y-4"
+              >
+                <UFormField
+                  :label="$t('common.email')"
+                  name="email"
+                >
+                  <UInput
+                    v-model="email"
+                    type="email"
+                    :placeholder="$t('common.emailInput')"
+                    required
+                    autocomplete="email"
+                    class="w-full"
+                  />
+                </UFormField>
+
+                <UFormField
+                  :label="$t('common.password')"
+                  name="password"
+                >
+                  <UInput
+                    v-model="password"
+                    type="password"
+                    :placeholder="$t('common.passwordInput')"
+                    required
+                    autocomplete="new-password"
+                    class="w-full"
+                  />
+                </UFormField>
+
+                <UFormField
+                  :label="$t('common.confirmPassword')"
+                  name="confirmPassword"
+                >
+                  <UInput
+                    v-model="confirmPassword"
+                    type="password"
+                    :placeholder="$t('common.confirmPasswordInput')"
+                    required
+                    autocomplete="new-password"
+                    class="w-full"
+                  />
+                </UFormField>
+
+                <div v-if="error" class="text-red-500 text-sm text-center">{{ error }}</div>
+
+                <UButton
+                  type="submit"
+                  color="primary"
+                  class="w-full"
+                  :loading="loading"
+                >
+                  {{ $t('common.register') }}
+                </UButton>
+              </UForm>
+
+              <template #footer>
+                <div class="flex justify-center">
+                  <UButton
+                    variant="link"
+                    class="text-sm text-primary-500 hover:text-primary-600"
+                    @click="openLogin"
+                  >
+                    {{ $t('common.alreadyHaveAccount') }} <span class="underline">{{ $t('common.signIn') }}</span>
+                  </UButton>
+                </div>
+              </template>
+            </UCard>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useUserStore } from '~/stores/user'
-import { createUserWithEmailAndPassword } from '~/utils/firebase/auth'
+import { ref, reactive, toRefs } from 'vue'
+import { 
+  createUserWithEmailAndPassword,
+  storeUserAndRedirect 
+} from '~/utils/firebase/auth'
 
-const router = useRouter()
-const userStore = useUserStore()
+const { t } = useI18n()
+const toast = useToast()
 
-const email = ref('')
-const password = ref('')
+const props = defineProps<{
+  modelValue: boolean
+}>()
+
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: boolean): void
+  (e: 'openLogin'): void
+}>()
+
+const closeModal = () => {
+  emit('update:modelValue', false)
+}
+
+const openLogin = () => {
+  closeModal()
+  emit('openLogin')
+}
+
+const formState = reactive({
+  email: '',
+  password: '',
+  confirmPassword: ''
+})
+
+const { email, password, confirmPassword } = toRefs(formState)
+
+const error = ref('')
 const loading = ref(false)
 
-const handleSubmit = async () => {
+const handleRegister = async () => {
+  error.value = ''
+  loading.value = true
+  
   try {
-    loading.value = true
-    const user = await createUserWithEmailAndPassword(email.value, password.value)
-    if (user) {
-      await userStore.setUser(user)
-      router.push('/')
+    if (password.value !== confirmPassword.value) {
+      error.value = t('common.passwordsDoNotMatch')
+      toast.add({
+        title: t('common.error'),
+        description: t('common.passwordsDoNotMatch'),
+        color: 'error'
+      })
+      return
     }
-  } catch (error: any) {
-    console.error('Registration error:', error)
-    // Here you can add error handling, e.g., showing a toast notification
+
+    const user = await createUserWithEmailAndPassword(formState.email, formState.password)
+    if (!user) {
+      error.value = t('common.registerError')
+      toast.add({
+        title: t('common.error'),
+        description: t('common.registerError'),
+        color: 'error'
+      })
+      return
+    }
+    
+    await storeUserAndRedirect(user)
+    toast.add({
+      title: t('common.success'),
+      description: t('common.registerSuccess'),
+      color: 'success'
+    })
+    closeModal()
+  } catch (err) {
+    error.value = t('common.unexpectedError')
+    toast.add({
+      title: t('common.error'),
+      description: t('common.unexpectedError'),
+      color: 'error'
+    })
   } finally {
     loading.value = false
   }
 }
-</script> 
+</script>

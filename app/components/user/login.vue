@@ -2,7 +2,7 @@
   <div>
     <Teleport to="body">
       <Transition
-        enter-active-class="transition duration-200 ease-out"
+        enter-active-class="transition duration-150 ease-out"
         enter-from-class="transform scale-95 opacity-0"
         enter-to-class="transform scale-100 opacity-100"
         leave-active-class="transition duration-150 ease-in"
@@ -10,10 +10,20 @@
         leave-to-class="transform scale-95 opacity-0"
       >
         <div v-if="props.modelValue" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-16">
-          <div
-            class="fixed inset-0 bg-black/50"
-            @click="closeModal"
-          />
+          <Transition
+            enter-active-class="transition duration-150 ease-out"
+            enter-from-class="opacity-0"
+            enter-to-class="opacity-100"
+            leave-active-class="transition duration-150 ease-in"
+            leave-from-class="opacity-100"
+            leave-to-class="opacity-0"
+          >
+            <div
+              v-if="props.modelValue"
+              class="fixed inset-0 bg-black/50"
+              @click="closeModal"
+            />
+          </Transition>
         
           <div
             ref="modalRef"
@@ -93,13 +103,13 @@
 
               <template #footer>
                 <div class="flex justify-center">
-                  <NuxtLink 
-                    to="/auth/register" 
+                  <UButton
+                    variant="link"
                     class="text-sm text-primary-500 hover:text-primary-600"
-                    @click="closeModal"
+                    @click="openRegister"
                   >
                     {{ $t('common.dontHaveAccount') }} <span class="underline">{{ $t('common.register') }}</span>
-                  </NuxtLink>
+                  </UButton>
                 </div>
               </template>
             </UCard>
@@ -128,10 +138,16 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
+  (e: 'openRegister'): void
 }>()
 
 const closeModal = () => {
   emit('update:modelValue', false)
+}
+
+const openRegister = () => {
+  closeModal()
+  emit('openRegister')
 }
 
 const formState = reactive({
