@@ -3,6 +3,19 @@ export default defineNuxtConfig({
   compatibilityDate: '2024-11-27',
   devtools: { enabled: true },
 
+  devServer: {
+    port: 4000,
+    host: '0.0.0.0'
+  },
+
+  app: {
+    head: {
+      title: 'PIP',
+      meta: [
+        { name: 'description', content: 'PIP' }
+      ]
+    }
+  },
   modules: [
     '@nuxt/ui', 
     '@nuxt/eslint', 
