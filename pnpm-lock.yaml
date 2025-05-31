@@ -13,10 +13,13 @@ importers:
         version: 1.10.0
       '@genkit-ai/evaluator':
         specifier: ^1.10.0
-        version: 1.10.0(genkit@1.10.0)
+        version: 1.10.0(genkit@1.11.0)
+      '@genkit-ai/flow':
+        specifier: ^0.5.17
+        version: 0.5.17
       '@genkit-ai/googleai':
-        specifier: ^1.10.0
-        version: 1.10.0(genkit@1.10.0)
+        specifier: ^1.11.0
+        version: 1.11.0(genkit@1.11.0)
       '@heroui/alert':
         specifier: ^2.2.19
         version: 2.2.19(@heroui/system@2.4.15(@heroui/theme@2.4.15(tailwindcss@3.4.16))(framer-motion@11.13.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@heroui/theme@2.4.15(tailwindcss@3.4.16))(framer-motion@11.13.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -114,8 +117,11 @@ importers:
         specifier: 11.13.1
         version: 11.13.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       genkit:
-        specifier: ^1.10.0
-        version: 1.10.0
+        specifier: ^1.11.0
+        version: 1.11.0
+      genkitx-graph:
+        specifier: ^0.22.0
+        version: 0.22.0(@genkit-ai/flow@0.5.17)
       intl-messageformat:
         specifier: 10.7.16
         version: 10.7.16
@@ -143,6 +149,9 @@ importers:
       require-in-the-middle:
         specifier: ^7.5.2
         version: 7.5.2
+      zod:
+        specifier: ^3.25.42
+        version: 3.25.42
     devDependencies:
       '@eslint/compat':
         specifier: 1.2.8
@@ -640,21 +649,30 @@ packages:
   '@formatjs/intl-localematcher@0.6.1':
     resolution: {integrity: sha512-ePEgLgVCqi2BBFnTMWPfIghu6FkbZnnBVhO2sSxvLfrdFw7wCHAHiDoM2h4NRgjbaY7+B7HgOLZGkK187pZTZg==}
 
-  '@genkit-ai/ai@1.10.0':
-    resolution: {integrity: sha512-1Ql7jlIA02UsWIiH9xJ4LKKerho1iP2J/x23nls4m6V9HXn5APUEseCWPDKs9eYBDa2WWxvYYNS975KDai1hnw==}
+  '@genkit-ai/ai@1.11.0':
+    resolution: {integrity: sha512-gPk/NUxJRkiefNfFh8dgg3rH8AU7qiecKg/fv7lNTN9L7cIDkQtuG8zT96DHMDLfrybK485F8QIgiXYebYhMdA==}
+
+  '@genkit-ai/core@0.5.17':
+    resolution: {integrity: sha512-o8aEIFjQ4FugS5w5XK1c6hmiX6bqx7u+UuikARJPMhqOek7aovcXXdYj2zbVmX2/4c94aXerSokB0vD59Pj3GQ==}
 
   '@genkit-ai/core@1.10.0':
     resolution: {integrity: sha512-aySikAJEfCIFXskrp5xy+GjGa4lF4Y/pR4LUNxVVYEHFqI3cU5gXqa09vQvfTWYVKIe5IXW0fVMas4B6vPAw+Q==}
+
+  '@genkit-ai/core@1.11.0':
+    resolution: {integrity: sha512-76J6fcAFVQCqqJErND2NdE0qTx2mEp/574cYBW59BQLRYaD8YtBj1CTQXhO/bxYRtSDlUvGJjF2xX0yfUmIMtA==}
 
   '@genkit-ai/evaluator@1.10.0':
     resolution: {integrity: sha512-nZ3AhEQ5LHTkB0X1kz+yWisIcn0f75+NS0HZXHVdOy4hvP1R3eM/w5yTgswJIW+8eECpFNZS58hG0WvalXrn2g==}
     peerDependencies:
       genkit: ^1.10.0
 
-  '@genkit-ai/googleai@1.10.0':
-    resolution: {integrity: sha512-k7yTIBbII9W63cIc5dc3ndJxDDb4ZAyj+C+1KX2yHBqcFX3vNXSC755emzhj3Cb+tp+F7H4Q3a9UwHKwAEe0hQ==}
+  '@genkit-ai/flow@0.5.17':
+    resolution: {integrity: sha512-+P2VGfa5z2e9VzjAJysLAw0oHuPv02UEj/z4Csxuurv2xgL3CQCZ9DV81i+14/ybp5LJ8waPSFsrJ29ffQCPwg==}
+
+  '@genkit-ai/googleai@1.11.0':
+    resolution: {integrity: sha512-p7EsOk8BwkvuO8tVyZ4gLCGPgOp8ewSasoHXStpA/FzeIDfkgT6Y8fAtxR9D9z7t3xJJwMGoO6yoZL7pOGdy0A==}
     peerDependencies:
-      genkit: ^1.10.0
+      genkit: ^1.11.0
 
   '@google-cloud/firestore@7.11.1':
     resolution: {integrity: sha512-ZxOdH8Wr01hBDvKCQfMWqwUcfNcN3JY19k1LtS1fTFhEyorYPLsbWN+VxIRL46pOYGHTPkU3Or5HbT/SLQM5nA==}
@@ -3493,6 +3511,13 @@ packages:
     resolution: {integrity: sha512-Y8DcyKK+4pl4B93ooiy1G8qvdyRMkcNFfBSh+8rbVcw4cW8dgG0VXCCTp5NUwub8sn9vSPsOwpb9tE2OuFmcfQ==}
     engines: {node: '>=18'}
 
+  firebase-functions@6.3.2:
+    resolution: {integrity: sha512-FC3A1/nhqt1ZzxRnj5HZLScQaozAcFSD/vSR8khqSoFNOfxuXgwJS6ZABTB7+v+iMD5z6Mmxw6OfqITUBuI7OQ==}
+    engines: {node: '>=14.10.0'}
+    hasBin: true
+    peerDependencies:
+      firebase-admin: ^11.10.0 || ^12.0.0 || ^13.0.0
+
   firebase@11.8.1:
     resolution: {integrity: sha512-oetXhPCvJZM4DVL/n/06442emMU+KzM0JLZjszpwlU6mqdFZqBwumBxn6hQkLukJyU5wsjihZHUY8HEAE2micg==}
 
@@ -3582,8 +3607,13 @@ packages:
     resolution: {integrity: sha512-a4tiq7E0/5fTjxPAaH4jpjkSv/uCaU2p5KC6HVGrvl0cDjA8iBZv4vv1gyzlmK0ZUKqwpOyQMKzZQe3lTit77A==}
     engines: {node: '>=14'}
 
-  genkit@1.10.0:
-    resolution: {integrity: sha512-YiGnUxbf6+t7dgQFb40ZUkwTKJfCNm4B4xltD5WkH3ddmP9hO08s7ZHVYyvggQNEWNxhcCPsxzWEMyWrBLIwgg==}
+  genkit@1.11.0:
+    resolution: {integrity: sha512-cp7wFVF5YbyuQLUpii3lfAVXe+XjAsgTTG1mZkGz0dylfrSL2C5ikyjEi8QEJr6nOLrWJ+5jFTiYE5WlMe2X2A==}
+
+  genkitx-graph@0.22.0:
+    resolution: {integrity: sha512-CoYYyHsF0+JI/Yyl6DXM/PnxVePanpqAyvoivOGWC05YpC4BDDsRRTUfRxyGgTKxyTf1uZmcMt8eErnR85/+6g==}
+    peerDependencies:
+      '@genkit-ai/flow': ^0.5.0
 
   get-caller-file@2.0.5:
     resolution: {integrity: sha512-DyFP3BM/3YHTQOCUL/w0OZHR0lpKeGrxotcHWcqNEdnltqFwXVfhEBQ94eIo34AfQpo0rGki4cyIiftY06h2Fg==}
@@ -5390,8 +5420,8 @@ packages:
     peerDependencies:
       zod: ^3.24.1
 
-  zod@3.25.32:
-    resolution: {integrity: sha512-OSm2xTIRfW8CV5/QKgngwmQW/8aPfGdaQFlrGoErlgg/Epm7cjb6K6VEyExfe65a3VybUOnu381edLb0dfJl0g==}
+  zod@3.25.42:
+    resolution: {integrity: sha512-PcALTLskaucbeHc41tU/xfjfhcz8z0GdhhDcSgrCTmSazUuqnYqiXO63M0QUBVwpBlsLsNVn5qHSC5Dw3KZvaQ==}
 
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
@@ -6113,9 +6143,9 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@genkit-ai/ai@1.10.0':
+  '@genkit-ai/ai@1.11.0':
     dependencies:
-      '@genkit-ai/core': 1.10.0
+      '@genkit-ai/core': 1.11.0
       '@opentelemetry/api': 1.9.0
       '@types/node': 20.17.51
       colorette: 2.0.20
@@ -6124,6 +6154,24 @@ snapshots:
       node-fetch: 3.3.2
       partial-json: 0.1.7
       uuid: 10.0.0
+    transitivePeerDependencies:
+      - supports-color
+
+  '@genkit-ai/core@0.5.17':
+    dependencies:
+      '@opentelemetry/api': 1.9.0
+      '@opentelemetry/context-async-hooks': 1.30.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/core': 1.30.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-metrics': 1.30.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-node': 0.52.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-trace-base': 1.30.1(@opentelemetry/api@1.9.0)
+      ajv: 8.17.1
+      ajv-formats: 3.0.1(ajv@8.17.1)
+      async-mutex: 0.5.0
+      express: 4.21.2
+      json-schema: 0.4.0
+      zod: 3.25.42
+      zod-to-json-schema: 3.24.5(zod@3.25.42)
     transitivePeerDependencies:
       - supports-color
 
@@ -6145,24 +6193,64 @@ snapshots:
       express: 4.21.2
       get-port: 5.1.1
       json-schema: 0.4.0
-      zod: 3.25.32
-      zod-to-json-schema: 3.24.5(zod@3.25.32)
+      zod: 3.25.42
+      zod-to-json-schema: 3.24.5(zod@3.25.42)
     transitivePeerDependencies:
       - supports-color
 
-  '@genkit-ai/evaluator@1.10.0(genkit@1.10.0)':
+  '@genkit-ai/core@1.11.0':
+    dependencies:
+      '@opentelemetry/api': 1.9.0
+      '@opentelemetry/context-async-hooks': 1.30.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/core': 1.30.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-metrics': 1.30.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-node': 0.52.1(@opentelemetry/api@1.9.0)
+      '@opentelemetry/sdk-trace-base': 1.30.1(@opentelemetry/api@1.9.0)
+      '@types/json-schema': 7.0.15
+      ajv: 8.17.1
+      ajv-formats: 3.0.1(ajv@8.17.1)
+      async-mutex: 0.5.0
+      body-parser: 1.20.3
+      cors: 2.8.5
+      dotprompt: 1.1.1
+      express: 4.21.2
+      get-port: 5.1.1
+      json-schema: 0.4.0
+      zod: 3.25.42
+      zod-to-json-schema: 3.24.5(zod@3.25.42)
+    transitivePeerDependencies:
+      - supports-color
+
+  '@genkit-ai/evaluator@1.10.0(genkit@1.11.0)':
     dependencies:
       compute-cosine-similarity: 1.1.0
       dotprompt: 1.1.1
-      genkit: 1.10.0
+      genkit: 1.11.0
       jsonata: 2.0.6
       node-fetch: 3.3.2
       path: 0.12.7
 
-  '@genkit-ai/googleai@1.10.0(genkit@1.10.0)':
+  '@genkit-ai/flow@0.5.17':
+    dependencies:
+      '@genkit-ai/core': 0.5.17
+      '@google-cloud/firestore': 7.11.1
+      '@opentelemetry/api': 1.9.0
+      '@types/cors': 2.8.18
+      body-parser: 1.20.3
+      cors: 2.8.5
+      express: 4.21.2
+      firebase-admin: 13.4.0
+      firebase-functions: 6.3.2(firebase-admin@13.4.0)
+      uuid: 9.0.1
+      zod: 3.25.42
+    transitivePeerDependencies:
+      - encoding
+      - supports-color
+
+  '@genkit-ai/googleai@1.11.0(genkit@1.11.0)':
     dependencies:
       '@google/generative-ai': 0.24.1
-      genkit: 1.10.0
+      genkit: 1.11.0
       google-auth-library: 9.15.1
       node-fetch: 3.3.2
     transitivePeerDependencies:
@@ -6179,7 +6267,6 @@ snapshots:
     transitivePeerDependencies:
       - encoding
       - supports-color
-    optional: true
 
   '@google-cloud/paginator@5.0.2':
     dependencies:
@@ -8470,8 +8557,7 @@ snapshots:
 
   '@tanstack/virtual-core@3.11.3': {}
 
-  '@tootallnate/once@2.0.0':
-    optional: true
+  '@tootallnate/once@2.0.0': {}
 
   '@tybys/wasm-util@0.9.0':
     dependencies:
@@ -8483,8 +8569,7 @@ snapshots:
       '@types/connect': 3.4.38
       '@types/node': 22.15.3
 
-  '@types/caseless@0.12.5':
-    optional: true
+  '@types/caseless@0.12.5': {}
 
   '@types/connect@3.4.38':
     dependencies:
@@ -8550,8 +8635,7 @@ snapshots:
       '@types/ms': 2.1.0
       '@types/node': 22.15.3
 
-  '@types/long@4.0.2':
-    optional: true
+  '@types/long@4.0.2': {}
 
   '@types/mdast@4.0.4':
     dependencies:
@@ -8590,7 +8674,6 @@ snapshots:
       '@types/node': 22.15.3
       '@types/tough-cookie': 4.0.5
       form-data: 2.5.3
-    optional: true
 
   '@types/send@0.17.4':
     dependencies:
@@ -8605,8 +8688,7 @@ snapshots:
 
   '@types/shimmer@1.2.0': {}
 
-  '@types/tough-cookie@4.0.5':
-    optional: true
+  '@types/tough-cookie@4.0.5': {}
 
   '@types/unist@2.0.11': {}
 
@@ -8747,7 +8829,6 @@ snapshots:
   abort-controller@3.0.0:
     dependencies:
       event-target-shim: 5.0.1
-    optional: true
 
   accepts@1.3.8:
     dependencies:
@@ -8774,7 +8855,6 @@ snapshots:
       debug: 4.4.1
     transitivePeerDependencies:
       - supports-color
-    optional: true
 
   agent-base@7.1.3: {}
 
@@ -8908,8 +8988,7 @@ snapshots:
       retry: 0.13.1
     optional: true
 
-  asynckit@0.4.0:
-    optional: true
+  asynckit@0.4.0: {}
 
   autoprefixer@10.4.21(postcss@8.5.3):
     dependencies:
@@ -9111,7 +9190,6 @@ snapshots:
   combined-stream@1.0.8:
     dependencies:
       delayed-stream: 1.0.0
-    optional: true
 
   comma-separated-tokens@2.0.3: {}
 
@@ -9234,8 +9312,7 @@ snapshots:
       has-property-descriptors: 1.0.2
       object-keys: 1.1.1
 
-  delayed-stream@1.0.0:
-    optional: true
+  delayed-stream@1.0.0: {}
 
   depd@2.0.0: {}
 
@@ -9291,7 +9368,6 @@ snapshots:
       inherits: 2.0.4
       readable-stream: 3.6.2
       stream-shift: 1.0.3
-    optional: true
 
   eastasianwidth@0.2.0: {}
 
@@ -9314,7 +9390,6 @@ snapshots:
   end-of-stream@1.4.4:
     dependencies:
       once: 1.4.0
-    optional: true
 
   es-abstract@1.23.9:
     dependencies:
@@ -9701,8 +9776,7 @@ snapshots:
       d: 1.0.2
       es5-ext: 0.10.64
 
-  event-target-shim@5.0.1:
-    optional: true
+  event-target-shim@5.0.1: {}
 
   express@4.21.2:
     dependencies:
@@ -9887,6 +9961,17 @@ snapshots:
       - encoding
       - supports-color
 
+  firebase-functions@6.3.2(firebase-admin@13.4.0):
+    dependencies:
+      '@types/cors': 2.8.18
+      '@types/express': 4.17.22
+      cors: 2.8.5
+      express: 4.21.2
+      firebase-admin: 13.4.0
+      protobufjs: 7.4.0
+    transitivePeerDependencies:
+      - supports-color
+
   firebase@11.8.1:
     dependencies:
       '@firebase/ai': 1.3.0(@firebase/app-types@0.9.3)(@firebase/app@0.13.0)
@@ -9945,7 +10030,6 @@ snapshots:
       es-set-tostringtag: 2.1.0
       mime-types: 2.1.35
       safe-buffer: 5.2.1
-    optional: true
 
   format@0.2.2: {}
 
@@ -9984,8 +10068,7 @@ snapshots:
       hasown: 2.0.2
       is-callable: 1.2.7
 
-  functional-red-black-tree@1.0.1:
-    optional: true
+  functional-red-black-tree@1.0.1: {}
 
   functions-have-names@1.2.3: {}
 
@@ -10009,11 +10092,19 @@ snapshots:
       - encoding
       - supports-color
 
-  genkit@1.10.0:
+  genkit@1.11.0:
     dependencies:
-      '@genkit-ai/ai': 1.10.0
-      '@genkit-ai/core': 1.10.0
+      '@genkit-ai/ai': 1.11.0
+      '@genkit-ai/core': 1.11.0
       uuid: 10.0.0
+    transitivePeerDependencies:
+      - supports-color
+
+  genkitx-graph@0.22.0(@genkit-ai/flow@0.5.17):
+    dependencies:
+      '@genkit-ai/flow': 0.5.17
+      express: 4.21.2
+      zod: 3.25.42
     transitivePeerDependencies:
       - supports-color
 
@@ -10106,7 +10197,6 @@ snapshots:
     transitivePeerDependencies:
       - encoding
       - supports-color
-    optional: true
 
   google-logging-utils@0.0.2: {}
 
@@ -10199,7 +10289,6 @@ snapshots:
       debug: 4.4.1
     transitivePeerDependencies:
       - supports-color
-    optional: true
 
   https-proxy-agent@5.0.1:
     dependencies:
@@ -10207,7 +10296,6 @@ snapshots:
       debug: 4.4.1
     transitivePeerDependencies:
       - supports-color
-    optional: true
 
   https-proxy-agent@7.0.6:
     dependencies:
@@ -11317,7 +11405,6 @@ snapshots:
   proto3-json-serializer@2.0.2:
     dependencies:
       protobufjs: 7.4.0
-    optional: true
 
   protobufjs@7.4.0:
     dependencies:
@@ -11463,7 +11550,6 @@ snapshots:
       inherits: 2.0.4
       string_decoder: 1.3.0
       util-deprecate: 1.0.2
-    optional: true
 
   readdirp@3.6.0:
     dependencies:
@@ -11544,7 +11630,6 @@ snapshots:
     transitivePeerDependencies:
       - encoding
       - supports-color
-    optional: true
 
   retry@0.13.1:
     optional: true
@@ -11762,10 +11847,8 @@ snapshots:
   stream-events@1.0.5:
     dependencies:
       stubs: 3.0.0
-    optional: true
 
-  stream-shift@1.0.3:
-    optional: true
+  stream-shift@1.0.3: {}
 
   streamsearch@1.1.0: {}
 
@@ -11836,7 +11919,6 @@ snapshots:
   string_decoder@1.3.0:
     dependencies:
       safe-buffer: 5.2.1
-    optional: true
 
   stringify-entities@4.0.4:
     dependencies:
@@ -11858,8 +11940,7 @@ snapshots:
   strnum@1.1.2:
     optional: true
 
-  stubs@3.0.0:
-    optional: true
+  stubs@3.0.0: {}
 
   style-mod@4.1.2: {}
 
@@ -11942,7 +12023,6 @@ snapshots:
     transitivePeerDependencies:
       - encoding
       - supports-color
-    optional: true
 
   thenify-all@1.6.0:
     dependencies:
@@ -12304,10 +12384,10 @@ snapshots:
 
   yocto-queue@0.1.0: {}
 
-  zod-to-json-schema@3.24.5(zod@3.25.32):
+  zod-to-json-schema@3.24.5(zod@3.25.42):
     dependencies:
-      zod: 3.25.32
+      zod: 3.25.42
 
-  zod@3.25.32: {}
+  zod@3.25.42: {}
 
   zwitch@2.0.4: {}
