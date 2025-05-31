@@ -27,50 +27,52 @@
     </div>
 
     <div class="flex flex-row gap-2">
-      <template v-if="!isAuthenticated && !userStore.loading">
-        <UButton 
-          data-language-button 
-          @click="isLanguageModalOpen = true" 
-          size="lg" 
-          variant="ghost"
-        >
-          <UIcon name="i-lucide-globe" />
-        </UButton>
-        <UButton 
-          @click="toggleTheme" 
-          size="lg" 
-          variant="ghost"
-        >
-          <ClientOnly>
-            <template #default>
-              <UIcon :name="colorMode === 'dark' ? 'i-lucide-sun' : 'i-lucide-moon'" />
-            </template>
-            <template #fallback>
-              <UIcon name="i-lucide-moon" />
-            </template>
-          </ClientOnly>
-        </UButton>
-        <UButton 
-          size="lg" 
-          variant="solid" 
-          :label="$t('common.signIn')" 
-          @click="openLogin"
-        />
+      <ClientOnly>
+        <template v-if="!isAuthenticated && !userStore.loading">
+          <UButton 
+            data-language-button 
+            @click="isLanguageModalOpen = true" 
+            size="lg" 
+            variant="ghost"
+          >
+            <UIcon name="i-lucide-globe" />
+          </UButton>
+          <UButton 
+            @click="toggleTheme" 
+            size="lg" 
+            variant="ghost"
+          >
+            <ClientOnly>
+              <template #default>
+                <UIcon :name="colorMode === 'dark' ? 'i-lucide-sun' : 'i-lucide-moon'" />
+              </template>
+              <template #fallback>
+                <UIcon name="i-lucide-moon" />
+              </template>
+            </ClientOnly>
+          </UButton>
+          <UButton 
+            size="lg" 
+            variant="solid" 
+            :label="$t('common.signIn')" 
+            @click="openLogin"
+          />
 
-        <UserLogin
-          v-model="showLoginModal"
-          @open-register="openRegister"
-        />
-        <UserRegister
-          v-model="showRegisterModal"
-          @open-login="openLogin"
-        />
-        <SettingsLanguageSelect v-model="isLanguageModalOpen" />
-      </template>
-      <template v-else-if="userStore.loading">
-        <USkeleton class="h-10 w-24" />
-      </template>
-      <UserNav v-else />
+          <UserLogin
+            v-model="showLoginModal"
+            @open-register="openRegister"
+          />
+          <UserRegister
+            v-model="showRegisterModal"
+            @open-login="openLogin"
+          />
+          <SettingsLanguageSelect v-model="isLanguageModalOpen" />
+        </template>
+        <template v-else-if="userStore.loading">
+          <USkeleton class="h-10 w-24" />
+        </template>
+        <UserNav v-else />
+    </ClientOnly>
     </div>
   </header>
 </template>
