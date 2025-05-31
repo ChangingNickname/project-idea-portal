@@ -52,9 +52,9 @@
             <p class="text-gray-500 dark:text-gray-400">Phone</p>
             <p :class="[
               'font-medium',
-              !user.phoneNumber ? 'text-red-500 dark:text-red-400' : 'text-gray-900 dark:text-white'
+              !user.contacts?.phone ? 'text-red-500 dark:text-red-400' : 'text-gray-900 dark:text-white'
             ]">
-              {{ user.phoneNumber || 'Not provided' }}
+              {{ user.contacts?.phone || 'Not provided' }}
             </p>
           </div>
           <div class="space-y-1">
@@ -82,12 +82,6 @@
               <span class="text-sm text-gray-700 dark:text-gray-300">{{ user.email }}</span>
             </a>
             
-            <a v-if="user.contacts?.phone" 
-               :href="`tel:${user.contacts.phone}`"
-               class="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-              <Icon name="heroicons:phone" class="w-5 h-5 text-gray-500" />
-              <span class="text-sm text-gray-700 dark:text-gray-300">{{ user.contacts.phone }}</span>
-            </a>
             
             <a v-if="user.contacts?.telegram" 
                :href="`https://t.me/${user.contacts.telegram}`"
@@ -175,7 +169,6 @@ const props = defineProps<{
 const hasContacts = computed(() => {
   if (!props.user.contacts) return !!props.user.email
   return props.user.email || 
-         props.user.contacts.phone || 
          props.user.contacts.telegram || 
          props.user.contacts.whatsapp || 
          props.user.contacts.viber || 
