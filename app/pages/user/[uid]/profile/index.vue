@@ -20,8 +20,27 @@
           {{ t('common.editProfile') }}
         </UButton>
       </div>
+      <div
+      v-else
+      class="flex flex-row justify-end gap-2"
+      >
+        <UButton
+        color="primary"
+        :icon="isFriend ? 'i-lucide-user-minus' : 'i-lucide-user-plus'"
+        :label="isFriend ? 'Удалить из друзей' : 'Добавить в друзья'"
+        @click="toggleFriend"
+        />
+        <UButton
+        color="primary"
+        :icon="isBlacklist ? 'i-lucide-user-block' : 'i-lucide-user-round-x'"
+        :label="isBlacklist ? 'Удалить из черного списка' : 'Добавить в черный список'"
+        @click="toggleBlacklist"
+        />
+      </div>
 
       <UserProfile
+        :class="isFriend ? 'border-green-500' : ''"
+        :disabled="isBlacklist"
         v-if="!isEditMode && userData"
         :user="userData"
       />
@@ -52,6 +71,8 @@ const userData = ref<User | null>(null)
 const error = ref<Error | null>(null)
 const pending = ref(true)
 const isEditMode = ref(false)
+const isFriend = ref(false)
+const isBlacklist = ref(false)
 
 const isOwnProfile = computed(() => {
   return userStore.user?.id === uid
@@ -60,7 +81,7 @@ const isOwnProfile = computed(() => {
 // Загрузка данных пользователя
 const fetchUserData = async () => {
   try {
-    userData.value = await $fetch<User>(`/api/user/profile/${uid}`)
+    userData.value = await $fetch<User>(`/api/user/${uid}/profile`)
   } catch (e) {
     error.value = e as Error
     console.error('Error fetching user data:', e)
@@ -71,6 +92,16 @@ const fetchUserData = async () => {
 
 // Вызываем загрузку данных
 fetchUserData()
+
+const toggleFriend = async () => {
+  isFriend.value = !isFriend.value  
+  console.log('toggleFriend')
+}
+
+const toggleBlacklist = async () => {
+  isBlacklist.value = !isBlacklist.value
+  console.log('toggleBlacklist')
+}
 
 const handleSave = async (updatedUser: User) => {
   try {
@@ -84,7 +115,7 @@ const handleSave = async (updatedUser: User) => {
     })
 
     // Отправляем запрос на сервер
-    const response = await $fetch(`/api/user/profile/${uid}`, {
+    const response = await $fetch(`/api/user/${uid}/profile`, {
       method: 'POST',
       body: updatedUser
     })
@@ -119,4 +150,14 @@ const handleSave = async (updatedUser: User) => {
     })
   }
 }
+
+const addFriend = async () => {
+  console.log('addFriend')
+}
+
+const addBlacklist = async () => {
+  console.log('addBlacklist')
+}
+
+
 </script>

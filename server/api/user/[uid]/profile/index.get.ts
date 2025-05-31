@@ -138,7 +138,7 @@ export default defineEventHandler(async (event): Promise<User> => {
       })
     }
   } catch (error: any) {
-    console.error('Error in /api/user/profile/[uid]:', error)
+    console.error('Error in /api/user/[uid]/profile:', error)
     throw createError({
       statusCode: error.statusCode || 500,
       message: error.message || 'Internal Server Error'

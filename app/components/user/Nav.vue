@@ -23,7 +23,7 @@
       <button
         type="button"
         class="w-full text-left px-4 py-3 border-b border-gray-200 dark:border-gray-700 cursor-pointer relative group focus:outline-none"
-        @click="handleNavigation(`/user/profile/${user?.id}`)"
+        @click="handleNavigation(`/user/${user?.id}/profile`)"
         :title="$t('common.profile')"
       >
         <div class="flex items-center gap-3">
