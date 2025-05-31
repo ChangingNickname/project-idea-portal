@@ -31,6 +31,15 @@ export const useUserStore = defineStore('user', {
       this.user = user
     },
 
+    updateUser(user: User) {
+      if (this.user && this.user.id === user.id) {
+        this.user = {
+          ...this.user,
+          ...user
+        }
+      }
+    },
+
     clearUser() {
       this.user = null
     }
