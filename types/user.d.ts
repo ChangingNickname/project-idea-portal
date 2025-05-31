@@ -7,7 +7,6 @@ declare global {
         avatar: string | null
         emailVerified: boolean
         displayName: string | null
-        phoneNumber: string | null
         disabled: boolean
         isAnonymous: boolean
         providerData: ProviderData[]
