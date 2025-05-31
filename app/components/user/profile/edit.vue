@@ -121,64 +121,6 @@
             </div>
           </div>
 
-          <!-- Phone -->
-          <div class="space-y-4">
-            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('common.phone') }}</h2>
-            <div class="grid grid-cols-2 gap-4">
-              <UFormField
-                label="Phone Number"
-                name="phoneNumber"
-              >
-                <UInput
-                  v-model="formState.phoneNumber"
-                  type="tel"
-                  :placeholder="t('common.phoneNumberInput')"
-                >
-                  <template #leading>
-                    <Icon name="heroicons:device-phone-mobile" class="w-5 h-5 text-gray-400" />
-                  </template>
-                </UInput>
-              </UFormField>
-            </div>
-          </div>
-
-          <!-- Account Status -->
-          <div class="space-y-4">
-            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('common.accountStatus') }}</h2>
-            <div class="grid grid-cols-2 gap-4">
-              <div class="flex items-center gap-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <Icon 
-                  :name="formState.disabled ? 'heroicons:lock-closed' : 'heroicons:lock-open'" 
-                  class="w-5 h-5"
-                  :class="formState.disabled ? 'text-red-500' : 'text-green-500'"
-                />
-                <div>
-                  <p class="font-medium text-gray-900 dark:text-white">
-                    {{ formState.disabled ? t('common.accountDisabled') : t('common.accountEnabled') }}
-                  </p>
-                  <p class="text-sm text-gray-500">
-                    {{ t('common.accountStatusDescription') }}
-                  </p>
-                </div>
-              </div>
-              <div class="flex items-center gap-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <Icon 
-                  :name="formState.isAnonymous ? 'heroicons:user-circle' : 'heroicons:user'" 
-                  class="w-5 h-5"
-                  :class="formState.isAnonymous ? 'text-yellow-500' : 'text-green-500'"
-                />
-                <div>
-                  <p class="font-medium text-gray-900 dark:text-white">
-                    {{ formState.isAnonymous ? t('common.anonymousUser') : t('common.registeredUser') }}
-                  </p>
-                  <p class="text-sm text-gray-500">
-                    {{ t('common.userTypeDescription') }}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
           <!-- Contacts -->
           <div class="space-y-4">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('common.contacts') }}</h2>
@@ -191,6 +133,7 @@
                   v-model="formState.contacts.phone"
                   type="tel"
                   :placeholder="t('common.phoneInput')"
+                  @input="(e) => formState.contacts.phone = formatPhoneNumber(e.target.value)"
                 >
                   <template #leading>
                     <Icon name="heroicons:phone" class="w-5 h-5 text-gray-400" />
@@ -353,8 +296,32 @@ const emit = defineEmits<{
 // Create form state from user data
 const formState = reactive<User>({
   ...JSON.parse(JSON.stringify(props.user)),
-  email: userStore.user?.email || ''
+  email: userStore.user?.email || '',
+  contacts: {
+    ...props.user.contacts,
+    phone: props.user.contacts?.phone || '',
+    telegram: props.user.contacts?.telegram || '',
+    whatsapp: props.user.contacts?.whatsapp || '',
+    viber: props.user.contacts?.viber || '',
+    discord: props.user.contacts?.discord || '',
+    linkedin: props.user.contacts?.linkedin || '',
+    github: props.user.contacts?.github || '',
+    website: props.user.contacts?.website || ''
+  }
 })
+
+// Функция для форматирования телефона
+const formatPhoneNumber = (value: string): string => {
+  if (!value) return ''
+  // Удаляем все нецифровые символы
+  const numbers = value.replace(/\D/g, '')
+  // Форматируем номер: +7 (XXX) XXX-XX-XX
+  const match = numbers.match(/^(\d{1})(\d{3})(\d{3})(\d{2})(\d{2})$/)
+  if (match) {
+    return `+${match[1]} (${match[2]}) ${match[3]}-${match[4]}-${match[5]}`
+  }
+  return value
+}
 
 const getProviderIcon = (providerId: string) => {
   const icons: Record<string, string> = {
@@ -449,14 +416,22 @@ const handleImageUpload = async (event: Event) => {
 
 const handleSubmit = async () => {
   try {
-    const updatedUser = await profileStore.updateProfile(formState)
+    // Очищаем пустые поля контактов
+    const cleanedContacts = Object.entries(formState.contacts || {}).reduce((acc, [key, value]) => {
+      if (value) {
+        acc[key] = value
+      }
+      return acc
+    }, {} as Record<string, string>)
+
+    const updatedUser = {
+      ...formState,
+      contacts: cleanedContacts
+    }
+
     emit('save', updatedUser)
-    toast.add({
-      title: t('common.success'),
-      description: t('common.profileUpdateSuccess'),
-      color: 'success'
-    })
   } catch (error) {
+    console.error('Form submission error:', error)
     toast.add({
       title: t('common.error'),
       description: t('common.profileUpdateError'),
