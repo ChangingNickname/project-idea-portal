@@ -1,5 +1,6 @@
 import { initializeApp, getApps, cert } from 'firebase-admin/app'
 import { getAuth } from 'firebase-admin/auth'
+import { getFirestore } from 'firebase-admin/firestore'
 import { defineEventHandler, getCookie, createError } from 'h3'
 
 // Initialize Firebase Admin if not already initialized
@@ -42,17 +43,20 @@ export default defineEventHandler(async (event): Promise<User> => {
 
     try {
       const userRecord = await getAuth().getUser(uid)
+      const db = getFirestore()
+      
+      // Получаем профиль пользователя из Firestore
+      const profileDoc = await db.collection('profiles').doc(uid).get()
+      const profileData = profileDoc.exists ? profileDoc.data() : null
 
       // If user is requesting their own data or is authenticated, return full data
       if (isAuthenticated && currentUserId === uid) {
         return {
           id: userRecord.uid,
           email: userRecord.email || null,
-          avatar: userRecord.photoURL || null,
+          avatar: profileData?.avatar || userRecord.photoURL || null,
           emailVerified: userRecord.emailVerified,
-          displayName: userRecord.displayName || null,
-          phoneNumber: userRecord.phoneNumber || null,
-          disabled: userRecord.disabled,
+          displayName: profileData?.displayName || userRecord.displayName || null,          disabled: userRecord.disabled,
           isAnonymous: userRecord.providerData.length === 0,
           providerData: userRecord.providerData.map(provider => ({
             providerId: provider.providerId,
@@ -77,7 +81,7 @@ export default defineEventHandler(async (event): Promise<User> => {
               enrollmentTime: factor.enrollmentTime || null
             }))
           } : null,
-          contacts: {
+          contacts: profileData?.contacts || {
             email: userRecord.email || null,
             phone: userRecord.phoneNumber || null,
             telegram: null,
@@ -91,14 +95,13 @@ export default defineEventHandler(async (event): Promise<User> => {
         }
       }
 
-      // For other users, return only id, displayName (or email) and avatar
+      // For other users, return only public data
       return {
         id: userRecord.uid,
         email: null,
-        avatar: userRecord.photoURL || null,
+        avatar: profileData?.avatar || userRecord.photoURL || null,
         emailVerified: false,
-        displayName: userRecord.displayName || userRecord.email || null,
-        phoneNumber: null,
+        displayName: profileData?.displayName || userRecord.displayName || userRecord.email || null,
         disabled: false,
         isAnonymous: false,
         providerData: [],
