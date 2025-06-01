@@ -110,12 +110,11 @@ const handleSave = async (updatedUser: User) => {
       title: t('common.saving'),
       description: t('common.savingProfile'),
       color: 'primary',
-      icon: 'i-heroicons-arrow-path',
-      loading: true
+      icon: 'i-heroicons-arrow-path'
     })
 
     // Отправляем запрос на сервер
-    const response = await $fetch(`/api/user/${uid}/profile`, {
+    const response = await $fetch<{ success: boolean; profile: User }>(`/api/user/${uid}/profile`, {
       method: 'POST',
       body: updatedUser
     })
