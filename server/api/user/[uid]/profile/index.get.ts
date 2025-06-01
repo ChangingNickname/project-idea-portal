@@ -39,8 +39,21 @@ export default defineEventHandler(async (event): Promise<User> => {
       const profileDoc = await db.collection('profiles').doc(uid).get()
       const profileData = profileDoc.exists ? profileDoc.data() : null
 
-      // Если пользователь запрашивает свои данные или авторизован, возвращаем полные данные
-      if (isAuthenticated && currentUserId === uid) {
+      // Проверяем, добавил ли пользователь меня в друзья
+      let isAddedToFriends = false
+      if (isAuthenticated && currentUserId) {
+        const relationshipDoc = await db.collection('relationships')
+          .where('uid', '==', uid)
+          .where('targetUid', '==', currentUserId)
+          .where('status', '==', 'friend')
+          .get()
+        isAddedToFriends = !relationshipDoc.empty
+      }
+
+      console.log('isAddedToFriends', isAddedToFriends)
+
+      // Если пользователь запрашивает свои данные или добавил меня в друзья, возвращаем полные данные
+      if (isAuthenticated && (currentUserId === uid || isAddedToFriends)) {
         return {
           id: userRecord.uid,
           email: userRecord.email || null,

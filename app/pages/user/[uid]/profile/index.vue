@@ -103,7 +103,7 @@ const fetchRelationshipStatus = async () => {
     const { status } = await $fetch<{ status: RelationStatus | null }>(`/api/user/${uid}/relationship`)
     isFriend.value = status === 'friend'
     isBlacklist.value = status === 'blacklist'
-    isPendingFriend.value = status === 'pending_friend'
+    isPendingFriend.value = false
   } catch (error) {
     console.error('Ошибка получения статуса отношений:', error)
   }

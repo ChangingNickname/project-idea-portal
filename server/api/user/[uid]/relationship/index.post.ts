@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
     if (status === null) {
       // Если статус null, удаляем запись
       if (!relation.empty) {
-        await relation.docs[0].ref.delete()
+        await relation.docs[0]?.ref.delete()
       }
       return {
         success: true,
