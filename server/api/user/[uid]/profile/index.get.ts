@@ -1,7 +1,8 @@
 import { initializeApp, getApps, cert } from 'firebase-admin/app'
 import { getAuth } from 'firebase-admin/auth'
 import { getFirestore } from 'firebase-admin/firestore'
-import { defineEventHandler, getCookie, createError } from 'h3'
+import { defineEventHandler, createError } from 'h3'
+import { checkAuth } from '~~/server/utils/auth'
 
 // Initialize Firebase Admin if not already initialized
 if (!getApps().length) {
@@ -25,21 +26,10 @@ export default defineEventHandler(async (event): Promise<User> => {
       })
     }
 
-    // Get session cookie to check if user is authenticated
-    const session = getCookie(event, 'session')
-    let isAuthenticated = false
-    let currentUserId = null
-
-    if (session) {
-      try {
-        const decodedToken = await getAuth().verifySessionCookie(session, true)
-        isAuthenticated = true
-        currentUserId = decodedToken.uid
-      } catch (error) {
-        // Session is invalid, but we'll still return limited user data
-        console.error('Session verification failed:', error)
-      }
-    }
+    // Проверяем авторизацию
+    const authResult = await checkAuth(event)
+    const isAuthenticated = authResult.isAuthenticated
+    const currentUserId = authResult.currentUserId
 
     try {
       const userRecord = await getAuth().getUser(uid)
@@ -56,7 +46,8 @@ export default defineEventHandler(async (event): Promise<User> => {
           email: userRecord.email || null,
           avatar: profileData?.avatar || userRecord.photoURL || null,
           emailVerified: userRecord.emailVerified,
-          displayName: profileData?.displayName || userRecord.displayName || null,          disabled: userRecord.disabled,
+          displayName: profileData?.displayName || userRecord.displayName || null,
+          disabled: userRecord.disabled,
           isAnonymous: userRecord.providerData.length === 0,
           providerData: userRecord.providerData.map(provider => ({
             providerId: provider.providerId,

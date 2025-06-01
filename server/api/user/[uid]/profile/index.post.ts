@@ -1,7 +1,8 @@
 import { initializeApp, getApps, cert } from 'firebase-admin/app'
 import { getAuth } from 'firebase-admin/auth'
 import { getFirestore } from 'firebase-admin/firestore'
-import { defineEventHandler, getCookie, createError, readBody } from 'h3'
+import { defineEventHandler, createError, readBody } from 'h3'
+import { requireAuth } from '~~/server/utils/auth'
 
 // Initialize Firebase Admin if not already initialized
 if (!getApps().length) {
@@ -25,21 +26,12 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // Проверяем аутентификацию
-    const session = getCookie(event, 'session')
-    if (!session) {
+    // Проверяем авторизацию
+    const authResult = await requireAuth(event, uid)
+    if (!authResult.isAuthenticated) {
       throw createError({
-        statusCode: 401,
-        message: 'Unauthorized'
-      })
-    }
-
-    // Верифицируем сессию
-    const decodedToken = await getAuth().verifySessionCookie(session, true)
-    if (decodedToken.uid !== uid) {
-      throw createError({
-        statusCode: 403,
-        message: 'Forbidden'
+        statusCode: authResult.error?.statusCode || 401,
+        message: authResult.error?.message || 'Unauthorized'
       })
     }
 
