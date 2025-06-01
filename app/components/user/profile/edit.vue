@@ -133,7 +133,7 @@
                   v-model="formState.contacts.phone"
                   type="tel"
                   :placeholder="t('common.phoneInput')"
-                  @input="(e) => formState.contacts.phone = formatPhoneNumber(e.target.value)"
+                  @input="(e: Event) => formState.contacts.phone = formatPhoneNumber((e.target as HTMLInputElement).value)"
                 >
                   <template #leading>
                     <Icon name="heroicons:phone" class="w-5 h-5 text-gray-400" />
@@ -417,12 +417,17 @@ const handleImageUpload = async (event: Event) => {
 const handleSubmit = async () => {
   try {
     // Очищаем пустые поля контактов
-    const cleanedContacts = Object.entries(formState.contacts || {}).reduce((acc, [key, value]) => {
-      if (value) {
-        acc[key] = value
-      }
-      return acc
-    }, {} as Record<string, string>)
+    const cleanedContacts: UserContacts = {
+      email: formState.contacts.email,
+      phone: formState.contacts.phone || null,
+      telegram: formState.contacts.telegram || null,
+      whatsapp: formState.contacts.whatsapp || null,
+      viber: formState.contacts.viber || null,
+      discord: formState.contacts.discord || null,
+      linkedin: formState.contacts.linkedin || null,
+      github: formState.contacts.github || null,
+      website: formState.contacts.website || null
+    }
 
     const updatedUser = {
       ...formState,
