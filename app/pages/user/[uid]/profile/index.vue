@@ -62,9 +62,17 @@
         <!-- Друзья -->
         <div class="space-y-4">
           <div class="flex items-center justify-between">
-            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
-              {{ t('profile.friends') }}
-            </h2>
+            <div class="flex items-center gap-2">
+              <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+                {{ t('profile.friends') }}
+              </h2>
+              <UButton
+                color="primary"
+                variant="ghost"
+                icon="i-lucide-plus"
+                @click="showFriendsSearch = true"
+              />
+            </div>
             <UPagination
               v-if="friendsPagination.pages > 1"
               v-model="friendsPage"
@@ -106,9 +114,17 @@
         <!-- Заблокированные пользователи -->
         <div class="space-y-4">
           <div class="flex items-center justify-between">
-            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
-              {{ t('profile.blockedUsers') }}
-            </h2>
+            <div class="flex items-center gap-2">
+              <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+                {{ t('profile.blockedUsers') }}
+              </h2>
+              <UButton
+                color="primary"
+                variant="ghost"
+                icon="i-lucide-plus"
+                @click="showBlockedSearch = true"
+              />
+            </div>
             <UPagination
               v-if="blockedPagination.pages > 1"
               v-model="blockedPage"
@@ -148,6 +164,82 @@
         </div>
       </div>
     </div>
+
+    <!-- Модальные окна поиска -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition duration-200 ease-out"
+        enter-from-class="transform scale-95 opacity-0"
+        enter-to-class="transform scale-100 opacity-100"
+        leave-active-class="transition duration-150 ease-in"
+        leave-from-class="transform scale-100 opacity-100"
+        leave-to-class="transform scale-95 opacity-0"
+      >
+        <div v-if="showFriendsSearch" class="fixed inset-0 z-50 flex items-center justify-center p-16">
+          <div
+            class="fixed inset-0 bg-black/50"
+            @click="showFriendsSearch = false"
+          />
+
+          <div
+            class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-3xl max-h-[calc(100vh-2rem)] overflow-y-auto"
+          >
+            <button
+              class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              @click="showFriendsSearch = false"
+            >
+              <UIcon name="i-lucide-x" class="w-6 h-6" />
+            </button>
+
+            <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white pr-8">
+              Добавить друзей
+            </h2>
+
+            <UserSearch
+              v-model="selectedFriends"
+              @select="handleAddFriends"
+            />
+          </div>
+        </div>
+      </Transition>
+
+      <Transition
+        enter-active-class="transition duration-200 ease-out"
+        enter-from-class="transform scale-95 opacity-0"
+        enter-to-class="transform scale-100 opacity-100"
+        leave-active-class="transition duration-150 ease-in"
+        leave-from-class="transform scale-100 opacity-100"
+        leave-to-class="transform scale-95 opacity-0"
+      >
+        <div v-if="showBlockedSearch" class="fixed inset-0 z-50 flex items-center justify-center p-16">
+          <div
+            class="fixed inset-0 bg-black/50"
+            @click="showBlockedSearch = false"
+          />
+
+          <div
+            class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-3xl max-h-[calc(100vh-2rem)] overflow-y-auto"
+          >
+            <button
+              class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              @click="showBlockedSearch = false"
+            >
+              <UIcon name="i-lucide-x" class="w-6 h-6" />
+            </button>
+
+            <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white pr-8">
+              Добавить в черный список
+            </h2>
+
+            <UserSearch
+              v-model="selectedBlocked"
+              @select="handleAddBlocked"
+            />
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
   </div>
 </template>
 
@@ -157,6 +249,7 @@ import { useProfileStore } from '~/stores/profile'
 import UserProfile from '~/components/user/profile/index.vue'
 import UserProfileEdit from '~/components/user/profile/edit.vue'
 import UserCard from '~/components/user/Card.vue'
+import UserSearch from '~/components/user/search.vue'
 
 const route = useRoute()
 const userStore = useUserStore()
@@ -198,6 +291,12 @@ const blockedPagination = ref({
 const isOwnProfile = computed(() => {
   return userStore.user?.id === uid
 })
+
+// Состояние для модальных окон поиска
+const showFriendsSearch = ref<boolean>(false)
+const showBlockedSearch = ref<boolean>(false)
+const selectedFriends = ref<string[]>([])
+const selectedBlocked = ref<string[]>([])
 
 // Загрузка данных пользователя
 const fetchUserData = async () => {
@@ -513,5 +612,94 @@ const removeBlocked = async (targetUid: string) => {
     ]
   })
 }
+
+// Обработчики добавления пользователей
+const handleAddFriends = async (userIds: string[]) => {
+  try {
+    await Promise.all(
+      userIds.map(async (uid) => {
+        await $fetch(`/api/user/${uid}/relationship`, {
+          method: 'POST',
+          body: { status: 'friend' }
+        })
+      })
+    )
+
+    // Обновляем список друзей
+    await fetchFriends()
+    
+    // Закрываем модальное окно
+    showFriendsSearch.value = false
+    selectedFriends.value = []
+
+    // Показываем уведомление
+    toast.add({
+      title: 'Успешно',
+      description: 'Пользователи добавлены в друзья',
+      color: 'success',
+      icon: 'i-lucide-user-plus'
+    })
+  } catch (error) {
+    console.error('Ошибка добавления в друзья:', error)
+    toast.add({
+      title: 'Ошибка',
+      description: 'Не удалось добавить пользователей в друзья',
+      color: 'error',
+      icon: 'i-lucide-alert-circle'
+    })
+  }
+}
+
+const handleAddBlocked = async (userIds: string[]) => {
+  try {
+    await Promise.all(
+      userIds.map(async (uid) => {
+        await $fetch(`/api/user/${uid}/relationship`, {
+          method: 'POST',
+          body: { status: 'blacklist' }
+        })
+      })
+    )
+
+    // Обновляем список заблокированных
+    await fetchBlockedUsers()
+    
+    // Закрываем модальное окно
+    showBlockedSearch.value = false
+    selectedBlocked.value = []
+
+    // Показываем уведомление
+    toast.add({
+      title: 'Успешно',
+      description: 'Пользователи добавлены в черный список',
+      color: 'success',
+      icon: 'i-lucide-user-x'
+    })
+  } catch (error) {
+    console.error('Ошибка добавления в черный список:', error)
+    toast.add({
+      title: 'Ошибка',
+      description: 'Не удалось добавить пользователей в черный список',
+      color: 'error',
+      icon: 'i-lucide-alert-circle'
+    })
+  }
+}
+
+// Закрытие по Escape
+const closeOnEsc = (event: KeyboardEvent) => {
+  if (event.key === 'Escape') {
+    showFriendsSearch.value = false
+    showBlockedSearch.value = false
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('keydown', closeOnEsc)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', closeOnEsc)
+})
 
 </script>
