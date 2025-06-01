@@ -15,7 +15,7 @@
           @click="isEditMode = true"
         >
           <template #leading>
-            <Icon name="heroicons:pencil-square" class="w-5 h-5" />
+            <Icon name="lucide:pencil" class="w-5 h-5" />
           </template>
           {{ t('common.editProfile') }}
         </UButton>
@@ -25,21 +25,27 @@
       class="flex flex-row justify-end gap-2"
       >
         <UButton
+        color="error"
+        variant="outline"
+        :icon="isBlacklist ? 'i-lucide-user-check' : 'i-lucide-user-x'"
+        :label="isBlacklist ? 'Удалить из черного списка' : 'Добавить в черный список'"
+        @click="toggleBlacklist"
+        />
+        <UButton
         color="primary"
+        variant="solid"
+        :disabled="isBlacklist"
         :icon="isFriend ? 'i-lucide-user-minus' : 'i-lucide-user-plus'"
         :label="isFriend ? 'Удалить из друзей' : 'Добавить в друзья'"
         @click="toggleFriend"
         />
-        <UButton
-        color="primary"
-        :icon="isBlacklist ? 'i-lucide-user-block' : 'i-lucide-user-round-x'"
-        :label="isBlacklist ? 'Удалить из черного списка' : 'Добавить в черный список'"
-        @click="toggleBlacklist"
-        />
       </div>
 
       <UserProfile
-        :class="isFriend ? 'border-green-500' : ''"
+        :class="[
+          isFriend ? 'border-2 border-primary' : '',
+          isBlacklist ? 'opacity-50 border-2 border-black dark:border-white' : ''
+        ]"
         :disabled="isBlacklist"
         v-if="!isEditMode && userData"
         :user="userData"
@@ -73,6 +79,7 @@ const pending = ref(true)
 const isEditMode = ref(false)
 const isFriend = ref(false)
 const isBlacklist = ref(false)
+const isPendingFriend = ref(false)
 
 const isOwnProfile = computed(() => {
   return userStore.user?.id === uid
@@ -90,17 +97,76 @@ const fetchUserData = async () => {
   }
 }
 
-// Вызываем загрузку данных
+// Загрузка статуса отношений
+const fetchRelationshipStatus = async () => {
+  try {
+    const { status } = await $fetch<{ status: RelationStatus | null }>(`/api/user/${uid}/relationship`)
+    isFriend.value = status === 'friend'
+    isBlacklist.value = status === 'blacklist'
+    isPendingFriend.value = status === 'pending_friend'
+  } catch (error) {
+    console.error('Ошибка получения статуса отношений:', error)
+  }
+}
+
+// Вызываем загрузку данных и статуса отношений
 fetchUserData()
+fetchRelationshipStatus()
 
 const toggleFriend = async () => {
-  isFriend.value = !isFriend.value  
-  console.log('toggleFriend')
+  try {
+    const newStatus = isFriend.value ? null : 'friend'
+    await $fetch(`/api/user/${uid}/relationship`, {
+      method: 'POST',
+      body: { status: newStatus }
+    })
+    isFriend.value = !isFriend.value
+    isPendingFriend.value = false
+    isBlacklist.value = false
+
+    // Показываем уведомление
+    toast.add({
+      title: isFriend.value ? 'Добавлено в друзья' : 'Удалено из друзей',
+      color: 'success',
+      icon: isFriend.value ? 'i-lucide-user-plus' : 'i-lucide-user-minus'
+    })
+  } catch (error) {
+    console.error('Ошибка обновления статуса дружбы:', error)
+    toast.add({
+      title: 'Ошибка',
+      description: 'Не удалось обновить статус дружбы',
+      color: 'error',
+      icon: 'i-lucide-alert-circle'
+    })
+  }
 }
 
 const toggleBlacklist = async () => {
-  isBlacklist.value = !isBlacklist.value
-  console.log('toggleBlacklist')
+  try {
+    const newStatus = isBlacklist.value ? null : 'blacklist'
+    await $fetch(`/api/user/${uid}/relationship`, {
+      method: 'POST',
+      body: { status: newStatus }
+    })
+    isBlacklist.value = !isBlacklist.value
+    isFriend.value = false
+    isPendingFriend.value = false
+
+    // Показываем уведомление
+    toast.add({
+      title: isBlacklist.value ? 'Добавлено в черный список' : 'Удалено из черного списка',
+      color: 'success',
+      icon: isBlacklist.value ? 'i-lucide-user-x' : 'i-lucide-user-check'
+    })
+  } catch (error) {
+    console.error('Ошибка обновления черного списка:', error)
+    toast.add({
+      title: 'Ошибка',
+      description: 'Не удалось обновить черный список',
+      color: 'error',
+      icon: 'i-lucide-alert-circle'
+    })
+  }
 }
 
 const handleSave = async (updatedUser: User) => {
@@ -110,7 +176,7 @@ const handleSave = async (updatedUser: User) => {
       title: t('common.saving'),
       description: t('common.savingProfile'),
       color: 'primary',
-      icon: 'i-heroicons-arrow-path'
+      icon: 'i-lucide-loader-2'
     })
 
     // Отправляем запрос на сервер
@@ -132,7 +198,7 @@ const handleSave = async (updatedUser: User) => {
       title: t('common.success'),
       description: t('common.profileUpdateSuccess'),
       color: 'success',
-      icon: 'i-heroicons-check-circle'
+      icon: 'i-lucide-check-circle'
     })
 
     // Выходим из режима редактирования
@@ -145,7 +211,7 @@ const handleSave = async (updatedUser: User) => {
       title: t('common.error'),
       description: error.data?.message || t('common.profileUpdateError'),
       color: 'error',
-      icon: 'i-heroicons-exclamation-circle'
+      icon: 'i-lucide-alert-circle'
     })
   }
 }

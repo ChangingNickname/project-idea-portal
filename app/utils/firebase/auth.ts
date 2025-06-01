@@ -8,7 +8,11 @@ import {
 } from 'firebase/auth'
 
 const TOKEN_REFRESH_INTERVAL = 10 * 60 * 1000 // 10 минут
+const MAX_REFRESH_RETRIES = 3
+const RETRY_DELAY = 5000 // 5 секунд
+
 let tokenRefreshTimer: NodeJS.Timeout | null = null
+let refreshRetryCount = 0
 
 export const mapFirebaseUser = (firebaseUser: FirebaseUser): User => ({
   id: firebaseUser.uid,
@@ -47,7 +51,7 @@ export const mapFirebaseUser = (firebaseUser: FirebaseUser): User => ({
 })
 
 /**
- * Refresh user token
+ * Refresh user token with retry logic
  */
 const refreshUserToken = async (): Promise<void> => {
   const { $auth } = useNuxtApp()
@@ -63,11 +67,34 @@ const refreshUserToken = async (): Promise<void> => {
     const user = mapFirebaseUser(currentUser)
     localStorage.setItem('user', JSON.stringify(user))
     
-    // Сохраняем токен в куки
-    document.cookie = `auth_token=${token}; path=/; max-age=${TOKEN_REFRESH_INTERVAL / 1000}; SameSite=Strict`
+    // Сохраняем токен в куки с безопасными настройками
+    document.cookie = `auth_token=${token}; path=/; max-age=${TOKEN_REFRESH_INTERVAL / 1000}; SameSite=Strict; Secure`
+    
+    // Сбрасываем счетчик попыток при успешном обновлении
+    refreshRetryCount = 0
   } catch (error) {
     console.error('Ошибка обновления токена:', error)
-    stopTokenRefresh()
+    
+    // Увеличиваем счетчик попыток
+    refreshRetryCount++
+    
+    if (refreshRetryCount < MAX_REFRESH_RETRIES) {
+      // Пробуем еще раз через RETRY_DELAY
+      setTimeout(refreshUserToken, RETRY_DELAY)
+    } else {
+      // Если превысили лимит попыток, останавливаем обновление
+      stopTokenRefresh()
+      // Показываем уведомление пользователю
+      const toast = useToast()
+      toast.add({
+        title: 'Ошибка авторизации',
+        description: 'Не удалось обновить сессию. Пожалуйста, войдите снова.',
+        color: 'error',
+        icon: 'i-heroicons-exclamation-circle'
+      })
+      // Разлогиниваем пользователя
+      await signOut()
+    }
   }
 }
 
@@ -78,7 +105,12 @@ const startTokenRefresh = (): void => {
   if (tokenRefreshTimer) {
     stopTokenRefresh()
   }
+  // Сбрасываем счетчик попыток при старте
+  refreshRetryCount = 0
+  // Запускаем обновление токена
   tokenRefreshTimer = setInterval(refreshUserToken, TOKEN_REFRESH_INTERVAL)
+  // Сразу делаем первую попытку обновления
+  refreshUserToken()
 }
 
 /**
@@ -89,6 +121,8 @@ const stopTokenRefresh = (): void => {
     clearInterval(tokenRefreshTimer)
     tokenRefreshTimer = null
   }
+  // Сбрасываем счетчик попыток
+  refreshRetryCount = 0
 }
 
 /**
@@ -249,5 +283,7 @@ export const getAuthToken = (): string | null => {
   if (process.server) return null
   const cookies = document.cookie.split(';')
   const tokenCookie = cookies.find(c => c.trim().startsWith('auth_token='))
-  return tokenCookie ? tokenCookie.split('=')[1] : null
+  if (!tokenCookie) return null
+  const token = tokenCookie.split('=')[1]
+  return token || null
 } 

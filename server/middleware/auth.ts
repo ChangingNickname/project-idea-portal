@@ -13,8 +13,7 @@ const PUBLIC_ROUTES = [
 ] as const
 
 // Маршруты, где GET запросы публичные, а остальные требуют авторизации
-const PUBLIC_GET_ROUTES = [
-]
+const PUBLIC_GET_ROUTES: string[] = []
 
 export default defineEventHandler(async (event) => {
   const method = event.node.req.method || 'GET'
