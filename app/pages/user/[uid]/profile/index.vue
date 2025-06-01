@@ -56,6 +56,97 @@
         @cancel="isEditMode = false"
         @save="handleSave"
       />
+
+      <!-- Секция друзей и заблокированных пользователей -->
+      <div v-if="isOwnProfile" class="mt-8 space-y-8">
+        <!-- Друзья -->
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+              {{ t('profile.friends') }}
+            </h2>
+            <UPagination
+              v-if="friendsPagination.pages > 1"
+              v-model="friendsPage"
+              :total="friendsPagination.total"
+              :page-count="friendsPagination.pages"
+              :per-page="friendsPagination.limit"
+            />
+          </div>
+          
+          <div v-if="friendsPending" class="flex justify-center py-8">
+            <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-primary animate-spin" />
+          </div>
+          
+          <div v-else-if="friends.length === 0" class="text-center py-8">
+            <UIcon name="i-lucide-users" class="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <p class="text-gray-500 dark:text-gray-400">
+              {{ t('profile.noFriends') }}
+            </p>
+          </div>
+          
+          <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div v-for="friend in friends" :key="friend.id" class="relative">
+              <UserCard
+                :user="friend.user || null"
+                :isFriend="true"
+              />
+              <UButton
+                v-if="friend.user"
+                color="neutral"
+                variant="outline"
+                icon="i-lucide-user-minus"
+                class="absolute top-2 right-2"
+                @click="removeFriend(friend.user.id)"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Заблокированные пользователи -->
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+              {{ t('profile.blockedUsers') }}
+            </h2>
+            <UPagination
+              v-if="blockedPagination.pages > 1"
+              v-model="blockedPage"
+              :total="blockedPagination.total"
+              :page-count="blockedPagination.pages"
+              :per-page="blockedPagination.limit"
+            />
+          </div>
+          
+          <div v-if="blockedPending" class="flex justify-center py-8">
+            <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-primary animate-spin" />
+          </div>
+          
+          <div v-else-if="blockedUsers.length === 0" class="text-center py-8">
+            <UIcon name="i-lucide-user-x" class="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <p class="text-gray-500 dark:text-gray-400">
+              {{ t('profile.noBlockedUsers') }}
+            </p>
+          </div>
+          
+          <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div v-for="blocked in blockedUsers" :key="blocked.id" class="relative">
+              <UserCard
+                :user="blocked.user || null"
+                :isBlocked="true"
+              />
+              <UButton
+                v-if="blocked.user"
+                color="neutral"
+                variant="outline"
+                icon="i-lucide-user-x"
+                class="absolute top-2 right-2"
+                @click="removeBlocked(blocked.user.id)"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -65,6 +156,7 @@ import { useUserStore } from '~/stores/user'
 import { useProfileStore } from '~/stores/profile'
 import UserProfile from '~/components/user/profile/index.vue'
 import UserProfileEdit from '~/components/user/profile/edit.vue'
+import UserCard from '~/components/user/Card.vue'
 
 const route = useRoute()
 const userStore = useUserStore()
@@ -80,6 +172,28 @@ const isEditMode = ref(false)
 const isFriend = ref(false)
 const isBlacklist = ref(false)
 const isPendingFriend = ref(false)
+
+// Состояние для друзей
+const friends = ref<Array<{ id: string; user: User | null }>>([])
+const friendsPending = ref(false)
+const friendsPage = ref(1)
+const friendsPagination = ref({
+  total: 0,
+  page: 1,
+  limit: 9,
+  pages: 1
+})
+
+// Состояние для заблокированных пользователей
+const blockedUsers = ref<Array<{ id: string; user: User | null }>>([])
+const blockedPending = ref(false)
+const blockedPage = ref(1)
+const blockedPagination = ref({
+  total: 0,
+  page: 1,
+  limit: 9,
+  pages: 1
+})
 
 const isOwnProfile = computed(() => {
   return userStore.user?.id === uid
@@ -108,6 +222,84 @@ const fetchRelationshipStatus = async () => {
     console.error('Ошибка получения статуса отношений:', error)
   }
 }
+
+// Загрузка друзей
+const fetchFriends = async () => {
+  if (!isOwnProfile.value) return
+  
+  friendsPending.value = true
+  try {
+    const response = await $fetch<{
+      relationships: Array<{ id: string; user: User | null }>;
+      pagination: typeof friendsPagination.value;
+    }>('/api/user/relationship', {
+      query: {
+        type: 'friends',
+        page: friendsPage.value,
+        limit: friendsPagination.value.limit
+      }
+    })
+    
+    friends.value = response.relationships
+    friendsPagination.value = response.pagination
+  } catch (error) {
+    console.error('Error fetching friends:', error)
+    toast.add({
+      title: t('common.error'),
+      description: t('profile.friendsFetchError'),
+      color: 'error'
+    })
+  } finally {
+    friendsPending.value = false
+  }
+}
+
+// Загрузка заблокированных пользователей
+const fetchBlockedUsers = async () => {
+  if (!isOwnProfile.value) return
+  
+  blockedPending.value = true
+  try {
+    const response = await $fetch<{
+      relationships: Array<{ id: string; user: User | null }>;
+      pagination: typeof blockedPagination.value;
+    }>('/api/user/relationship', {
+      query: {
+        type: 'blocked',
+        page: blockedPage.value,
+        limit: blockedPagination.value.limit
+      }
+    })
+    
+    blockedUsers.value = response.relationships
+    blockedPagination.value = response.pagination
+  } catch (error) {
+    console.error('Error fetching blocked users:', error)
+    toast.add({
+      title: t('common.error'),
+      description: t('profile.blockedUsersFetchError'),
+      color: 'error'
+    })
+  } finally {
+    blockedPending.value = false
+  }
+}
+
+// Обновляем данные при изменении статуса отношений
+watch([isFriend, isBlacklist], () => {
+  if (isOwnProfile.value) {
+    fetchFriends()
+    fetchBlockedUsers()
+  }
+})
+
+// Загружаем данные при монтировании
+onMounted(() => {
+  if (isOwnProfile.value) {
+    fetchFriends()
+    fetchBlockedUsers()
+  }
+})
 
 // Вызываем загрузку данных и статуса отношений
 fetchUserData()
@@ -224,5 +416,102 @@ const addBlacklist = async () => {
   console.log('addBlacklist')
 }
 
+const removeFriend = async (targetUid: string) => {
+  const { id: toastId } = toast.add({
+    title: 'Удаление из друзей',
+    description: 'Вы уверены, что хотите удалить пользователя из друзей?',
+    color: 'neutral',
+    icon: 'i-lucide-user-minus',
+    actions: [
+      {
+        label: 'Отмена',
+        onClick: () => {
+          toast.remove(toastId)
+        }
+      },
+      {
+        label: 'Удалить',
+        color: 'error',
+        onClick: async () => {
+          try {
+            await $fetch(`/api/user/${targetUid}/relationship`, {
+              method: 'POST',
+              body: { status: null }
+            })
+            
+            // Обновляем список друзей
+            await fetchFriends()
+            
+            toast.remove(toastId)
+            toast.add({
+              title: 'Успешно',
+              description: 'Пользователь удален из друзей',
+              color: 'success',
+              icon: 'i-lucide-user-minus'
+            })
+          } catch (error) {
+            console.error('Ошибка удаления из друзей:', error)
+            toast.remove(toastId)
+            toast.add({
+              title: 'Ошибка',
+              description: 'Не удалось удалить пользователя из друзей',
+              color: 'error',
+              icon: 'i-lucide-alert-circle'
+            })
+          }
+        }
+      }
+    ]
+  })
+}
+
+const removeBlocked = async (targetUid: string) => {
+  const { id: toastId } = toast.add({
+    title: 'Удаление из черного списка',
+    description: 'Вы уверены, что хотите удалить пользователя из черного списка?',
+    color: 'neutral',
+    icon: 'i-lucide-user-x',
+    actions: [
+      {
+        label: 'Отмена',
+        onClick: () => {
+          toast.remove(toastId)
+        }
+      },
+      {
+        label: 'Удалить',
+        color: 'error',
+        onClick: async () => {
+          try {
+            await $fetch(`/api/user/${targetUid}/relationship`, {
+              method: 'POST',
+              body: { status: null }
+            })
+            
+            // Обновляем список заблокированных
+            await fetchBlockedUsers()
+            
+            toast.remove(toastId)
+            toast.add({
+              title: 'Успешно',
+              description: 'Пользователь удален из черного списка',
+              color: 'success',
+              icon: 'i-lucide-user-x'
+            })
+          } catch (error) {
+            console.error('Ошибка удаления из черного списка:', error)
+            toast.remove(toastId)
+            toast.add({
+              title: 'Ошибка',
+              description: 'Не удалось удалить пользователя из черного списка',
+              color: 'error',
+              icon: 'i-lucide-alert-circle'
+            })
+          }
+        }
+      }
+    ]
+  })
+}
 
 </script>

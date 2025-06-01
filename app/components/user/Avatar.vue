@@ -6,7 +6,8 @@
       size="md"
       :class="[
         'transition-all duration-200',
-        isActive && 'ring-2 ring-primary ring-offset-2'
+        isActive && 'ring-2 ring-primary ring-offset-2',
+        isBlocked && 'opacity-50'
       ]"
     />
     <UChip
@@ -26,6 +27,7 @@ interface Props {
   email?: string
   alt?: string
   isActive?: boolean
+  isBlocked?: boolean
   chipText?: string | number
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 }
@@ -35,6 +37,7 @@ const props = withDefaults(defineProps<Props>(), {
   email: '',
   alt: 'User avatar',
   isActive: false,
+  isBlocked: false,
   chipText: '',
   size: 'md'
 })
