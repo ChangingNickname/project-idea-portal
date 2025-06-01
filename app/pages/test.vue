@@ -37,8 +37,12 @@ const testMessage = `
 
 \`\`\`javascript
 // Пример кода
-const hello = 'world';
-console.log(hello);
+import { marked } from 'marked'
+import DOMPurify from 'dompurify'
+import Card from '~/components/user/Card.vue'
+import { computed, ref, watchEffect } from 'vue'
+import hljs from 'highlight.js'
+import 'highlight.js/styles/vs2015.css'
 \`\`\`
 
 > Цитата из какого-то текста
