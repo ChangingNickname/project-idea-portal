@@ -7,7 +7,7 @@ export default defineNuxtConfig({
     port: 4000,
     host: '0.0.0.0'
   },
-
+  ssr: false,
   app: {
     head: {
       title: 'PIP',

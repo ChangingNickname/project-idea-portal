@@ -7,8 +7,7 @@ import {
   type User as FirebaseUser
 } from 'firebase/auth'
 
-
-const TOKEN_REFRESH_INTERVAL = 10 * 60 * 1000 // 10 minutes
+const TOKEN_REFRESH_INTERVAL = 10 * 60 * 1000 // 10 минут
 let tokenRefreshTimer: NodeJS.Timeout | null = null
 
 export const mapFirebaseUser = (firebaseUser: FirebaseUser): User => ({
@@ -18,7 +17,6 @@ export const mapFirebaseUser = (firebaseUser: FirebaseUser): User => ({
   avatar: firebaseUser.photoURL || null,
   emailVerified: firebaseUser.emailVerified,
   isAnonymous: firebaseUser.isAnonymous,
-  phoneNumber: firebaseUser.phoneNumber || null,
   disabled: false,
   providerData: firebaseUser.providerData.map(provider => ({
     providerId: provider.providerId,
@@ -49,7 +47,7 @@ export const mapFirebaseUser = (firebaseUser: FirebaseUser): User => ({
 })
 
 /**
- * Refresh user token and update session
+ * Refresh user token
  */
 const refreshUserToken = async (): Promise<void> => {
   const { $auth } = useNuxtApp()
@@ -65,13 +63,10 @@ const refreshUserToken = async (): Promise<void> => {
     const user = mapFirebaseUser(currentUser)
     localStorage.setItem('user', JSON.stringify(user))
     
-    // Update session cookie on server
-    await $fetch('/api/auth/session', {
-      method: 'POST',
-      body: { token }
-    })
+    // Сохраняем токен в куки
+    document.cookie = `auth_token=${token}; path=/; max-age=${TOKEN_REFRESH_INTERVAL / 1000}; SameSite=Strict`
   } catch (error) {
-    console.error('Error refreshing token:', error)
+    console.error('Ошибка обновления токена:', error)
     stopTokenRefresh()
   }
 }
@@ -104,10 +99,12 @@ export const signInWithEmail = async (email: string, password: string): Promise<
   try {
     const result = await signInWithEmailAndPassword($auth, email, password)
     const user = mapFirebaseUser(result.user)
+    const token = await result.user.getIdToken()
+    document.cookie = `auth_token=${token}; path=/; max-age=${TOKEN_REFRESH_INTERVAL / 1000}; SameSite=Strict`
     startTokenRefresh()
     return user
   } catch (error) {
-    console.error('Error signing in with email:', error)
+    console.error('Ошибка входа с email:', error)
     return null
   }
 }
@@ -121,10 +118,12 @@ export const signInWithGoogle = async (): Promise<User | null> => {
     const provider = new GoogleAuthProvider()
     const result = await signInWithPopup($auth, provider)
     const user = mapFirebaseUser(result.user)
+    const token = await result.user.getIdToken()
+    document.cookie = `auth_token=${token}; path=/; max-age=${TOKEN_REFRESH_INTERVAL / 1000}; SameSite=Strict`
     startTokenRefresh()
     return user
   } catch (error) {
-    console.error('Error signing in with Google:', error)
+    console.error('Ошибка входа через Google:', error)
     return null
   }
 }
@@ -137,16 +136,18 @@ export const signInAnonymouslyUser = async (): Promise<User | null> => {
   try {
     const result = await firebaseSignInAnonymously($auth)
     const user = mapFirebaseUser(result.user)
+    const token = await result.user.getIdToken()
+    document.cookie = `auth_token=${token}; path=/; max-age=${TOKEN_REFRESH_INTERVAL / 1000}; SameSite=Strict`
     startTokenRefresh()
     return user
   } catch (error) {
-    console.error('Error signing in anonymously:', error)
+    console.error('Ошибка анонимного входа:', error)
     return null
   }
 }
 
 /**
- * Store user data and create session
+ * Store user data and redirect
  */
 export const storeUserAndRedirect = async (user: User): Promise<User> => {
   const { $auth } = useNuxtApp()
@@ -155,14 +156,15 @@ export const storeUserAndRedirect = async (user: User): Promise<User> => {
   try {
     const token = await $auth.currentUser?.getIdToken()
     if (!token) {
-      throw new Error('No authenticated user found')
+      throw new Error('Пользователь не авторизован')
     }
     
     localStorage.setItem('user', JSON.stringify(user))
+    localStorage.setItem('auth_token', token)
     startTokenRefresh()
     await router.push('/')
   } catch (error) {
-    console.error('Error storing user:', error)
+    console.error('Ошибка сохранения пользователя:', error)
     throw error
   }
   
@@ -189,17 +191,13 @@ export const checkStoredUser = (): User | null => {
 export const signOut = async (): Promise<void> => {
   const { $auth } = useNuxtApp()
   try {
-    // Call server logout endpoint first
-    await $fetch('/api/auth/logout', {
-      method: 'POST'
-    })
-    
-    // Then sign out from Firebase
     await $auth.signOut()
     stopTokenRefresh()
     localStorage.removeItem('user')
+    // Удаляем куки
+    document.cookie = 'auth_token=; path=/; max-age=0'
   } catch (error) {
-    console.error('Error signing out:', error)
+    console.error('Ошибка выхода:', error)
     throw error
   }
 }
@@ -235,11 +233,21 @@ export const createUserWithEmailAndPassword = async (email: string, password: st
     const userCredential = await firebaseCreateUserWithEmailAndPassword($auth, email, password)
     const user = userCredential.user ? mapFirebaseUser(userCredential.user) : null
     if (user) {
+      const token = await userCredential.user.getIdToken()
+      document.cookie = `auth_token=${token}; path=/; max-age=${TOKEN_REFRESH_INTERVAL / 1000}; SameSite=Strict`
       startTokenRefresh()
     }
     return user
   } catch (error) {
-    console.error('Error creating user with email:', error)
+    console.error('Ошибка создания пользователя:', error)
     throw error
   }
+}
+
+// Удаляем функции для работы с заголовками, так как теперь используем куки
+export const getAuthToken = (): string | null => {
+  if (process.server) return null
+  const cookies = document.cookie.split(';')
+  const tokenCookie = cookies.find(c => c.trim().startsWith('auth_token='))
+  return tokenCookie ? tokenCookie.split('=')[1] : null
 } 

@@ -2,7 +2,7 @@ import { initializeApp, getApps, cert } from 'firebase-admin/app'
 import { getAuth } from 'firebase-admin/auth'
 import { getFirestore } from 'firebase-admin/firestore'
 import { defineEventHandler, createError, readBody } from 'h3'
-import { requireAuth } from '~~/server/utils/auth'
+import { checkAuth } from '~~/server/utils/auth'
 
 // Initialize Firebase Admin if not already initialized
 if (!getApps().length) {
@@ -22,16 +22,16 @@ export default defineEventHandler(async (event) => {
     if (!uid || uid === 'undefined' || uid === 'null') {
       throw createError({
         statusCode: 400,
-        message: 'Invalid user ID'
+        message: 'Неверный ID пользователя'
       })
     }
 
     // Проверяем авторизацию
-    const authResult = await requireAuth(event, uid)
-    if (!authResult.isAuthenticated) {
+    const authResult = await checkAuth(event)
+    if (!authResult.isAuthenticated || authResult.currentUserId !== uid) {
       throw createError({
-        statusCode: authResult.error?.statusCode || 401,
-        message: authResult.error?.message || 'Unauthorized'
+        statusCode: 403,
+        message: 'Нет доступа к этому ресурсу'
       })
     }
 
@@ -42,7 +42,7 @@ export default defineEventHandler(async (event) => {
     if (!profileData.displayName) {
       throw createError({
         statusCode: 400,
-        message: 'Display name is required'
+        message: 'Имя пользователя обязательно'
       })
     }
 
@@ -120,10 +120,10 @@ export default defineEventHandler(async (event) => {
     }
 
   } catch (error: any) {
-    console.error('Error in /api/user/[uid]/profile POST:', error)
+    console.error('Ошибка в /api/user/[uid]/profile POST:', error)
     throw createError({
       statusCode: error.statusCode || 500,
-      message: error.message || 'Internal Server Error'
+      message: error.message || 'Внутренняя ошибка сервера'
     })
   }
 }) 

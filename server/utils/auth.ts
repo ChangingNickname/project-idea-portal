@@ -11,35 +11,47 @@ export interface AuthResult {
 }
 
 export const checkAuth = async (event: H3Event): Promise<AuthResult> => {
-  const session = event.node.req.headers.cookie?.split(';')
-    .find(c => c.trim().startsWith('session='))
-    ?.split('=')[1]
-
-  if (!session) {
+  const cookies = event.node.req.headers.cookie
+  if (!cookies) {
     return {
       isAuthenticated: false,
       currentUserId: null,
       error: {
         statusCode: 401,
-        message: 'Unauthorized'
+        message: 'Отсутствует токен авторизации'
+      }
+    }
+  }
+
+  const token = cookies.split(';')
+    .find(c => c.trim().startsWith('auth_token='))
+    ?.split('=')[1]
+
+  if (!token) {
+    return {
+      isAuthenticated: false,
+      currentUserId: null,
+      error: {
+        statusCode: 401,
+        message: 'Отсутствует токен авторизации'
       }
     }
   }
 
   try {
-    const decodedToken = await getAuth().verifySessionCookie(session, true)
+    const decodedToken = await getAuth().verifyIdToken(token)
     return {
       isAuthenticated: true,
       currentUserId: decodedToken.uid
     }
   } catch (error) {
-    console.error('Session verification failed:', error)
+    console.error('Ошибка проверки токена:', error)
     return {
       isAuthenticated: false,
       currentUserId: null,
       error: {
         statusCode: 401,
-        message: 'Invalid session'
+        message: 'Недействительный токен'
       }
     }
   }
@@ -58,7 +70,7 @@ export const requireAuth = async (event: H3Event, uid?: string): Promise<AuthRes
       currentUserId: null,
       error: {
         statusCode: 403,
-        message: 'Forbidden'
+        message: 'Нет доступа к этому ресурсу'
       }
     }
   }

@@ -22,7 +22,7 @@ export default defineEventHandler(async (event): Promise<User> => {
     if (!uid || uid === 'undefined' || uid === 'null') {
       throw createError({
         statusCode: 400,
-        message: 'Invalid user ID'
+        message: 'Неверный ID пользователя'
       })
     }
 
@@ -39,7 +39,7 @@ export default defineEventHandler(async (event): Promise<User> => {
       const profileDoc = await db.collection('profiles').doc(uid).get()
       const profileData = profileDoc.exists ? profileDoc.data() : null
 
-      // If user is requesting their own data or is authenticated, return full data
+      // Если пользователь запрашивает свои данные или авторизован, возвращаем полные данные
       if (isAuthenticated && currentUserId === uid) {
         return {
           id: userRecord.uid,
@@ -86,7 +86,7 @@ export default defineEventHandler(async (event): Promise<User> => {
         }
       }
 
-      // For other users, return only public data
+      // Для других пользователей возвращаем только публичные данные
       return {
         id: userRecord.uid,
         email: null,
@@ -120,19 +120,19 @@ export default defineEventHandler(async (event): Promise<User> => {
       if (error.code === 'auth/user-not-found') {
         throw createError({
           statusCode: 404,
-          message: 'User not found'
+          message: 'Пользователь не найден'
         })
       }
       throw createError({
         statusCode: 500,
-        message: error.message || 'Failed to get user data'
+        message: error.message || 'Ошибка при получении данных пользователя'
       })
     }
   } catch (error: any) {
-    console.error('Error in /api/user/[uid]/profile:', error)
+    console.error('Ошибка в /api/user/[uid]/profile:', error)
     throw createError({
       statusCode: error.statusCode || 500,
-      message: error.message || 'Internal Server Error'
+      message: error.message || 'Внутренняя ошибка сервера'
     })
   }
 }) 
