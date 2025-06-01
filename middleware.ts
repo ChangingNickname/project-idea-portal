@@ -6,6 +6,7 @@ const publicPaths = [
   '/api/auth/login',
   '/api/auth/register',
   '/api/auth/session',
+  '/api/posts/search',
   '/api/auth/verify',
   '/api/genkit',
   '/login',

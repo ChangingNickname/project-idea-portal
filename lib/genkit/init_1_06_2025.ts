@@ -20,8 +20,10 @@ const TaskType = z.enum([
   'format_article',
   'web_search',
   'knowledge_base_search',
-  'help'
+  'help',
+  'web_and_post_search',
 ]);
+
 type TaskType = z.infer<typeof TaskType>;
 
 // Определение схем для результатов
@@ -478,6 +480,17 @@ textProcessingGraph.addNode(
         case 'knowledge_base_search':
           result = await knowledgeBaseSearchTool({ query: state.text });
           break;
+        case 'web_and_post_search':
+          const webResults = await webSearchTool({ query: state.text });
+          const dbResults = await searchPostsTool({ query: state.text });
+
+          result = {
+            webResults,
+            dbResults,
+            summary: `Combined results for '${state.text}' from web and local database.`,
+          };
+          break;
+  
         default:
           throw new Error(`Unknown task type: ${state.taskType}`);
       }
@@ -485,6 +498,171 @@ textProcessingGraph.addNode(
       return result;
     }
   )
+);
+
+const searchPostsTool = ai.defineTool(
+  {
+    name: 'searchPosts',
+    description: 'Searches user-submitted posts in the database using keywords, tags and date filters',
+    inputSchema: z.object({
+      query: z.string().describe('The keyword(s) to search for in posts'),
+      tags: z.array(z.string()).optional().describe('Optional array of tags to filter by'),
+      startDate: z.string().optional().describe('Optional start date for filtering (ISO format)'),
+      endDate: z.string().optional().describe('Optional end date for filtering (ISO format)'),
+      limit: z.number().optional().describe('Optional limit for number of results (default: 10)'),
+    }),
+    outputSchema: z.object({
+      results: z.array(z.object({
+        id: z.string(),
+        name: z.string(),
+        shortDesc: z.string(),
+        fullDesc: z.string(),
+        tags: z.array(z.string()),
+        image: z.string().optional(),
+        createdAt: z.string().nullable(),
+        updatedAt: z.string().nullable(),
+        relevance: z.number().optional(),
+        authorId: z.string().nullable(),
+        status: z.string().optional(),
+        views: z.number().optional(),
+        likes: z.number().optional(),
+        comments: z.number().optional(),
+        additionalFields: z.record(z.any()).optional(),
+      })),
+      pageToken: z.string(),
+    }),
+  },
+  async ({ query, tags = [], startDate = '', endDate = '', limit = 10 }) => {
+    try {
+      console.log('Searching posts with params:', { query, tags, startDate, endDate, limit });
+      
+      // Формируем URL с параметрами
+      const params = new URLSearchParams();
+      
+      // Добавляем только непустые параметры
+      if (query) {
+        params.append('q', query);
+      }
+      
+      if (tags && tags.length > 0) {
+        params.append('tags', tags.filter(Boolean).join(','));
+      }
+      
+      if (startDate && startDate.trim()) {
+        params.append('startDate', startDate.trim());
+      }
+      
+      if (endDate && endDate.trim()) {
+        params.append('endDate', endDate.trim());
+      }
+      
+      if (limit > 0) {
+        params.append('limit', limit.toString());
+      }
+
+      const url = `http://localhost:3000/api/posts/search?${params.toString()}`;
+      console.log('Making request to:', url);
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        console.error('API Error:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData
+        });
+        throw new Error(`API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('API Response:', data);
+      
+      if (!data.posts || !Array.isArray(data.posts)) {
+        console.error('Invalid API response format:', data);
+        throw new Error('Invalid API response format');
+      }
+
+      const results = data.posts.map((post: any) => {
+        // Извлекаем известные поля
+        const {
+          id,
+          name,
+          title,
+          shortDesc,
+          fullDesc,
+          tags,
+          image,
+          createdAt,
+          updatedAt,
+          relevance,
+          authorId,
+          status,
+          views,
+          likes,
+          comments,
+          ...rest
+        } = post;
+
+        // Используем title как name, если name отсутствует
+        const postName = name ?? title ?? '';
+
+        // Преобразуем даты в ISO строки или null
+        const formatDate = (date: any): string | null => {
+          if (!date) return null;
+          if (typeof date === 'string') return date;
+          if (date._seconds) {
+            return new Date(date._seconds * 1000).toISOString();
+          }
+          if (date.toDate) {
+            return date.toDate().toISOString();
+          }
+          return null;
+        };
+
+        // Создаем объект с обязательными полями
+        const result = {
+          id,
+          name: postName,
+          shortDesc: shortDesc ?? '',
+          fullDesc: fullDesc ?? '',
+          tags: tags ?? [],
+          image: image ?? '',
+          createdAt: formatDate(createdAt),
+          updatedAt: formatDate(updatedAt),
+          relevance: relevance ?? 0,
+          authorId: authorId ?? null,
+          status: status ?? 'Open',
+          views: views ?? 0,
+          likes: likes ?? 0,
+          comments: comments ?? 0,
+          additionalFields: rest
+        };
+
+        return result;
+      });
+
+      console.log('Processed results:', { count: results.length, pageToken: data.pageToken || '' });
+
+      return {
+        results,
+        pageToken: data.pageToken || ''
+      };
+    } catch (error) {
+      console.error('Error searching posts:', error);
+      return {
+        results: [],
+        pageToken: ''
+      };
+    }
+  }
 );
 
 // Определение инструмента для вызова графа

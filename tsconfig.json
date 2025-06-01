@@ -11,8 +11,30 @@
     "paths": {
       "@/*": ["./*"]
     },
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
+    "noEmit": true,
+    "incremental": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "types": ["node"]
   },
-  "include": ["lib/**/*"],
-  "exclude": ["node_modules"]
+  "include": [
+    "lib/**/*",
+    ".next/types/**/*.ts",
+    "app/**/*"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }
