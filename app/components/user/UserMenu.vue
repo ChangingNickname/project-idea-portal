@@ -17,7 +17,7 @@
         >
           <template #leading>
             <UAvatar
-              :src="userStore.user?.photoURL || undefined"
+              :src="userStore.user?.avatar || undefined"
               :alt="userStore.user?.displayName || 'User'"
               size="sm"
             />
