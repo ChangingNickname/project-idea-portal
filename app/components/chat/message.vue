@@ -15,7 +15,6 @@
 </template>
 
 <script setup lang="ts">
-// TODO: Make highlight.js work
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import Card from '~/components/user/Card.vue'
@@ -23,17 +22,22 @@ import { computed, ref, watchEffect } from 'vue'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/vs2015.css'
 
-const props = defineProps<{
-  user: User
-  message: string
-  timestamp: number
-}>()
+const props = defineProps<MessageProps>()
+const emit = defineEmits<MessageEmits>()
+
+const state = ref<MessageState>({
+  isEditing: false,
+  isDeleting: false,
+  isReplying: false,
+  editContent: '',
+  error: null
+})
 
 // Настройка marked для безопасного рендеринга
 marked.setOptions({
   breaks: true,
   gfm: true,
-  highlight: function(code: string, lang: string) {
+  highlight(code: string, lang: string) {
     if (lang && hljs.getLanguage(lang)) {
       try {
         return hljs.highlight(code, { language: lang }).value
