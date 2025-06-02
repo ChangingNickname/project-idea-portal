@@ -50,7 +50,7 @@ export default defineEventHandler(async (event) => {
         // Проверяем, не прочитано ли уже сообщение этим пользователем
         if (!read_by.some((reader: ReadBy) => reader.userId === authResult.currentUserId)) {
           read_by.push({
-            userId: authResult.currentUserId,
+            userId: authResult.currentUserId!,
             timestamp: now.getTime()
           })
         }
