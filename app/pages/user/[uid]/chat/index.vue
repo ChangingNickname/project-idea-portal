@@ -22,7 +22,11 @@
     </div>
 
     <!-- Сообщения -->
-    <div class="flex-1 overflow-y-auto p-4 space-y-4" ref="messagesContainer">
+    <div 
+      class="flex-1 overflow-y-auto p-4 space-y-4 relative" 
+      ref="messagesContainer"
+      @scroll="handleScroll"
+    >
       <div v-for="message in messages" :key="message.id">
         <ChatMessage
           v-if="message.id && message.message"
@@ -32,9 +36,21 @@
           :timestamp="message.timestamp || new Date(message.created_at).getTime()"
           :status="message.status"
           :readBy="message.read_by"
+          :showUserInfo="shouldShowUserInfo(message)"
+          :isCurrentUser="message.from_user_id === currentUser?.id"
           @markAsRead="markMessageAsRead"
         />
       </div>
+
+      <!-- Кнопка прокрутки вниз -->
+      <UButton
+        v-if="!isNearBottom"
+        icon="i-lucide-arrow-down"
+        color="primary"
+        variant="soft"
+        class="fixed bottom-24 left-1/2 -translate-x-1/2 rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
+        @click="scrollToBottom"
+      />
     </div>
 
     <!-- Форма отправки -->
@@ -49,35 +65,22 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useUserStore } from '~/stores/user'
-
-interface Message {
-  id: string
-  from_user_id: string
-  to_user_id: string
-  message: string
-  type: 'text' | 'code' | 'image' | 'file'
-  metadata?: Record<string, any>
-  created_at: string
-  updated_at: string
-  read_at: string | null
-  read_by: Array<{
-    userId: string
-    timestamp: number
-  }>
-  status: 'sending' | 'sent' | 'delivered' | 'read' | 'error'
-  timestamp: number
-}
+import { useUnreadMessagesStore } from '~/stores/unreadMessages'
 
 const route = useRoute()
 const { t } = useI18n()
 const userStore = useUserStore()
 const currentUser = userStore.user
+const unreadStore = useUnreadMessagesStore()
 
 // Состояние
 const messages = ref<Message[]>([])
 const messagesContainer = ref<HTMLElement | null>(null)
 const user = ref<User | null>(null)
 const unreadMessages = ref<number>(0)
+
+// Добавим состояние для отслеживания, находимся ли мы внизу
+const isNearBottom = ref(true)
 
 // Получаем данные пользователя
 const userData = await $fetch<User>(`/api/user/${route.params.uid}/profile`)
@@ -90,6 +93,7 @@ const loadMessages = async () => {
   try {
     const data = await $fetch<Message[]>(`/api/user/${route.params.uid}/messages`)
     if (data) {
+      const oldMessages = messages.value
       messages.value = data.map(msg => ({
         ...msg,
         status: msg.status || 'sent',
@@ -111,8 +115,14 @@ const loadMessages = async () => {
         }
       }
 
-      await nextTick()
-      scrollToBottom()
+      // Обновляем store непрочитанных сообщений после загрузки
+      await unreadStore.checkUnreadMessages()
+
+      // Прокручиваем только если это первая загрузка или мы были внизу
+      if (!oldMessages.length || isNearBottom.value) {
+        await nextTick()
+        scrollToBottom()
+      }
     }
   } catch (error) {
     console.error('Error loading messages:', error)
@@ -120,7 +130,7 @@ const loadMessages = async () => {
 }
 
 // Обработка отправленного сообщения
-const handleMessageSent = (message: Message) => {
+const handleMessageSent = async (message: Message) => {
   if (!messages.value) {
     messages.value = []
   }
@@ -155,6 +165,9 @@ const handleMessageSent = (message: Message) => {
       messages.value = [...messages.value, message]
     }
   }
+
+  // Обновляем store непрочитанных сообщений после отправки
+  await unreadStore.checkUnreadMessages()
 
   nextTick(() => {
     scrollToBottom()
@@ -199,6 +212,9 @@ const markMessageAsRead = async (messageId: string) => {
             updatedMessage,
             ...messages.value.slice(messageIndex + 1)
           ]
+
+          // Обновляем store непрочитанных сообщений
+          await unreadStore.checkUnreadMessages()
         }
       }
     }
@@ -207,11 +223,21 @@ const markMessageAsRead = async (messageId: string) => {
   }
 }
 
-// Прокрутка к последнему сообщению
+// Обновим функцию прокрутки
 const scrollToBottom = () => {
   if (messagesContainer.value) {
     messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
+    isNearBottom.value = true
   }
+}
+
+// Добавим обработчик прокрутки
+const handleScroll = () => {
+  if (!messagesContainer.value) return
+
+  const { scrollTop, scrollHeight, clientHeight } = messagesContainer.value
+  // Считаем, что мы внизу, если до конца осталось меньше 100px
+  isNearBottom.value = scrollHeight - scrollTop - clientHeight < 100
 }
 
 // Проверка непрочитанных сообщений
@@ -253,6 +279,17 @@ onUnmounted(() => {
     clearInterval(messageUpdateInterval)
   }
 })
+
+// Добавим функцию для определения, нужно ли показывать информацию о пользователе
+const shouldShowUserInfo = (message: Message) => {
+  if (!messages.value) return true
+  
+  const messageIndex = messages.value.findIndex(m => m.id === message.id)
+  if (messageIndex === 0) return true
+  
+  const previousMessage = messages.value[messageIndex - 1]
+  return !previousMessage || previousMessage.from_user_id !== message.from_user_id
+}
 </script>
 
 <style scoped>
