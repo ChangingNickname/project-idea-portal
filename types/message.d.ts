@@ -3,33 +3,28 @@ export {}
 declare global {
   interface Message {
     id: string
-    user: User
+    from_user_id: string
+    to_user_id: string
     message: string
-    timestamp: number
-    roomId: string
     type: 'text' | 'code' | 'image' | 'file'
-    status: 'sent' | 'delivered' | 'read' | 'error'
-    readBy: {
+    metadata?: Record<string, any>
+    created_at: string
+    updated_at: string
+    read_at: string | null
+    read_by: Array<{
       userId: string
       timestamp: number
-    }[]
-    metadata?: {
-      language?: string
-      fileName?: string
-      fileSize?: number
-      fileType?: string
-      imageUrl?: string
-      codeBlock?: {
-        language: string
-        code: string
-      }
-    }
+    }>
+    status: 'sending' | 'sent' | 'delivered' | 'read' | 'error'
+    timestamp: number
   }
 
   interface MessageProps {
+    id: string
     user: User
     message: string
     timestamp: number
+    status: 'sending' | 'sent' | 'delivered' | 'read' | 'error'
     readBy?: {
       userId: string
       timestamp: number

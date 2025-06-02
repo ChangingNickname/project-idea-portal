@@ -2,8 +2,8 @@
   <div class="relative inline-block">
     <UAvatar
       :src="avatarSrc"
-      :alt="email"
-      size="md"
+      :alt="alt || email || 'User avatar'"
+      :size="size"
       :class="[
         'transition-all duration-200',
         isActive && 'ring-2 ring-primary ring-offset-2',
@@ -23,9 +23,9 @@
 import { generateAvatarUrl } from '~/utils/avatar'
 
 interface Props {
-  src?: string
-  email?: string
-  alt?: string
+  src?: string | null
+  email?: string | null
+  alt?: string | null
   isActive?: boolean
   isBlocked?: boolean
   chipText?: string | number

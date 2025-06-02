@@ -11,12 +11,24 @@
         <span>{{ formatDate(timestamp) }}</span>
         <div class="flex items-center gap-1">
           <span v-if="readBy?.length" class="text-green-500">
-            <Icon name="heroicons:check-circle" class="w-4 h-4" />
+            <Icon name="lucide:check-circle" class="w-4 h-4" />
             {{ readBy.length }} {{ readBy.length === 1 ? 'read' : 'reads' }}
           </span>
-          <span v-else class="text-gray-400">
-            <Icon name="heroicons:clock" class="w-4 h-4" />
+          <span v-else-if="status === 'sending'" class="text-gray-400">
+            <Icon name="lucide:loader-2" class="w-4 h-4 animate-spin" />
+            Sending...
+          </span>
+          <span v-else-if="status === 'sent'" class="text-gray-400">
+            <Icon name="lucide:check" class="w-4 h-4" />
             Sent
+          </span>
+          <span v-else-if="status === 'delivered'" class="text-blue-500">
+            <Icon name="lucide:check-check" class="w-4 h-4" />
+            Delivered
+          </span>
+          <span v-else-if="status === 'error'" class="text-red-500">
+            <Icon name="lucide:alert-circle" class="w-4 h-4" />
+            Error
           </span>
         </div>
       </div>
@@ -33,17 +45,20 @@ import hljs from 'highlight.js'
 import 'highlight.js/styles/vs2015.css'
 
 const props = defineProps<{
-  id: string
+  id?: string
   user: User
-  message: string
-  timestamp: number
+  message?: string
+  timestamp?: number
+  status?: 'sending' | 'sent' | 'delivered' | 'read' | 'error'
   readBy?: {
     userId: string
     timestamp: number
   }[]
 }>()
 
-const emit = defineEmits<MessageEmits>()
+const emit = defineEmits<{
+  (e: 'markAsRead', messageId: string): void
+}>()
 
 const state = ref<MessageState>({
   isEditing: false,
@@ -72,6 +87,7 @@ marked.setOptions({
 
 // Рендерим markdown с очисткой от потенциально опасного HTML
 const renderedMessage = computed(async () => {
+  if (!props.message) return ''
   const rawHtml = await marked.parse(props.message)
   return DOMPurify.sanitize(rawHtml, {
     ALLOWED_TAGS: [
@@ -105,8 +121,10 @@ watchEffect(async () => {
 })
 
 // Форматирование даты
-const formatDate = (timestamp: number) => {
-  return new Date(timestamp).toLocaleString('ru-RU', {
+const formatDate = (timestamp?: number) => {
+  if (!timestamp) return ''
+  const date = new Date(timestamp)
+  return date.toLocaleString('ru-RU', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -117,7 +135,7 @@ const formatDate = (timestamp: number) => {
 
 // Отслеживаем прочтение сообщения
 const markAsRead = () => {
-  if (!state.value.isRead) {
+  if (!state.value.isRead && props.id) {
     emit('markAsRead', props.id)
     state.value.isRead = true
   }
