@@ -66,42 +66,49 @@
         <!-- Автор и дата -->
         <div class="flex items-center justify-between">
           <div class="flex-1">
-            <!-- Один автор -->
-            <template v-if="!Array.isArray(post.author)">
-              <UserCard
-                :user="post.author"
-                class="flex-1"
-                :compact="!props.isFull"
+            <!-- Владелец -->
+            <div v-if="post?.owner" class="flex items-center gap-2 mb-2">
+              <Avatar
+                :src="post.owner.avatar || undefined"
+                :email="post.owner.email || undefined"
+                :alt="post.owner.displayName || 'Owner avatar'"
+                :isActive="post.owner.emailVerified"
+                size="sm"
               />
-            </template>
+              <div class="text-sm text-gray-600 dark:text-gray-300">
+                {{ post.owner.displayName || post.owner.email }}
+                <span class="text-xs text-gray-500 dark:text-gray-400">(владелец)</span>
+              </div>
+            </div>
             
-            <!-- Несколько авторов -->
-            <template v-else>
-              <div class="flex items-center gap-2">
-                <div class="flex -space-x-2">
+            <!-- Дополнительные авторы -->
+            <div v-if="post?.author?.length > 1" class="flex items-center gap-2">
+              <div class="flex -space-x-2">
+                <div 
+                  v-for="(author, index) in post?.author?.filter(a => a?.id !== post?.owner?.id).slice(0, 3) || []" 
+                  :key="author.id"
+                  class="relative"
+                >
+                  <Avatar
+                    :src="author.avatar || undefined"
+                    :email="author.email || undefined"
+                    :alt="author.displayName || 'Author avatar'"
+                    :isActive="author.emailVerified"
+                    size="sm"
+                    class="border-2 border-white dark:border-gray-800"
+                  />
                   <div 
-                    v-for="(author, index) in post.author.slice(0, 3)" 
-                    :key="author.id"
-                    class="relative"
+                    v-if="index === 2 && post?.author?.length > 4"
+                    class="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full text-white text-xs font-medium"
                   >
-                    <UserCard
-                      :user="author"
-                      :compact="!props.isFull"
-                      class="border-2 border-white dark:border-gray-800"
-                    />
-                    <div 
-                      v-if="index === 2 && post.author.length > 3"
-                      class="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full text-white text-xs font-medium"
-                    >
-                      +{{ post.author.length - 3 }}
-                    </div>
+                    +{{ post.author.length - 4 }}
                   </div>
                 </div>
               </div>
-            </template>
+            </div>
           </div>
           <div class="text-xs text-gray-500 dark:text-gray-400">
-            {{ formatDate(post.createdAt) }}
+            {{ post?.createdAt ? formatDate(post.createdAt) : '' }}
           </div>
         </div>
 
@@ -132,16 +139,51 @@
           </div>
 
           <!-- Список всех авторов в полном режиме -->
-          <div v-if="Array.isArray(post.author) && post.author.length > 0" class="pt-4 border-t dark:border-gray-700">
+          <div v-if="post?.author?.length > 1" class="pt-4 border-t dark:border-gray-700">
             <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-3">
               Авторы ({{ post.author.length }})
             </h4>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <UserCard
-                v-for="author in post.author"
+              <!-- Владелец -->
+              <div v-if="post.owner" class="flex items-center gap-3 p-2 rounded-lg bg-gray-50 dark:bg-gray-700">
+                <Avatar
+                  :src="post.owner.avatar || undefined"
+                  :email="post.owner.email || undefined"
+                  :alt="post.owner.displayName || 'Owner avatar'"
+                  :isActive="post.owner.emailVerified"
+                  size="md"
+                />
+                <div>
+                  <div class="font-medium text-gray-900 dark:text-white">
+                    {{ post.owner.displayName || post.owner.email }}
+                  </div>
+                  <div class="text-sm text-gray-500 dark:text-gray-400">
+                    Владелец
+                  </div>
+                </div>
+              </div>
+              <!-- Дополнительные авторы -->
+              <div
+                v-for="author in post?.author?.filter(a => a?.id !== post?.owner?.id) || []"
                 :key="author.id"
-                :user="author"
-              />
+                class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+              >
+                <Avatar
+                  :src="author.avatar || undefined"
+                  :email="author.email || undefined"
+                  :alt="author.displayName || 'Author avatar'"
+                  :isActive="author.emailVerified"
+                  size="md"
+                />
+                <div>
+                  <div class="font-medium text-gray-900 dark:text-white">
+                    {{ author.displayName || author.email }}
+                  </div>
+                  <div class="text-sm text-gray-500 dark:text-gray-400">
+                    Автор
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </template>
@@ -201,7 +243,7 @@
               </div>
 
               <div class="flex items-center justify-between pt-4 border-t dark:border-gray-700">
-                <UserCard :user="post.author" />
+                <UserCard :user="post.owner" />
                 <div class="text-sm text-gray-500 dark:text-gray-400">
                   {{ formatDate(post.createdAt) }}
                 </div>
@@ -228,6 +270,7 @@
 
 <script setup lang="ts">
 import UserCard from '~/components/user/Card.vue'
+import Avatar from '~/components/user/Avatar.vue'
 
 const props = defineProps<{
   post: Post | null

@@ -72,9 +72,23 @@
 import { useArticleBuilderStore } from '~/stores/articleBuilder'
 import PostsCreate from '~/components/posts/create.vue'
 import PostsFull from '~/components/posts/full.vue'
+import { useUserStore } from '~/stores/user'
 
 const store = useArticleBuilderStore()
+const userStore = useUserStore()
 const previewKey = ref(0)
+
+// Set author when component is mounted
+onMounted(() => {
+  if (userStore.isAuthenticated && userStore.user) {
+    store.updateDraft({ 
+      owner: userStore.user,
+      ownerId: userStore.user.id,
+      author: [userStore.user],
+      authorId: [userStore.user.id]
+    })
+  }
+})
 
 // Вычисляем классы для сетки в зависимости от количества панелей
 const gridClass = computed(() => {

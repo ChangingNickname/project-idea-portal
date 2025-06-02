@@ -6,8 +6,10 @@ declare global {
         title: string
         cover: string | null // base64 string
         annotation: string
-        author: User | User[] // Поддержка одного или нескольких авторов
-        authorId: string | string[] // ID одного или нескольких авторов
+        owner: User // Владелец поста
+        ownerId: string // ID владельца
+        author: User[] // Список авторов (включая владельца)
+        authorId: string[] // ID авторов (включая владельца)
         keywords: string[]
         domain: string
         content: string
