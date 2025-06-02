@@ -1,5 +1,5 @@
 <template>
-  <div class="flex gap-3 p-4">
+  <div class="flex gap-3 p-4" ref="messageRef">
     <div class="flex-shrink-0">
       <Card :user="user" />
     </div>
@@ -7,8 +7,18 @@
       <div class="markdown-body">
         <div v-html="safeMessage" />
       </div>
-      <div class="mt-2 text-xs text-neutral-900/70 dark:text-neutral-100/70">
-        {{ formatDate(timestamp) }}
+      <div class="mt-2 flex items-center justify-between text-xs text-neutral-900/70 dark:text-neutral-100/70">
+        <span>{{ formatDate(timestamp) }}</span>
+        <div class="flex items-center gap-1">
+          <span v-if="readBy?.length" class="text-green-500">
+            <Icon name="heroicons:check-circle" class="w-4 h-4" />
+            {{ readBy.length }} {{ readBy.length === 1 ? 'read' : 'reads' }}
+          </span>
+          <span v-else class="text-gray-400">
+            <Icon name="heroicons:clock" class="w-4 h-4" />
+            Sent
+          </span>
+        </div>
       </div>
     </div>
   </div>
@@ -18,11 +28,21 @@
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import Card from '~/components/user/Card.vue'
-import { computed, ref, watchEffect } from 'vue'
+import { computed, ref, watchEffect, onMounted, onUnmounted } from 'vue'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/vs2015.css'
 
-const props = defineProps<MessageProps>()
+const props = defineProps<{
+  id: string
+  user: User
+  message: string
+  timestamp: number
+  readBy?: {
+    userId: string
+    timestamp: number
+  }[]
+}>()
+
 const emit = defineEmits<MessageEmits>()
 
 const state = ref<MessageState>({
@@ -30,7 +50,8 @@ const state = ref<MessageState>({
   isDeleting: false,
   isReplying: false,
   editContent: '',
-  error: null
+  error: null,
+  isRead: false
 })
 
 // Настройка marked для безопасного рендеринга
@@ -93,6 +114,36 @@ const formatDate = (timestamp: number) => {
     minute: '2-digit'
   })
 }
+
+// Отслеживаем прочтение сообщения
+const markAsRead = () => {
+  if (!state.value.isRead) {
+    emit('markAsRead', props.id)
+    state.value.isRead = true
+  }
+}
+
+// Автоматически отмечаем сообщение как прочитанное при появлении в поле зрения
+const messageRef = ref<HTMLElement | null>(null)
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      markAsRead()
+    }
+  })
+})
+
+onMounted(() => {
+  if (messageRef.value) {
+    observer.observe(messageRef.value)
+  }
+})
+
+onUnmounted(() => {
+  if (messageRef.value) {
+    observer.unobserve(messageRef.value)
+  }
+})
 </script>
 
 <style>
