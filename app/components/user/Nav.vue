@@ -6,12 +6,20 @@
       class="relative"
       @click="isOpen = !isOpen"
     >
-      <Avatar
-        :src="user?.avatar || undefined"
-        :email="user?.email || undefined"
-        :alt="user?.displayName || user?.email || ''"
-        :isActive="true"
-      />
+      <div class="relative">
+        <Avatar
+          :src="user?.avatar || undefined"
+          :email="user?.email || undefined"
+          :alt="user?.displayName || user?.email || ''"
+          :isActive="true"
+        />
+        <UChip
+          v-if="totalUnread > 0"
+          :text="totalUnread"
+          size="3xl"
+          class="absolute -top-2 -right-2"
+        />
+      </div>
     </UButton>
 
     <!-- Dropdown Menu -->
@@ -51,7 +59,15 @@
           class="w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
           @click="handleNavigation(link.path)"
         >
-          <UIcon :name="link.icon" class="w-4 h-4" />
+          <div class="relative">
+            <UIcon :name="link.icon" class="w-4 h-4" />
+            <UChip
+              v-if="link.path === '/mails' && totalUnread > 0"
+              :text="totalUnread"
+              size="3xl"
+              class="absolute -top-2 -right-2"
+            />
+          </div>
           {{ link.label }}
         </button>
       </div>
@@ -102,10 +118,11 @@
 import { useColorMode, onClickOutside } from '@vueuse/core'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { computed } from 'vue'
+import { computed, onMounted, onUnmounted, watch } from 'vue'
 import { useUserStore } from '~/stores/user'
 import { signOut } from '~/utils/firebase/auth'
 import Avatar from '~/components/user/Avatar.vue'
+import { useUnreadMessagesStore } from '~/stores/unreadMessages'
 
 const router = useRouter()
 const colorMode = useColorMode()
@@ -114,6 +131,9 @@ const isOpen = ref(false)
 const dropdownRef = ref<HTMLElement | null>(null)
 const { t } = useI18n()
 const userStore = useUserStore()
+const unreadStore = useUnreadMessagesStore()
+const toast = useToast()
+const previousUnreadCount = ref(0)
 
 // Используем computed для получения пользователя
 const user = computed<User | null>(() => userStore.user)
@@ -184,4 +204,33 @@ const handleLogout = async () => {
 onClickOutside(dropdownRef, () => {
   isOpen.value = false
 })
+
+// Следим за изменениями количества непрочитанных сообщений
+watch(() => unreadStore.totalUnread, (newCount, oldCount) => {
+  if (newCount > oldCount && oldCount > 0) {
+    toast.add({
+      title: 'Новые сообщения',
+      description: `У вас ${newCount} непрочитанных сообщений`,
+      color: 'primary',
+      icon: 'i-lucide-mail',
+      onClick: () => {
+        router.push('/mails')
+      }
+    })
+  }
+})
+
+// Запускаем проверку непрочитанных сообщений при монтировании
+onMounted(() => {
+  unreadStore.startPeriodicCheck()
+  previousUnreadCount.value = unreadStore.totalUnread
+})
+
+// Останавливаем проверку при размонтировании
+onUnmounted(() => {
+  unreadStore.stopPeriodicCheck()
+})
+
+// Получаем общее количество непрочитанных сообщений
+const totalUnread = computed(() => unreadStore.totalUnread)
 </script>
