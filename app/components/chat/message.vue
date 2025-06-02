@@ -1,15 +1,49 @@
 <template>
-  <div class="flex gap-3 p-4" ref="messageRef">
-    <div class="flex-shrink-0">
+  <div 
+    class="flex gap-3 p-4" 
+    :class="[
+      isCurrentUser ? 'flex-row-reverse' : 'flex-row',
+      { 'justify-end': isCurrentUser }
+    ]"
+    ref="messageRef"
+  >
+    <div v-if="showUserInfo" class="flex-shrink-0">
       <Card :user="user" />
     </div>
-    <div class="flex-1 min-w-0">
-      <div class="markdown-body">
+    <div 
+      :class="[
+        'flex-1 min-w-0 max-w-[80%]',
+        { 
+          'ml-12': !showUserInfo && !isCurrentUser,
+          'mr-12': !showUserInfo && isCurrentUser
+        }
+      ]"
+    >
+      <div v-if="showUserInfo" class="mb-1" :class="{ 'text-right': isCurrentUser }">
+        <span class="text-sm font-medium text-gray-900 dark:text-white">
+          {{ user.displayName || user.email }}
+        </span>
+      </div>
+      <div 
+        class="markdown-body rounded-lg p-3"
+        :class="[
+          isCurrentUser 
+            ? 'bg-primary-500 text-white dark:bg-primary-600' 
+            : 'bg-gray-100 dark:bg-gray-800'
+        ]"
+      >
         <div v-html="safeMessage" />
       </div>
-      <div class="mt-2 flex items-center justify-between text-xs text-neutral-900/70 dark:text-neutral-100/70">
+      <div 
+        class="mt-2 flex items-center text-xs text-neutral-900/70 dark:text-neutral-100/70"
+        :class="[
+          isCurrentUser 
+            ? 'justify-start flex-row-reverse' 
+            : 'justify-start'
+        ]"
+      >
         <span>{{ formatDate(timestamp) }}</span>
-        <div class="flex items-center gap-1">
+        <div class="flex items-center gap-1" :class="{ 'ml-2': !isCurrentUser, 'mr-2': isCurrentUser }">
           <span v-if="readBy?.length" class="text-green-500">
             <Icon name="lucide:check-circle" class="w-4 h-4" />
             {{ readBy.length }} {{ readBy.length === 1 ? 'read' : 'reads' }}
@@ -54,6 +88,8 @@ const props = defineProps<{
     userId: string
     timestamp: number
   }[]
+  showUserInfo?: boolean
+  isCurrentUser?: boolean
 }>()
 
 const emit = defineEmits<{
