@@ -34,7 +34,10 @@ export default defineEventHandler(async (event) => {
       type,
       metadata,
       created_at: new Date(),
-      updated_at: new Date()
+      updated_at: new Date(),
+      read_at: null,
+      read_by: [],
+      status: 'sent'
     })
 
     // Получаем созданное сообщение

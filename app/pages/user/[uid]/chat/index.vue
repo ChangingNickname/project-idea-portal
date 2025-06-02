@@ -85,7 +85,7 @@ user.value = userData || null
 
 // Загрузка сообщений
 const loadMessages = async () => {
-  if (!route.params.uid) return
+  if (!route.params.uid || !currentUser?.id) return
 
   try {
     const data = await $fetch<Message[]>(`/api/user/${route.params.uid}/messages`)
@@ -96,6 +96,21 @@ const loadMessages = async () => {
         read_by: msg.read_by || [],
         timestamp: msg.timestamp || new Date(msg.created_at).getTime()
       }))
+
+      // Отмечаем непрочитанные сообщения как прочитанные
+      const unreadMessages = messages.value.filter(msg => 
+        msg.from_user_id === route.params.uid && 
+        msg.to_user_id === currentUser.id && 
+        !msg.read_at
+      )
+
+      if (unreadMessages.length > 0) {
+        const firstUnread = unreadMessages[0]
+        if (firstUnread?.id) {
+          await markMessageAsRead(firstUnread.id)
+        }
+      }
+
       await nextTick()
       scrollToBottom()
     }
@@ -148,15 +163,45 @@ const handleMessageSent = (message: Message) => {
 
 // Отметка сообщений как прочитанных
 const markMessageAsRead = async (messageId: string) => {
-  if (!route.params.uid) return
+  if (!route.params.uid || !currentUser?.id) return
 
   try {
-    await $fetch<{ updated: number }>(`/api/user/${route.params.uid}/message`, {
+    const result = await $fetch<{ updated: number }>(`/api/user/${route.params.uid}/message`, {
       method: 'PUT',
       body: {
         messageIds: [messageId]
       }
     })
+
+    if (result.updated > 0) {
+      // Обновляем статус сообщения локально
+      const messageIndex = messages.value.findIndex(m => m.id === messageId)
+      if (messageIndex !== -1) {
+        const message = messages.value[messageIndex]
+        if (message) {
+          const read_by = message.read_by || []
+          if (!read_by.some(reader => reader.userId === currentUser.id)) {
+            read_by.push({
+              userId: currentUser.id,
+              timestamp: Date.now()
+            })
+          }
+
+          const updatedMessage: Message = {
+            ...message,
+            status: 'read',
+            read_by,
+            read_at: new Date().toISOString()
+          }
+
+          messages.value = [
+            ...messages.value.slice(0, messageIndex),
+            updatedMessage,
+            ...messages.value.slice(messageIndex + 1)
+          ]
+        }
+      }
+    }
   } catch (error) {
     console.error('Error marking message as read:', error)
   }

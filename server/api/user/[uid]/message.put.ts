@@ -1,6 +1,11 @@
 import { getFirestore } from 'firebase-admin/firestore'
 import { checkAuth } from '~~/server/utils/auth'
 
+interface ReadBy {
+  userId: string
+  timestamp: number
+}
+
 export default defineEventHandler(async (event) => {
   const db = getFirestore()
   const uid = event.context.params?.uid
@@ -30,18 +35,31 @@ export default defineEventHandler(async (event) => {
     const messagesRef = db.collection('messages')
       .where('from_user_id', '==', uid)
       .where('to_user_id', '==', authResult.currentUserId)
-      .where('read_at', '==', null)
 
     const messages = await messagesRef.get()
     const batch = db.batch()
     let updatedCount = 0
+    const now = new Date()
 
     // Обновляем каждое сообщение
     messages.forEach(doc => {
       if (messageIds.includes(doc.id)) {
+        const data = doc.data()
+        const read_by: ReadBy[] = data.read_by || []
+        
+        // Проверяем, не прочитано ли уже сообщение этим пользователем
+        if (!read_by.some((reader: ReadBy) => reader.userId === authResult.currentUserId)) {
+          read_by.push({
+            userId: authResult.currentUserId,
+            timestamp: now.getTime()
+          })
+        }
+
         batch.update(doc.ref, {
-          read_at: new Date(),
-          updated_at: new Date()
+          read_at: now,
+          updated_at: now,
+          read_by,
+          status: 'read'
         })
         updatedCount++
       }
