@@ -10,7 +10,8 @@
         v-model="form.title"
         type="text"
         required
-        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+        :disabled="isDisabled"
+        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
         placeholder="Введите заголовок статьи"
       />
     </div>
@@ -56,7 +57,8 @@
               <button
                 type="button"
                 @click="removeAuthor(author.id)"
-                class="ml-1 inline-flex text-primary-400 hover:text-primary-500"
+                :disabled="isDisabled"
+                class="ml-1 inline-flex text-primary-400 hover:text-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Icon name="lucide:x" class="w-3 h-3" />
               </button>
@@ -68,6 +70,7 @@
             type="button"
             color="primary"
             variant="soft"
+            :disabled="isDisabled"
             @click="showAuthorsSearch = true"
           >
             <Icon name="lucide:user-plus" class="w-4 h-4 mr-1" />
@@ -92,6 +95,7 @@
         <input
           type="file"
           accept="image/*"
+          :disabled="isDisabled"
           @change="handleCoverUpload"
           class="block w-full text-sm text-gray-500 dark:text-gray-400
             file:mr-4 file:py-2 file:px-4
@@ -99,7 +103,8 @@
             file:text-sm file:font-medium
             file:bg-primary-50 file:text-primary-700
             dark:file:bg-primary-900 dark:file:text-primary-300
-            hover:file:bg-primary-100 dark:hover:file:bg-primary-800"
+            hover:file:bg-primary-100 dark:hover:file:bg-primary-800
+            disabled:opacity-50 disabled:cursor-not-allowed"
         />
       </div>
     </div>
@@ -113,7 +118,8 @@
         id="annotation"
         v-model="form.annotation"
         rows="3"
-        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+        :disabled="isDisabled"
+        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
         placeholder="Краткое описание статьи"
       />
     </div>
@@ -134,7 +140,8 @@
             <button
               type="button"
               @click="removeKeyword(keyword)"
-              class="ml-1 inline-flex text-primary-400 hover:text-primary-500"
+              :disabled="isDisabled"
+              class="ml-1 inline-flex text-primary-400 hover:text-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Icon name="lucide:x" class="w-3 h-3" />
             </button>
@@ -145,7 +152,8 @@
             id="keywords"
             v-model="newKeyword"
             type="text"
-            class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+            :disabled="isDisabled"
+            class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
             placeholder="Введите ключевые слова через запятую"
             @keydown.enter.prevent="addKeywords"
           />
@@ -153,6 +161,7 @@
             type="button"
             color="primary"
             variant="soft"
+            :disabled="isDisabled"
             @click="addKeywords"
           >
             Добавить
@@ -171,7 +180,8 @@
         v-model="form.domain"
         type="text"
         required
-        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+        :disabled="isDisabled"
+        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
         placeholder="Например: web-development"
       />
     </div>
@@ -186,7 +196,8 @@
         v-model="form.content"
         rows="10"
         required
-        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 shadow-sm focus:border-primary-500 focus:ring-primary-500 font-mono"
+        :disabled="isDisabled"
+        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed font-mono"
         placeholder="Напишите содержание статьи в формате Markdown"
       />
     </div>
@@ -202,7 +213,8 @@
             type="radio"
             v-model="form.executionPolicy"
             value="public"
-            class="form-radio text-primary-600"
+            :disabled="isDisabled"
+            class="form-radio text-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
           />
           <span class="ml-2">Публичный</span>
         </label>
@@ -211,25 +223,43 @@
             type="radio"
             v-model="form.executionPolicy"
             value="contest"
-            class="form-radio text-primary-600"
+            :disabled="isDisabled"
+            class="form-radio text-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
           />
           <span class="ml-2">Конкурс</span>
         </label>
       </div>
     </div>
 
-    <!-- Максимальное количество участников (только для конкурса) -->
-    <div v-if="form.executionPolicy === 'contest'">
+    <!-- Максимальное количество участников -->
+    <div>
       <label for="maxParticipants" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
         Максимальное количество участников
       </label>
-      <input
-        id="maxParticipants"
-        v-model.number="form.maxParticipants"
-        type="number"
-        min="1"
-        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-      />
+      <div class="mt-1 flex items-center gap-4">
+        <input
+          id="maxParticipants"
+          v-model.number="form.maxParticipants"
+          type="number"
+          min="1"
+          :disabled="isDisabled"
+          class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          placeholder="Оставьте пустым для неограниченного количества"
+        />
+        <UButton
+          v-if="form.maxParticipants"
+          type="button"
+          color="neutral"
+          variant="soft"
+          :disabled="isDisabled"
+          @click="form.maxParticipants = undefined"
+        >
+          <Icon name="lucide:infinity" class="w-4 h-4" />
+        </UButton>
+      </div>
+      <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+        Оставьте поле пустым для неограниченного количества участников
+      </p>
     </div>
 
     <!-- Дедлайн (только для конкурса) -->
@@ -241,7 +271,8 @@
         id="deadline"
         v-model="form.deadline"
         type="datetime-local"
-        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+        :disabled="isDisabled"
+        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
       />
     </div>
 
@@ -251,6 +282,7 @@
         type="button"
         color="neutral"
         variant="soft"
+        :disabled="isDisabled"
         @click="resetForm"
       >
         Сбросить
@@ -372,6 +404,7 @@ onMounted(() => {
 // Синхронизация с props
 const props = defineProps<{
   modelValue: Partial<Post>
+  disabled: boolean
 }>()
 
 // Инициализация формы при монтировании
@@ -523,5 +556,10 @@ onMounted(() => {
 
 onUnmounted(() => {
   document.removeEventListener('keydown', closeOnEsc)
+})
+
+// Вычисляемое свойство для определения, заблокирована ли форма
+const isDisabled = computed(() => {
+  return props.disabled || form.value.status === 'published' || form.value.status === 'archived'
 })
 </script>

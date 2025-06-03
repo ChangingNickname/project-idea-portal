@@ -7,6 +7,7 @@ interface ArticleBuilderState {
   leftPanel: 'create' | 'preview' | null
   rightPanel: 'create' | 'preview' | null
   draft: Partial<Post>
+  isEditing: boolean
 }
 
 export const useArticleBuilderStore = defineStore('articleBuilder', {
@@ -17,6 +18,7 @@ export const useArticleBuilderStore = defineStore('articleBuilder', {
       showPreview: false,
       leftPanel: 'create',
       rightPanel: null,
+      isEditing: false,
       draft: {
         title: '',
         cover: null,
@@ -34,7 +36,8 @@ export const useArticleBuilderStore = defineStore('articleBuilder', {
         owner: userStore.user || undefined,
         ownerId: userStore.user?.id,
         author: userStore.user ? [userStore.user] : [],
-        authorId: userStore.user ? [userStore.user.id] : []
+        authorId: userStore.user ? [userStore.user.id] : [],
+        maxParticipants: undefined
       }
     }
   },
@@ -94,6 +97,11 @@ export const useArticleBuilderStore = defineStore('articleBuilder', {
         updates.authorId = updatedAuthorIds
       }
 
+      // Если есть ID, значит это редактирование
+      if (updates.id) {
+        this.isEditing = true
+      }
+
       this.draft = {
         ...this.draft,
         ...updates,
@@ -121,8 +129,10 @@ export const useArticleBuilderStore = defineStore('articleBuilder', {
         owner: userStore.user || undefined,
         ownerId: userStore.user?.id,
         author: userStore.user ? [userStore.user] : [],
-        authorId: userStore.user ? [userStore.user.id] : []
+        authorId: userStore.user ? [userStore.user.id] : [],
+        maxParticipants: undefined
       }
+      this.isEditing = false
     }
   }
 }) 
