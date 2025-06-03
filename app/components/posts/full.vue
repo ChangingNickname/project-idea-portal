@@ -7,52 +7,14 @@
       </h1>
 
       <!-- Авторы -->
-      <div v-if="post.author" class="mb-8">
+      <div v-if="post.author && post.author.length" class="mb-8">
         <div class="flex flex-wrap gap-4 items-center">
           <!-- Владелец -->
-          <div v-if="post?.owner" class="flex items-center gap-2">
-            <Avatar
-              :src="post.owner.avatar || undefined"
-              :email="post.owner.email || undefined"
-              :alt="post.owner.displayName || 'Owner avatar'"
-              :isActive="post.owner.emailVerified"
-              size="md"
-            />
-            <div>
-              <div class="font-medium text-gray-900 dark:text-white">
-                {{ post.owner.displayName || post.owner.email }}
-              </div>
-              <div class="text-sm text-gray-500 dark:text-gray-400">
-                Владелец
-              </div>
-            </div>
-          </div>
-
+          <UserCard v-if="post.owner" :user="post.owner" />
           <!-- Дополнительные авторы -->
-          <div v-if="post?.author?.length > 1" class="flex items-center gap-2">
-            <div class="flex -space-x-2">
-              <div 
-                v-for="(author, index) in post.author.filter(a => a?.id !== post.owner?.id).slice(0, 3)" 
-                :key="author.id"
-                class="relative"
-              >
-                <Avatar
-                  :src="author.avatar || undefined"
-                  :email="author.email || undefined"
-                  :alt="author.displayName || 'Author avatar'"
-                  :isActive="author.emailVerified"
-                  size="sm"
-                  class="border-2 border-white dark:border-gray-800"
-                />
-                <div 
-                  v-if="index === 2 && post.author.length > 4"
-                  class="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full text-white text-xs font-medium"
-                >
-                  +{{ post.author.length - 4 }}
-                </div>
-              </div>
-            </div>
-          </div>
+          <template v-for="author in post.author.filter(a => a?.id !== post.owner?.id)" :key="author.id">
+            <UserCard :user="author" />
+          </template>
         </div>
       </div>
 
@@ -111,7 +73,7 @@ import DOMPurify from 'dompurify'
 import { computed, ref, watchEffect } from 'vue'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/vs2015.css'
-import Avatar from '~/components/user/Avatar.vue'
+import UserCard from '~/components/user/Card.vue'
 
 const props = defineProps<{
   post: Partial<Post>
