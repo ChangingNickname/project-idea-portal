@@ -10,11 +10,17 @@
       <div v-if="post.author && post.author.length" class="mb-8">
         <div class="flex flex-wrap gap-4 items-center">
           <!-- Владелец -->
-          <UserCard v-if="post.owner" :user="post.owner" />
-          <!-- Дополнительные авторы -->
-          <template v-for="author in post.author.filter(a => a?.id !== post.owner?.id)" :key="author.id">
-            <UserCard :user="author" />
-          </template>
+          <div class="flex flex-col items-start mr-6">
+            <span class="text-xs text-gray-500 dark:text-gray-400 mb-1">Автор</span>
+            <UserCard v-if="post.owner" :user="post.owner" />
+          </div>
+          <!-- Соавторы -->
+          <div v-if="post.author.filter(a => a?.id !== post.owner?.id).length" class="flex flex-col items-start gap-2">
+            <span class="text-xs text-gray-500 dark:text-gray-400 mb-1">Соавторы</span>
+            <template v-for="author in post.author.filter(a => a?.id !== post.owner?.id)" :key="author.id">
+              <UserCard :user="author" />
+            </template>
+          </div>
         </div>
       </div>
 

@@ -4,6 +4,7 @@ import { useUserStore } from '~/stores/user'
 interface ArticleBuilderState {
   showCreate: boolean
   showPreview: boolean
+  showAiAgent: boolean
   leftPanel: 'create' | 'preview' | null
   rightPanel: 'create' | 'preview' | null
   draft: Partial<Post>
@@ -16,6 +17,7 @@ export const useArticleBuilderStore = defineStore('articleBuilder', {
     return {
       showCreate: true,
       showPreview: false,
+      showAiAgent: false,
       leftPanel: 'create',
       rightPanel: null,
       isEditing: false,
@@ -28,15 +30,13 @@ export const useArticleBuilderStore = defineStore('articleBuilder', {
         content: '',
         status: 'draft',
         executionPolicy: 'public',
-        participants: [],
         currentParticipants: 0,
         views: 0,
         likes: 0,
         owner: userStore.user || undefined,
         ownerId: userStore.user?.id,
         author: userStore.user ? [userStore.user] : [],
-        authorId: userStore.user ? [userStore.user.id] : [],
-        maxParticipants: undefined
+        authorId: userStore.user ? [userStore.user.id] : []
       }
     }
   },
@@ -50,6 +50,10 @@ export const useArticleBuilderStore = defineStore('articleBuilder', {
     togglePreview() {
       this.showPreview = !this.showPreview
       this.updatePanels()
+    },
+
+    toggleAiAgent() {
+      this.showAiAgent = !this.showAiAgent
     },
 
     updatePanels() {
@@ -120,15 +124,13 @@ export const useArticleBuilderStore = defineStore('articleBuilder', {
         content: '',
         status: 'draft',
         executionPolicy: 'public',
-        participants: [],
         currentParticipants: 0,
         views: 0,
         likes: 0,
         owner: userStore.user || undefined,
         ownerId: userStore.user?.id,
         author: userStore.user ? [userStore.user] : [],
-        authorId: userStore.user ? [userStore.user.id] : [],
-        maxParticipants: undefined
+        authorId: userStore.user ? [userStore.user.id] : []
       }
       this.isEditing = false
     }

@@ -25,6 +25,14 @@
               <Icon name="lucide:eye" class="w-5 h-5 mr-2" />
               Превью
             </UButton>
+            <UButton
+              :color="store.showAiAgent ? 'primary' : 'neutral'"
+              variant="soft"
+              @click="store.toggleAiAgent"
+            >
+              <Icon name="lucide:bot" class="w-5 h-5 mr-2" />
+              AI-ассистент
+            </UButton>
           </div>
 
           <!-- Правая сторона - кнопки действий -->
@@ -140,8 +148,10 @@
           </div>
         </div>
       </div>
+      <div v-if="store.showAiAgent" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+        <PostsAiagent />
+      </div>
     </div>
-    <PostsAiagent />
   </div>
 </template>
 
@@ -149,6 +159,7 @@
 import { useArticleBuilderStore } from '~/stores/articleBuilder'
 import PostsCreate from '~/components/posts/create.vue'
 import PostsFull from '~/components/posts/full.vue'
+import PostsAiagent from '~/components/posts/aiagent.vue'
 import { useUserStore } from '~/stores/user'
 import { useRoute } from 'vue-router'
 
@@ -190,16 +201,13 @@ const loadPost = async (id: string) => {
         content: response.content || '',
         status: response.status || 'draft',
         executionPolicy: response.executionPolicy || 'public',
-        participants: response.participants || [],
         currentParticipants: response.currentParticipants || 0,
         views: response.views || 0,
         likes: response.likes || 0,
-        comments: response.comments || 0,
         owner: response.owner,
         ownerId: response.ownerId,
         author: response.author || [],
         authorId: response.authorId || [],
-        maxParticipants: response.maxParticipants,
         createdAt: response.createdAt,
         updatedAt: response.updatedAt
       }

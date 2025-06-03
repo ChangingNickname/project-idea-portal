@@ -1,6 +1,7 @@
 import { db } from '~~/server/utils/firebase-admin'
 import { defineEventHandler, createError } from 'h3'
 import { checkAuth } from '~~/server/utils/auth'
+import { Query } from 'firebase-admin/firestore'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -24,11 +25,15 @@ export default defineEventHandler(async (event) => {
     const take = Number(limit)
 
     // Build query
-    let postsQuery = db.collection('posts')
+    let postsQuery: Query = db.collection('posts')
     
     // Apply filters
     if (domain) {
       postsQuery = postsQuery.where('domain', '==', domain as string)
+    }
+    const isOwnerOrAuthor = !!ownerId || !!authorId
+    if (!isOwnerOrAuthor) {
+      postsQuery = postsQuery.where('status', '==', 'published')
     }
     if (status) {
       postsQuery = postsQuery.where('status', '==', status as string)

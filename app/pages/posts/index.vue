@@ -73,6 +73,7 @@
             <PostsCard :post="post" />
             <div class="mt-2 text-right">
               <UButton
+                v-if="post.status === 'draft' && post.ownerId === userStore.user?.id"
                 :to="`/article-builder?id=${post.id}`"
                 color="primary"
                 variant="soft"
@@ -102,6 +103,7 @@
   <script setup lang="ts">
   import { useArticleBuilderStore } from '~/stores/articleBuilder'
   import { useDebounceFn } from '@vueuse/core'
+  import { useUserStore } from '~/stores/user'
   
   const loading = ref(true)
   const posts = ref<Post[]>([])
@@ -124,23 +126,29 @@
     { label: 'По комментариям', value: 'comments', icon: 'i-lucide-message-circle' }
   ]
   
+  const userStore = useUserStore()
+  
   // Загрузка статей
   const loadPosts = async () => {
     try {
       loading.value = true
-      const response = await $fetch('/api/posts', {
-        query: {
-          page: currentPage.value,
-          limit: itemsPerPage.value,
-          search: searchQuery.value,
-          sortBy: sortBy.value,
-          sortDirection: sortDirection.value
-        }
-      })
-      posts.value = response.posts.map((post: any) => ({
-        ...post,
-        author: Array.isArray(post.author) ? post.author.filter(Boolean) : []
-      }))
+      const query: any = {
+        page: currentPage.value,
+        limit: itemsPerPage.value,
+        search: searchQuery.value,
+        sortBy: sortBy.value,
+        sortDirection: sortDirection.value
+      }
+      if (userStore.user) {
+        query.ownerId = userStore.user.id
+      }
+      const response = await $fetch('/api/posts', { query })
+      posts.value = Array.isArray(response.posts)
+        ? response.posts.map((post: any) => ({
+            ...post,
+            author: Array.isArray(post.author) ? post.author.filter(Boolean) : []
+          }))
+        : []
       pagination.value = response.pagination
     } catch (error) {
       console.error('Error loading posts:', error)

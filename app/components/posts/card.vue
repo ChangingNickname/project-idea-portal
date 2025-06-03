@@ -95,29 +95,26 @@
         <!-- Автор и дата -->
         <div class="flex items-center justify-between">
           <div class="flex-1">
-            <!-- Владелец -->
-            <div v-if="post?.owner" class="flex items-center gap-2 mb-2">
-              <Avatar
-                :src="post.owner.avatar || undefined"
-                :email="post.owner.email || undefined"
-                :alt="post.owner.displayName || 'Owner avatar'"
-                :isActive="post.owner.emailVerified"
-                size="sm"
-              />
-              <div class="text-sm text-gray-600 dark:text-gray-300">
-                {{ post.owner.displayName || post.owner.email }}
-                <span class="text-xs text-gray-500 dark:text-gray-400">(владелец)</span>
+            <div class="flex flex-col items-start mr-2">
+              <span class="text-xs text-gray-500 dark:text-gray-400 mb-1">Автор</span>
+              <div v-if="post?.owner" class="flex items-center gap-2 mb-2">
+                <Avatar
+                  :src="post.owner.avatar || undefined"
+                  :email="post.owner.email || undefined"
+                  :alt="post.owner.displayName || 'Owner avatar'"
+                  :isActive="post.owner.emailVerified"
+                  size="sm"
+                />
+                <div class="text-sm text-gray-600 dark:text-gray-300">
+                  {{ post.owner.displayName || post.owner.email }}
+                  <span class="text-xs text-gray-500 dark:text-gray-400">(владелец)</span>
+                </div>
               </div>
             </div>
-            
-            <!-- Дополнительные авторы -->
-            <div v-if="post?.author?.length > 1" class="flex items-center gap-2">
-              <div class="flex -space-x-2">
-                <div 
-                  v-for="(author, index) in post?.author?.filter(a => a?.id !== post?.owner?.id).slice(0, 3) || []" 
-                  :key="author.id"
-                  class="relative"
-                >
+            <div v-if="post?.author?.filter(a => a?.id !== post?.owner?.id).length" class="flex flex-col items-start gap-1">
+              <span class="text-xs text-gray-500 dark:text-gray-400 mb-1">Соавторы</span>
+              <div class="flex items-center gap-2">
+                <div v-for="author in post?.author?.filter(a => a?.id !== post?.owner?.id).slice(0, 3) || []" :key="author.id" class="relative">
                   <Avatar
                     :src="author.avatar || undefined"
                     :email="author.email || undefined"
@@ -126,12 +123,6 @@
                     size="sm"
                     class="border-2 border-white dark:border-gray-800"
                   />
-                  <div 
-                    v-if="index === 2 && post?.author?.length > 4"
-                    class="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full text-white text-xs font-medium"
-                  >
-                    +{{ post.author.length - 4 }}
-                  </div>
                 </div>
               </div>
             </div>
@@ -242,10 +233,7 @@ const props = defineProps<{
 // Функция проверки прав на редактирование
 const canEditPost = (post: Post) => {
   if (!userStore.user) return false
-  return post.status === 'draft' && (
-    post.ownerId === userStore.user.id || 
-    post.authorId.includes(userStore.user.id)
-  )
+  return post.status === 'draft' && post.ownerId === userStore.user.id
 }
 
 // Форматирование даты

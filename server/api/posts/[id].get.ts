@@ -28,6 +28,14 @@ export default defineEventHandler(async (event) => {
       ...postDoc.data()
     } as Post
 
+    // Only allow published posts
+    if (post.status !== 'published') {
+      throw createError({
+        statusCode: 404,
+        message: 'Post not found'
+      })
+    }
+
     // Fetch author profiles
     const authorProfiles = await Promise.all(
       (post.authorId || []).map(async (authorId: string) => {

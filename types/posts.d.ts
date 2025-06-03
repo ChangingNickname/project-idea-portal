@@ -20,15 +20,6 @@ declare global {
         likes: number // Количество лайков
         deadline?: string
         executionPolicy: 'contest' | 'public'
-        maxParticipants?: number
-        participants: {
-            userId: string
-            user: User
-            status: 'pending' | 'approved' | 'rejected'
-            joinedAt: string
-            approvedAt?: string
-            approvedBy?: string
-        }[]
         currentParticipants: number
         viewedBy: string[] // ID пользователей, просмотревших пост
     }
