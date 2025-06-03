@@ -52,7 +52,6 @@
 import { ref } from 'vue'
 import { useUserStore } from '~/stores/user'
 import { signOut } from '~/utils/firebase/auth'
-import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
 const userStore = useUserStore()

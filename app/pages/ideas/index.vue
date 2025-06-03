@@ -1,16 +1,30 @@
 <template>
     <div class="container mx-auto px-4 py-8">
+
+      
       <!-- Заголовок и поиск -->
       <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ t('common.articles') }}</h1>
-        <UInput
-          v-model="searchQuery"
-          :placeholder="t('common.searchByTitleOrId')"
-          icon="i-lucide-search"
-          class="w-64"
-          :loading="loading"
-          @input="debouncedSearch"
-        />
+              <!-- Search Section -->
+      <div class="w-full mx-auto mb-16">
+        <div class="relative">
+          <UInput
+            v-model="searchQuery"
+            :placeholder="$t('common.search')"
+            icon="i-heroicons-magnifying-glass"
+            size="xl"
+            class="w-full"
+            @keyup.enter="handleSearch"
+          />
+          <UButton
+            color="primary"
+            size="xl"
+            class="absolute right-0 top-1/2 -translate-y-1/2"
+            @click="handleSearch"
+          >
+            {{ $t('common.search') }}
+          </UButton>
+        </div>
+      </div>
       </div>
   
       <!-- Фильтры и сортировка -->
@@ -105,6 +119,7 @@
   import { useDebounceFn } from '@vueuse/core'
   import { useUserStore } from '~/stores/user'
   import { useI18n } from 'vue-i18n'
+  import { useRoute } from 'vue-router'
   
   const { t } = useI18n()
   const loading = ref(true)
@@ -144,7 +159,9 @@
       if (userStore.user) {
         query.ownerId = userStore.user.id
       }
-      const response = await $fetch('/api/posts', { query })
+
+      // Всегда используем эндпоинт поиска
+      const response = await $fetch<{ posts: any[], pagination: any }>('/api/posts/search', { query })
       posts.value = Array.isArray(response.posts)
         ? response.posts.map((post: any) => ({
             ...post,
@@ -189,6 +206,12 @@
   
   const getSortLabel = (value: string) => {
     return sortOptions.find(option => option.value === value)?.label || t('common.sortByCreationDate')
+  }
+  
+  // Добавляем функцию handleSearch
+  const handleSearch = () => {
+    currentPage.value = 1 // Сброс страницы при поиске
+    loadPosts()
   }
   
   // Загружаем статьи при монтировании

@@ -107,7 +107,6 @@
 <script setup lang="ts">
 import { useDebounceFn } from '@vueuse/core'
 import Avatar from '~/components/user/Avatar.vue'
-import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
 

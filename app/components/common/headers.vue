@@ -78,7 +78,6 @@
 </template>
 
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n'
 import { computed, ref, watch } from 'vue'
 import { useColorMode } from '@vueuse/core'
 import { useUserStore } from '~/stores/user'
@@ -112,21 +111,6 @@ watch(isAuthenticated, (newValue) => {
 })
 
 const navItems = computed<NavItem[]>(() => [
-  {
-    to: '/',
-    icon: 'i-lucide-home',
-    label: 'navigation.home'
-  },
-  {
-    to: '/ideas',
-    icon: 'i-lucide-lightbulb',
-    label: 'navigation.ideas'
-  },
-  {
-    to: '/my/mails',
-    icon: 'i-lucide-message-square',
-    label: 'navigation.chat'
-  }
 ])
 
 const isActiveRoute = (path: string) => {

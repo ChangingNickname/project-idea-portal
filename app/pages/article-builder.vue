@@ -136,8 +136,14 @@
               {{ t('common.aiAssistant') }}
             </h2>
           </div>
-          <div class="p-4">
-            <PostsAiagent />
+          <div class="p-4" :class="{ 'opacity-50 pointer-events-none': !canEditPost && store.rightPanel === 'create' }">
+            <PostsCreate 
+              v-if="store.rightPanel === 'create'" 
+              :model-value="store.draft"
+              :disabled="!canEditPost"
+              @update="handleFormUpdate"
+            />
+            <PostsFull v-else :post="store.draft" :key="previewKey" />
           </div>
         </div>
 
@@ -150,8 +156,8 @@
           </div>
           <div class="p-4">
             <PostsFull :post="store.draft" :key="previewKey" />
-          </div>
         </div>
+      </div>
       </div>
     </div>
   </div>
@@ -261,7 +267,7 @@ const gridClass = computed(() => {
     case 1:
       return 'grid-cols-1'
     case 2:
-      return 'grid-cols-2'
+    return 'grid-cols-2'
     case 3:
       return 'grid-cols-3'
     default:

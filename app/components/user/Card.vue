@@ -103,7 +103,6 @@
 <script setup lang="ts">
 import Avatar from '~/components/user/Avatar.vue'
 import UserProfile from '~/components/user/profile/index.vue'
-import { useI18n } from 'vue-i18n'
 
 const props = defineProps<{
   user: User | null

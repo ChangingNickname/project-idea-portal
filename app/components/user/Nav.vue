@@ -117,7 +117,6 @@
 <script setup lang="ts">
 import { useColorMode, onClickOutside } from '@vueuse/core'
 import { useRouter } from 'vue-router'
-import { useI18n } from 'vue-i18n'
 import { computed, onMounted, onUnmounted, watch } from 'vue'
 import { useUserStore } from '~/stores/user'
 import { signOut } from '~/utils/firebase/auth'

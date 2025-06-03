@@ -80,7 +80,6 @@ import { computed, ref, watchEffect } from 'vue'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/vs2015.css'
 import UserCard from '~/components/user/Card.vue'
-import { useI18n } from 'vue-i18n'
 
 const props = defineProps<{
   post: Partial<Post>

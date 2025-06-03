@@ -95,9 +95,6 @@
           />
         </template>
         <template v-else>
-          <p class="text-gray-500 dark:text-gray-400">
-            {{ $t('chat.allMessages') }}
-          </p>
         </template>
       </div>
     </div>
@@ -108,7 +105,6 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { useUnreadMessagesStore } from '~/stores/unreadMessages'
-import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
 

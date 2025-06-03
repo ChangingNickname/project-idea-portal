@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
+  <div class="bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
     <!-- Hero Section -->
     <div class="container mx-auto px-4 py-16">
       <div class="text-center mb-12">
@@ -27,7 +27,7 @@
           <UButton
             color="primary"
             size="xl"
-            class="absolute right-2 top-1/2 -translate-y-1/2"
+            class="absolute right-0 top-1/2 -translate-y-1/2"
             @click="handleSearch"
           >
             {{ $t('common.search') }}

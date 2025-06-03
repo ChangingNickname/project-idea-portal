@@ -325,7 +325,6 @@ import { ref, watch, onMounted, onUnmounted, computed } from 'vue'
 import UserSearch from '~/components/user/search.vue'
 import { useUserStore } from '~/stores/user'
 import Avatar from '~/components/user/Avatar.vue'
-import { useI18n } from 'vue-i18n'
 
 const emit = defineEmits(['update'])
 const userStore = useUserStore()

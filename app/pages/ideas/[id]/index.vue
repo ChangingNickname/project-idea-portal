@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="w-full">
         <template v-if="post">
             <PostsFull :post="post" />
             <div ref="endOfPost" style="height: 1px;"></div>
