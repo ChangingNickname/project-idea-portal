@@ -61,7 +61,6 @@ export default defineEventHandler(async (event) => {
       authorId: [userRecord.uid],
       views: 0,
       likes: 0,
-      comments: 0,
       currentParticipants: 0,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),

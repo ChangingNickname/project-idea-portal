@@ -32,7 +32,6 @@ export const useArticleBuilderStore = defineStore('articleBuilder', {
         currentParticipants: 0,
         views: 0,
         likes: 0,
-        comments: 0,
         owner: userStore.user || undefined,
         ownerId: userStore.user?.id,
         author: userStore.user ? [userStore.user] : [],

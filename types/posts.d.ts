@@ -18,8 +18,6 @@ declare global {
         status: 'draft' | 'published' | 'archived'
         views: number // Количество просмотров
         likes: number // Количество лайков
-        comments: number // Количество комментариев
-
         deadline?: string
         executionPolicy: 'contest' | 'public'
         maxParticipants?: number

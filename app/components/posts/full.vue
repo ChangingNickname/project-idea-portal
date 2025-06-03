@@ -97,10 +97,6 @@
           {{ post.likes || 0 }} лайков
         </div>
         <div class="flex items-center gap-2">
-          <Icon name="lucide:message-circle" class="w-4 h-4" />
-          {{ post.comments || 0 }} комментариев
-        </div>
-        <div class="flex items-center gap-2">
           <Icon name="lucide:users" class="w-4 h-4" />
           {{ post.currentParticipants || 0 }} участников
         </div>

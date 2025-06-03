@@ -157,10 +157,6 @@
                 <UIcon name="i-lucide-heart" class="w-5 h-5" />
                 <span>{{ post.likes }}</span>
               </div>
-              <div class="flex items-center gap-1 text-gray-500 dark:text-gray-400">
-                <UIcon name="i-lucide-message-square" class="w-5 h-5" />
-                <span>{{ post.comments }}</span>
-              </div>
             </div>
             <div class="text-sm text-gray-500 dark:text-gray-400">
               Обновлено: {{ formatDate(post.updatedAt) }}
