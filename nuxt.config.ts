@@ -43,7 +43,7 @@ export default defineNuxtConfig({
       optimizeTranslationDirective: true
     },
 
-    strategy: 'no_prefix',
+    strategy: 'prefix',
     defaultLocale: 'ru',
     baseUrl: 'http://localhost:3000',
     lazy: true,
