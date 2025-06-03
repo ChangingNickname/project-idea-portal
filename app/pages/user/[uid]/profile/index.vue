@@ -321,10 +321,22 @@ const fetchFriends = async () => {
         limit: friendsPagination.value.limit
       }
     })
-    friends.value = response.friends
-    friendsPagination.value = response.pagination
+    friends.value = response.friends || []
+    friendsPagination.value = {
+      total: response.pagination?.total || 0,
+      page: response.pagination?.page || 1,
+      limit: response.pagination?.limit || 9,
+      pages: response.pagination?.pages || 1
+    }
   } catch (error) {
     console.error('Error fetching friends:', error)
+    friends.value = []
+    friendsPagination.value = {
+      total: 0,
+      page: 1,
+      limit: 9,
+      pages: 1
+    }
   } finally {
     friendsPending.value = false
   }
@@ -343,10 +355,22 @@ const fetchBlockedUsers = async () => {
         limit: blockedPagination.value.limit
       }
     })
-    blockedUsers.value = response.blocked
-    blockedPagination.value = response.pagination
+    blockedUsers.value = response.blocked || []
+    blockedPagination.value = {
+      total: response.pagination?.total || 0,
+      page: response.pagination?.page || 1,
+      limit: response.pagination?.limit || 9,
+      pages: response.pagination?.pages || 1
+    }
   } catch (error) {
     console.error('Error fetching blocked users:', error)
+    blockedUsers.value = []
+    blockedPagination.value = {
+      total: 0,
+      page: 1,
+      limit: 9,
+      pages: 1
+    }
   } finally {
     blockedPending.value = false
   }
