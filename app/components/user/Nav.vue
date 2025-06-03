@@ -162,7 +162,7 @@ const navigationLinks = computed(() => [
     path: '/my/ideas'
   },
   {
-    label: t('navigation.mails'),
+    label: t('navigation.chat'),
     icon: 'i-lucide-mail',
     path: '/my/mails'
   },

@@ -189,7 +189,9 @@ export default {
     home: 'Início',
     ideas: 'Ideias',
     chat: 'Chat',
-    profile: 'Perfil'
+    profile: 'Perfil',
+    posts: 'Meus Posts',
+    mails: 'Mensagens'
   },
   post: {
     title: 'Publicações',

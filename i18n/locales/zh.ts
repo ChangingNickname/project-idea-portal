@@ -189,7 +189,9 @@ export default {
     home: '首页',
     ideas: '创意',
     chat: '聊天',
-    profile: '个人资料'
+    profile: '个人资料',
+    posts: '我的帖子',
+    mails: '消息'
   },
   post: {
     title: '帖子',

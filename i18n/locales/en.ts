@@ -182,10 +182,13 @@ export default {
     }
   },
   navigation: {
+    title: 'Navigation',
     home: 'Home',
     ideas: 'Ideas',
     chat: 'Chat',
-    profile: 'Profile'
+    profile: 'Profile',
+    posts: 'My Posts',
+    mails: 'Messages'
   },
   post: {
     author: 'Author',

@@ -113,44 +113,45 @@
         <span class="ml-2">{{ t('common.loading') }}</span>
       </div>
       <div v-else class="grid gap-6" :class="gridClass">
-        <!-- Левая панель -->
-        <div v-if="store.leftPanel" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+        <!-- Левая панель - Редактирование -->
+        <div v-if="store.showCreate" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
           <div class="p-4 border-b border-gray-200 dark:border-gray-700">
             <h2 class="text-lg font-medium">
-              {{ store.leftPanel === 'create' ? t('common.create') : t('common.preview') }}
+              {{ t('common.create') }}
             </h2>
           </div>
-          <div class="p-4" :class="{ 'opacity-50 pointer-events-none': !canEditPost && store.leftPanel === 'create' }">
+          <div class="p-4" :class="{ 'opacity-50 pointer-events-none': !canEditPost }">
             <PostsCreate 
-              v-if="store.leftPanel === 'create'" 
               :model-value="store.draft"
               :disabled="!canEditPost"
               @update="handleFormUpdate"
             />
-            <PostsFull v-else :post="store.draft" :key="previewKey" />
           </div>
         </div>
 
-        <!-- Правая панель -->
-        <div v-if="store.rightPanel" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+        <!-- Средняя панель - AI -->
+        <div v-if="store.showAiAgent" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
           <div class="p-4 border-b border-gray-200 dark:border-gray-700">
             <h2 class="text-lg font-medium">
-              {{ store.rightPanel === 'create' ? t('common.create') : t('common.preview') }}
+              {{ t('common.aiAssistant') }}
             </h2>
           </div>
-          <div class="p-4" :class="{ 'opacity-50 pointer-events-none': !canEditPost && store.rightPanel === 'create' }">
-            <PostsCreate 
-              v-if="store.rightPanel === 'create'" 
-              :model-value="store.draft"
-              :disabled="!canEditPost"
-              @update="handleFormUpdate"
-            />
-            <PostsFull v-else :post="store.draft" :key="previewKey" />
+          <div class="p-4">
+            <PostsAiagent />
           </div>
         </div>
-      </div>
-      <div v-if="store.showAiAgent" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-        <PostsAiagent />
+
+        <!-- Правая панель - Превью -->
+        <div v-if="store.showPreview" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+          <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 class="text-lg font-medium">
+              {{ t('common.preview') }}
+            </h2>
+          </div>
+          <div class="p-4">
+            <PostsFull :post="store.draft" :key="previewKey" />
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -250,10 +251,22 @@ onMounted(async () => {
 
 // Вычисляем классы для сетки в зависимости от количества панелей
 const gridClass = computed(() => {
-  if (store.showCreate && store.showPreview) {
-    return 'grid-cols-2'
+  const panels = [
+    store.showCreate,
+    store.showAiAgent,
+    store.showPreview
+  ].filter(Boolean).length
+
+  switch (panels) {
+    case 1:
+      return 'grid-cols-1'
+    case 2:
+      return 'grid-cols-2'
+    case 3:
+      return 'grid-cols-3'
+    default:
+      return 'grid-cols-1'
   }
-  return 'grid-cols-1'
 })
 
 // Обработчик обновления формы

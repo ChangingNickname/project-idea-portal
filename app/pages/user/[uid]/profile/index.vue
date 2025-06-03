@@ -21,23 +21,23 @@
         </UButton>
       </div>
       <div
-      v-else
-      class="flex flex-row justify-end gap-2"
+        v-else
+        class="flex flex-row justify-end gap-2"
       >
         <UButton
-        color="error"
-        variant="outline"
-        :icon="isBlacklist ? 'i-lucide-user-check' : 'i-lucide-user-x'"
-        :label="isBlacklist ? t('profile.removeFromBlacklist') : t('profile.addToBlacklist')"
-        @click="toggleBlacklist"
+          color="error"
+          variant="outline"
+          :icon="isBlacklist ? 'i-lucide-user-check' : 'i-lucide-user-x'"
+          :label="isBlacklist ? t('profile.removeFromBlacklist') : t('profile.addToBlacklist')"
+          @click="toggleBlacklist"
         />
         <UButton
-        color="primary"
-        variant="solid"
-        :disabled="isBlacklist"
-        :icon="isFriend ? 'i-lucide-user-minus' : 'i-lucide-user-plus'"
-        :label="isFriend ? t('profile.removeFromFriends') : t('profile.addFriends')"
-        @click="toggleFriend"
+          color="primary"
+          variant="solid"
+          :disabled="isBlacklist"
+          :icon="isFriend ? 'i-lucide-user-minus' : 'i-lucide-user-plus'"
+          :label="isFriend ? t('profile.removeFromFriends') : t('profile.addFriends')"
+          @click="toggleFriend"
         />
       </div>
 
@@ -57,9 +57,9 @@
         @save="handleSave"
       />
 
-      <!-- Секция друзей и заблокированных пользователей -->
+      <!-- Friends and Blocked Users Section -->
       <div v-if="isOwnProfile" class="mt-8 space-y-8">
-        <!-- Друзья -->
+        <!-- Friends -->
         <div class="space-y-4">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
@@ -94,24 +94,17 @@
           </div>
           
           <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div v-for="friend in friends" :key="friend.id" class="relative">
-              <UserCard
-                :user="friend.user || null"
-                :isFriend="true"
-              />
-              <UButton
-                v-if="friend.user"
-                color="neutral"
-                variant="outline"
-                icon="i-lucide-user-minus"
-                class="absolute top-2 right-2"
-                @click="removeFriend(friend.user.id)"
-              />
-            </div>
+            <UserCard
+              v-for="friend in friends"
+              :key="friend.id"
+              :user="friend.user"
+              :is-friend="true"
+              :is-blocked="false"
+            />
           </div>
         </div>
 
-        <!-- Заблокированные пользователи -->
+        <!-- Blocked Users -->
         <div class="space-y-4">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
@@ -119,7 +112,7 @@
                 {{ t('profile.blockedUsers') }}
               </h2>
               <UButton
-                color="primary"
+                color="error"
                 variant="ghost"
                 icon="i-lucide-plus"
                 @click="showBlockedSearch = true"
@@ -146,127 +139,125 @@
           </div>
           
           <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div v-for="blocked in blockedUsers" :key="blocked.id" class="relative">
-              <UserCard
-                :user="blocked.user || null"
-                :isBlocked="true"
-              />
-              <UButton
-                v-if="blocked.user"
-                color="neutral"
-                variant="outline"
-                icon="i-lucide-user-x"
-                class="absolute top-2 right-2"
-                @click="removeBlocked(blocked.user.id)"
-              />
-            </div>
+            <UserCard
+              v-for="blocked in blockedUsers"
+              :key="blocked.id"
+              :user="blocked.user"
+              :is-friend="false"
+              :is-blocked="true"
+            />
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Модальные окна поиска -->
-    <Teleport to="body">
-      <Transition
-        enter-active-class="transition duration-200 ease-out"
-        enter-from-class="transform scale-95 opacity-0"
-        enter-to-class="transform scale-100 opacity-100"
-        leave-active-class="transition duration-150 ease-in"
-        leave-from-class="transform scale-100 opacity-100"
-        leave-to-class="transform scale-95 opacity-0"
-      >
-        <div v-if="showFriendsSearch" class="fixed inset-0 z-50 flex items-center justify-center p-16">
-          <div
-            class="fixed inset-0 bg-black/50"
+    <!-- Friends Search Modal -->
+    <Transition
+      enter-active-class="transition duration-200 ease-out"
+      enter-from-class="transform scale-95 opacity-0"
+      enter-to-class="transform scale-100 opacity-100"
+      leave-active-class="transition duration-150 ease-in"
+      leave-from-class="transform scale-100 opacity-100"
+      leave-to-class="transform scale-95 opacity-0"
+    >
+      <div v-if="showFriendsSearch" class="fixed inset-0 z-50 flex items-center justify-center p-16">
+        <div
+          class="fixed inset-0 bg-black/50"
+          @click="showFriendsSearch = false"
+        />
+
+        <div
+          class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-3xl max-h-[calc(100vh-2rem)] overflow-y-auto"
+        >
+          <button
+            class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
             @click="showFriendsSearch = false"
-          />
-
-          <div
-            class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-3xl max-h-[calc(100vh-2rem)] overflow-y-auto"
           >
-            <button
-              class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-              @click="showFriendsSearch = false"
-            >
-              <UIcon name="i-lucide-x" class="w-6 h-6" />
-            </button>
+            <UIcon name="i-lucide-x" class="w-6 h-6" />
+          </button>
 
-            <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white pr-8">
-              {{ t('profile.addFriends') }}
-            </h2>
+          <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white pr-8">
+            {{ t('profile.addFriends') }}
+          </h2>
 
-            <UserSearch
-              v-model="selectedFriends"
-              @select="handleAddFriends"
-            />
-          </div>
+          <UserSearch
+            v-model="selectedFriends"
+            @select="handleAddFriends"
+          />
         </div>
-      </Transition>
+      </div>
+    </Transition>
 
-      <Transition
-        enter-active-class="transition duration-200 ease-out"
-        enter-from-class="transform scale-95 opacity-0"
-        enter-to-class="transform scale-100 opacity-100"
-        leave-active-class="transition duration-150 ease-in"
-        leave-from-class="transform scale-100 opacity-100"
-        leave-to-class="transform scale-95 opacity-0"
-      >
-        <div v-if="showBlockedSearch" class="fixed inset-0 z-50 flex items-center justify-center p-16">
-          <div
-            class="fixed inset-0 bg-black/50"
+    <!-- Blocked Users Search Modal -->
+    <Transition
+      enter-active-class="transition duration-200 ease-out"
+      enter-from-class="transform scale-95 opacity-0"
+      enter-to-class="transform scale-100 opacity-100"
+      leave-active-class="transition duration-150 ease-in"
+      leave-from-class="transform scale-100 opacity-100"
+      leave-to-class="transform scale-95 opacity-0"
+    >
+      <div v-if="showBlockedSearch" class="fixed inset-0 z-50 flex items-center justify-center p-16">
+        <div
+          class="fixed inset-0 bg-black/50"
+          @click="showBlockedSearch = false"
+        />
+
+        <div
+          class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-3xl max-h-[calc(100vh-2rem)] overflow-y-auto"
+        >
+          <button
+            class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
             @click="showBlockedSearch = false"
-          />
-
-          <div
-            class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-3xl max-h-[calc(100vh-2rem)] overflow-y-auto"
           >
-            <button
-              class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-              @click="showBlockedSearch = false"
-            >
-              <UIcon name="i-lucide-x" class="w-6 h-6" />
-            </button>
+            <UIcon name="i-lucide-x" class="w-6 h-6" />
+          </button>
 
-            <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white pr-8">
-              {{ t('profile.addToBlacklist') }}
-            </h2>
+          <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white pr-8">
+            {{ t('profile.addToBlacklist') }}
+          </h2>
 
-            <UserSearch
-              v-model="selectedBlocked"
-              @select="handleAddBlocked"
-            />
-          </div>
+          <UserSearch
+            v-model="selectedBlocked"
+            @select="handleAddBlocked"
+          />
         </div>
-      </Transition>
-    </Teleport>
-
+      </div>
+    </Transition>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref, computed, watch, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useUserStore } from '~/stores/user'
-import { useProfileStore } from '~/stores/profile'
+import { useToast } from '#imports'
+import { ofetch } from 'ofetch'
 import UserProfile from '~/components/user/profile/index.vue'
 import UserProfileEdit from '~/components/user/profile/edit.vue'
 import UserCard from '~/components/user/Card.vue'
 import UserSearch from '~/components/user/search.vue'
 
+const { t } = useI18n()
 const route = useRoute()
 const userStore = useUserStore()
-const profileStore = useProfileStore()
 const toast = useToast()
-const { t } = useI18n()
 
-const uid = route.params.uid as string
+const uid = computed(() => route.params.uid as string)
+const isOwnProfile = computed(() => userStore.user?.id === uid.value)
+
+// Profile state
 const userData = ref<User | null>(null)
-const error = ref<Error | null>(null)
 const pending = ref(true)
+const error = ref<Error | null>(null)
 const isEditMode = ref(false)
+
+// Relationship state
 const isFriend = ref(false)
 const isBlacklist = ref(false)
 const isPendingFriend = ref(false)
 
-// Состояние для друзей
+// Friends state
 const friends = ref<Array<{ id: string; user: User | null }>>([])
 const friendsPending = ref(false)
 const friendsPage = ref(1)
@@ -277,7 +268,7 @@ const friendsPagination = ref({
   pages: 1
 })
 
-// Состояние для заблокированных пользователей
+// Blocked users state
 const blockedUsers = ref<Array<{ id: string; user: User | null }>>([])
 const blockedPending = ref(false)
 const blockedPage = ref(1)
@@ -288,20 +279,16 @@ const blockedPagination = ref({
   pages: 1
 })
 
-const isOwnProfile = computed(() => {
-  return userStore.user?.id === uid
-})
-
-// Состояние для модальных окон поиска
-const showFriendsSearch = ref<boolean>(false)
-const showBlockedSearch = ref<boolean>(false)
+// Search modals state
+const showFriendsSearch = ref(false)
+const showBlockedSearch = ref(false)
 const selectedFriends = ref<string[]>([])
 const selectedBlocked = ref<string[]>([])
 
-// Загрузка данных пользователя
+// Fetch user data
 const fetchUserData = async () => {
   try {
-    userData.value = await $fetch<User>(`/api/user/${uid}/profile`)
+    userData.value = await $fetch<User>(`/api/user/${uid.value}/profile`)
   } catch (e) {
     error.value = e as Error
     console.error('Error fetching user data:', e)
@@ -310,159 +297,65 @@ const fetchUserData = async () => {
   }
 }
 
-// Загрузка статуса отношений
+// Fetch relationship status
 const fetchRelationshipStatus = async () => {
   try {
-    const { status } = await $fetch<{ status: RelationStatus | null }>(`/api/user/${uid}/relationship`)
+    const { status } = await $fetch<{ status: RelationStatus | null }>(`/api/user/${uid.value}/relationship`)
     isFriend.value = status === 'friend'
     isBlacklist.value = status === 'blacklist'
     isPendingFriend.value = false
   } catch (error) {
-    console.error('Ошибка получения статуса отношений:', error)
+    console.error('Error fetching relationship status:', error)
   }
 }
 
-// Загрузка друзей
+// Fetch friends
 const fetchFriends = async () => {
-  if (!isOwnProfile.value) return
-  
   friendsPending.value = true
   try {
     const response = await $fetch<{
-      relationships: Array<{ id: string; user: User | null }>;
+      friends: Array<{ id: string; user: User | null }>;
       pagination: typeof friendsPagination.value;
-    }>('/api/user/relationship', {
-      query: {
-        type: 'friends',
+    }>(`/api/user/${uid.value}/friends`, {
+      params: {
         page: friendsPage.value,
         limit: friendsPagination.value.limit
       }
     })
-    
-    friends.value = response.relationships
+    friends.value = response.friends
     friendsPagination.value = response.pagination
   } catch (error) {
     console.error('Error fetching friends:', error)
-    toast.add({
-      title: t('common.error'),
-      description: t('profile.friendsFetchError'),
-      color: 'error'
-    })
   } finally {
     friendsPending.value = false
   }
 }
 
-// Загрузка заблокированных пользователей
+// Fetch blocked users
 const fetchBlockedUsers = async () => {
-  if (!isOwnProfile.value) return
-  
   blockedPending.value = true
   try {
     const response = await $fetch<{
-      relationships: Array<{ id: string; user: User | null }>;
+      blocked: Array<{ id: string; user: User | null }>;
       pagination: typeof blockedPagination.value;
-    }>('/api/user/relationship', {
-      query: {
-        type: 'blocked',
+    }>(`/api/user/${uid.value}/blocked`, {
+      params: {
         page: blockedPage.value,
         limit: blockedPagination.value.limit
       }
     })
-    
-    blockedUsers.value = response.relationships
+    blockedUsers.value = response.blocked
     blockedPagination.value = response.pagination
   } catch (error) {
     console.error('Error fetching blocked users:', error)
-    toast.add({
-      title: t('common.error'),
-      description: t('profile.blockedUsersFetchError'),
-      color: 'error'
-    })
   } finally {
     blockedPending.value = false
   }
 }
 
-// Обновляем данные при изменении статуса отношений
-watch([isFriend, isBlacklist], () => {
-  if (isOwnProfile.value) {
-    fetchFriends()
-    fetchBlockedUsers()
-  }
-})
-
-// Загружаем данные при монтировании
-onMounted(() => {
-  if (isOwnProfile.value) {
-    fetchFriends()
-    fetchBlockedUsers()
-  }
-})
-
-// Вызываем загрузку данных и статуса отношений
-fetchUserData()
-fetchRelationshipStatus()
-
-const toggleFriend = async () => {
-  try {
-    const newStatus = isFriend.value ? null : 'friend'
-    await $fetch(`/api/user/${uid}/relationship`, {
-      method: 'POST',
-      body: { status: newStatus }
-    })
-    isFriend.value = !isFriend.value
-    isPendingFriend.value = false
-    isBlacklist.value = false
-
-    // Показываем уведомление
-    toast.add({
-      title: isFriend.value ? 'Добавлено в друзья' : 'Удалено из друзей',
-      color: 'success',
-      icon: isFriend.value ? 'i-lucide-user-plus' : 'i-lucide-user-minus'
-    })
-  } catch (error) {
-    console.error('Ошибка обновления статуса дружбы:', error)
-    toast.add({
-      title: 'Ошибка',
-      description: 'Не удалось обновить статус дружбы',
-      color: 'error',
-      icon: 'i-lucide-alert-circle'
-    })
-  }
-}
-
-const toggleBlacklist = async () => {
-  try {
-    const newStatus = isBlacklist.value ? null : 'blacklist'
-    await $fetch(`/api/user/${uid}/relationship`, {
-      method: 'POST',
-      body: { status: newStatus }
-    })
-    isBlacklist.value = !isBlacklist.value
-    isFriend.value = false
-    isPendingFriend.value = false
-
-    // Показываем уведомление
-    toast.add({
-      title: isBlacklist.value ? 'Добавлено в черный список' : 'Удалено из черного списка',
-      color: 'success',
-      icon: isBlacklist.value ? 'i-lucide-user-x' : 'i-lucide-user-check'
-    })
-  } catch (error) {
-    console.error('Ошибка обновления черного списка:', error)
-    toast.add({
-      title: 'Ошибка',
-      description: 'Не удалось обновить черный список',
-      color: 'error',
-      icon: 'i-lucide-alert-circle'
-    })
-  }
-}
-
+// Handle profile save
 const handleSave = async (updatedUser: User) => {
   try {
-    // Показываем уведомление о начале сохранения
     toast.add({
       title: t('common.saving'),
       description: t('common.savingProfile'),
@@ -470,21 +363,17 @@ const handleSave = async (updatedUser: User) => {
       icon: 'i-lucide-loader-2'
     })
 
-    // Отправляем запрос на сервер
-    const response = await $fetch<{ success: boolean; profile: User }>(`/api/user/${uid}/profile`, {
-      method: 'POST',
+    const response = await ofetch<{ success: boolean; profile: User }>(`/api/user/${uid.value}/profile`, {
+      method: 'PUT',
       body: updatedUser
     })
 
-    // Обновляем данные в компоненте
     userData.value = response.profile
 
-    // Обновляем данные в store
     if (isOwnProfile.value) {
       userStore.updateUser(response.profile)
     }
 
-    // Показываем уведомление об успехе
     toast.add({
       title: t('common.success'),
       description: t('common.profileUpdateSuccess'),
@@ -492,12 +381,10 @@ const handleSave = async (updatedUser: User) => {
       icon: 'i-lucide-check-circle'
     })
 
-    // Выходим из режима редактирования
     isEditMode.value = false
   } catch (error: any) {
     console.error('Error saving profile:', error)
     
-    // Показываем уведомление об ошибке
     toast.add({
       title: t('common.error'),
       description: error.data?.message || t('common.profileUpdateError'),
@@ -507,197 +394,149 @@ const handleSave = async (updatedUser: User) => {
   }
 }
 
-const addFriend = async () => {
-  console.log('addFriend')
-}
-
-const addBlacklist = async () => {
-  console.log('addBlacklist')
-}
-
-const removeFriend = async (targetUid: string) => {
-  const { id: toastId } = toast.add({
-    title: t('profile.removeFromFriends'),
-    description: t('profile.removeFromFriendsConfirm'),
-    color: 'neutral',
-    icon: 'i-lucide-user-minus',
-    actions: [
-      {
-        label: t('profile.cancel'),
-        onClick: () => {
-          toast.remove(toastId)
-        }
-      },
-      {
-        label: t('profile.remove'),
-        color: 'error',
-        onClick: async () => {
-          try {
-            await $fetch(`/api/user/${targetUid}/relationship`, {
-              method: 'POST',
-              body: { status: null }
-            })
-            
-            await fetchFriends()
-            
-            toast.remove(toastId)
-            toast.add({
-              title: t('profile.success'),
-              description: t('profile.userRemovedFromFriends'),
-              color: 'success',
-              icon: 'i-lucide-user-minus'
-            })
-          } catch (error) {
-            console.error(t('profile.removeFromFriendsError'), error)
-            toast.remove(toastId)
-            toast.add({
-              title: t('common.error'),
-              description: t('profile.removeFromFriendsError'),
-              color: 'error',
-              icon: 'i-lucide-alert-circle'
-            })
-          }
-        }
-      }
-    ]
-  })
-}
-
-const removeBlocked = async (targetUid: string) => {
-  const { id: toastId } = toast.add({
-    title: t('profile.removeFromBlacklist'),
-    description: t('profile.removeFromBlacklistConfirm'),
-    color: 'neutral',
-    icon: 'i-lucide-user-x',
-    actions: [
-      {
-        label: t('profile.cancel'),
-        onClick: () => {
-          toast.remove(toastId)
-        }
-      },
-      {
-        label: t('profile.remove'),
-        color: 'error',
-        onClick: async () => {
-          try {
-            await $fetch(`/api/user/${targetUid}/relationship`, {
-              method: 'POST',
-              body: { status: null }
-            })
-            
-            await fetchBlockedUsers()
-            
-            toast.remove(toastId)
-            toast.add({
-              title: t('profile.success'),
-              description: t('profile.userRemovedFromBlacklist'),
-              color: 'success',
-              icon: 'i-lucide-user-x'
-            })
-          } catch (error) {
-            console.error(t('profile.removeFromBlacklistError'), error)
-            toast.remove(toastId)
-            toast.add({
-              title: t('common.error'),
-              description: t('profile.removeFromBlacklistError'),
-              color: 'error',
-              icon: 'i-lucide-alert-circle'
-            })
-          }
-        }
-      }
-    ]
-  })
-}
-
-// Обработчики добавления пользователей
-const handleAddFriends = async (userIds: string[]) => {
+// Handle friend toggle
+const toggleFriend = async () => {
   try {
-    await Promise.all(
-      userIds.map(async (uid) => {
-        await $fetch(`/api/user/${uid}/relationship`, {
-          method: 'POST',
-          body: { status: 'friend' }
-        })
-      })
-    )
-
-    // Обновляем список друзей
-    await fetchFriends()
+    const action = isFriend.value ? 'remove' : 'add'
+    await ofetch(`/api/user/${uid.value}/friend`, {
+      method: 'PUT',
+      body: { action }
+    })
     
-    // Закрываем модальное окно
+    isFriend.value = !isFriend.value
+    
+    toast.add({
+      title: t('common.success'),
+      description: isFriend.value 
+        ? t('profile.friendAdded') 
+        : t('profile.friendRemoved'),
+      color: 'success',
+      icon: 'i-lucide-check-circle'
+    })
+  } catch (error: any) {
+    console.error('Error toggling friend status:', error)
+    
+    toast.add({
+      title: t('common.error'),
+      description: error.data?.message || t('common.operationFailed'),
+      color: 'error',
+      icon: 'i-lucide-alert-circle'
+    })
+  }
+}
+
+// Handle blacklist toggle
+const toggleBlacklist = async () => {
+  try {
+    const action = isBlacklist.value ? 'remove' : 'add'
+    await ofetch(`/api/user/${uid.value}/blacklist`, {
+      method: 'PUT',
+      body: { action }
+    })
+    
+    isBlacklist.value = !isBlacklist.value
+    
+    toast.add({
+      title: t('common.success'),
+      description: isBlacklist.value 
+        ? t('profile.userBlocked') 
+        : t('profile.userUnblocked'),
+      color: 'success',
+      icon: 'i-lucide-check-circle'
+    })
+  } catch (error: any) {
+    console.error('Error toggling blacklist status:', error)
+    
+    toast.add({
+      title: t('common.error'),
+      description: error.data?.message || t('common.operationFailed'),
+      color: 'error',
+      icon: 'i-lucide-alert-circle'
+    })
+  }
+}
+
+// Handle adding friends
+const handleAddFriends = async (selectedUsers: string[]) => {
+  try {
+    await ofetch(`/api/user/${uid.value}/friends`, {
+      method: 'PUT',
+      body: { users: selectedUsers }
+    })
+    
     showFriendsSearch.value = false
     selectedFriends.value = []
-
-    // Показываем уведомление
+    await fetchFriends()
+    
     toast.add({
-      title: t('profile.success'),
-      description: t('profile.usersAddedToFriends'),
+      title: t('common.success'),
+      description: t('profile.friendsAdded'),
       color: 'success',
-      icon: 'i-lucide-user-plus'
+      icon: 'i-lucide-check-circle'
     })
-  } catch (error) {
-    console.error(t('profile.addToFriendsError'), error)
+  } catch (error: any) {
+    console.error('Error adding friends:', error)
+    
     toast.add({
       title: t('common.error'),
-      description: t('profile.addToFriendsError'),
+      description: error.data?.message || t('common.operationFailed'),
       color: 'error',
       icon: 'i-lucide-alert-circle'
     })
   }
 }
 
-const handleAddBlocked = async (userIds: string[]) => {
+// Handle adding blocked users
+const handleAddBlocked = async (selectedUsers: string[]) => {
   try {
-    await Promise.all(
-      userIds.map(async (uid) => {
-        await $fetch(`/api/user/${uid}/relationship`, {
-          method: 'POST',
-          body: { status: 'blacklist' }
-        })
-      })
-    )
-
-    // Обновляем список заблокированных
-    await fetchBlockedUsers()
+    await ofetch(`/api/user/${uid.value}/blocked`, {
+      method: 'PUT',
+      body: { users: selectedUsers }
+    })
     
-    // Закрываем модальное окно
     showBlockedSearch.value = false
     selectedBlocked.value = []
-
-    // Показываем уведомление
+    await fetchBlockedUsers()
+    
     toast.add({
-      title: t('profile.success'),
-      description: t('profile.usersAddedToBlacklist'),
+      title: t('common.success'),
+      description: t('profile.usersBlocked'),
       color: 'success',
-      icon: 'i-lucide-user-x'
+      icon: 'i-lucide-check-circle'
     })
-  } catch (error) {
-    console.error(t('profile.addToBlacklistError'), error)
+  } catch (error: any) {
+    console.error('Error adding blocked users:', error)
+    
     toast.add({
       title: t('common.error'),
-      description: t('profile.addToBlacklistError'),
+      description: error.data?.message || t('common.operationFailed'),
       color: 'error',
       icon: 'i-lucide-alert-circle'
     })
   }
 }
 
-// Закрытие по Escape
-const closeOnEsc = (event: KeyboardEvent) => {
-  if (event.key === 'Escape') {
-    showFriendsSearch.value = false
-    showBlockedSearch.value = false
+// Watch for page changes
+watch(friendsPage, () => {
+  fetchFriends()
+})
+
+watch(blockedPage, () => {
+  fetchBlockedUsers()
+})
+
+// Initialize data
+onMounted(async () => {
+  await Promise.all([
+    fetchUserData(),
+    fetchRelationshipStatus()
+  ])
+  
+  if (isOwnProfile.value) {
+    await Promise.all([
+      fetchFriends(),
+      fetchBlockedUsers()
+    ])
   }
-}
-
-onMounted(() => {
-  document.addEventListener('keydown', closeOnEsc)
 })
-
-onUnmounted(() => {
-  document.removeEventListener('keydown', closeOnEsc)
-})
-
 </script>

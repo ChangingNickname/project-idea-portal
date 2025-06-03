@@ -25,7 +25,7 @@ const { locale } = useI18n()
 useHead({
   htmlAttrs: { lang: i18nHead.value.htmlAttrs!.lang },
   link: [...(i18nHead.value.link || [])],
-  title: t(`${locale.value}.title`),
+  title: t(`title`),
   meta: [
     { name: 'theme-color', content: themeHandler.value },
     ...(i18nHead.value.meta || []),

@@ -126,11 +126,6 @@ const navItems = computed<NavItem[]>(() => [
     to: '/my/mails',
     icon: 'i-lucide-message-square',
     label: 'navigation.chat'
-  },
-  {
-    to: '/profile',
-    icon: 'i-lucide-user',
-    label: 'navigation.profile'
   }
 ])
 

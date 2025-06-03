@@ -189,7 +189,9 @@ export default {
     home: 'ホーム',
     ideas: 'アイデア',
     chat: 'チャット',
-    profile: 'プロフィール'
+    profile: 'プロフィール',
+    posts: 'マイ投稿',
+    mails: 'メッセージ'
   },
   post: {
     title: '投稿',

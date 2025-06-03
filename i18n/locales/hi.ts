@@ -189,7 +189,9 @@ export default {
     home: 'होम',
     ideas: 'विचार',
     chat: 'चैट',
-    profile: 'प्रोफ़ाइल'
+    profile: 'प्रोफ़ाइल',
+    posts: 'मेरी पोस्ट',
+    mails: 'संदेश'
   },
   post: {
     title: 'पोस्ट',

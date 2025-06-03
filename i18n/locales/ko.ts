@@ -189,7 +189,9 @@ export default {
     home: '홈',
     ideas: '아이디어',
     chat: '채팅',
-    profile: '프로필'
+    profile: '프로필',
+    posts: '내 게시물',
+    mails: '메시지'
   },
   post: {
     title: '게시물',

@@ -182,10 +182,13 @@ export default {
     }
   },
   navigation: {
+    title: 'Навигация',
     home: 'Басты бет',
     ideas: 'Идеялар',
     chat: 'Чат',
-    profile: 'Профиль'
+    profile: 'Профиль',
+    posts: 'Менің жарияланымдарым',
+    mails: 'Хабарламалар'
   },
   post: {
     author: 'Автор',

@@ -188,7 +188,9 @@ export default {
     home: 'Главная',
     ideas: 'Идеи',
     chat: 'Чат',
-    profile: 'Профиль'
+    profile: 'Профиль',
+    posts: 'Мои публикации',
+    mails: 'Сообщения'
   },
   post: {
     title: 'Публикации',
