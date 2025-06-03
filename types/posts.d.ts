@@ -32,5 +32,6 @@ declare global {
             approvedBy?: string
         }[]
         currentParticipants: number
+        viewedBy: string[] // ID пользователей, просмотревших пост
     }
 }

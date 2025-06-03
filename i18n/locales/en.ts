@@ -41,6 +41,8 @@ export default {
     passwordsDoNotMatch: 'Passwords do not match',
     registerError: 'Failed to register. Please try again.',
     registerSuccess: 'Successfully registered',
+    search: 'Search',
+    start: 'Start',
     // Profile edit keys
     basicInfo: 'Basic Information',
     editProfile: 'Edit Profile',

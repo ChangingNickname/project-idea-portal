@@ -1,7 +1,3 @@
 [
-  {
-    "label": "navigation.dashboard",
-    "icon": "i-lucide-layout-dashboard",
-    "to": "/dashboard"
-  }
+
 ] 

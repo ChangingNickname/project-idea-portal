@@ -70,19 +70,31 @@ export default defineEventHandler(async (event) => {
         email: userRecord.email || null,
         avatar: userRecord.photoURL || null,
         displayName: userRecord.displayName || userRecord.email || null
-      },
-      author: [{
-        id: userRecord.uid,
-        email: userRecord.email || null,
-        avatar: userRecord.photoURL || null,
-        displayName: userRecord.displayName || userRecord.email || null
-      }]
+      }
     }
 
     // Save post to Firestore
     await postRef.set(post)
 
-    return post
+    // Fetch author profiles
+    const authorProfiles = await Promise.all(
+      post.authorId.map(async (authorId) => {
+        const profileDoc = await db.collection('profiles').doc(authorId).get()
+        if (profileDoc.exists) {
+          return {
+            id: profileDoc.id,
+            ...profileDoc.data()
+          }
+        }
+        return null
+      })
+    )
+
+    // Return post with author profiles
+    return {
+      ...post,
+      author: authorProfiles.filter(Boolean)
+    }
   } catch (error: any) {
     console.error('Error in /api/posts POST:', error)
     throw createError({

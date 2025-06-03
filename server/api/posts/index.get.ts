@@ -97,8 +97,31 @@ export default defineEventHandler(async (event) => {
       )
     }
 
+    // Fetch author profiles for all posts
+    const postsWithAuthors = await Promise.all(
+      posts.map(async (post) => {
+        const authorProfiles = await Promise.all(
+          post.authorId.map(async (authorId) => {
+            const profileDoc = await db.collection('profiles').doc(authorId).get()
+            if (profileDoc.exists) {
+              return {
+                id: profileDoc.id,
+                ...profileDoc.data()
+              }
+            }
+            return null
+          })
+        )
+
+        return {
+          ...post,
+          author: authorProfiles.filter(Boolean)
+        }
+      })
+    )
+
     return {
-      posts,
+      posts: postsWithAuthors,
       pagination: {
         total,
         page: Number(page),

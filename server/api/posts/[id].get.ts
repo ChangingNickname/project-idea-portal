@@ -40,9 +40,26 @@ export default defineEventHandler(async (event) => {
     const post = {
       id: postDoc.id,
       ...postDoc.data()
-    }
+    } as Post
 
-    return post
+    // Fetch author profiles
+    const authorProfiles = await Promise.all(
+      (post.authorId || []).map(async (authorId: string) => {
+        const profileDoc = await db.collection('profiles').doc(authorId).get()
+        if (profileDoc.exists) {
+          return {
+            id: profileDoc.id,
+            ...profileDoc.data()
+          }
+        }
+        return null
+      })
+    )
+
+    return {
+      ...post,
+      author: authorProfiles.filter(Boolean)
+    }
   } catch (error: any) {
     console.error('Error fetching post:', error)
     throw createError({
