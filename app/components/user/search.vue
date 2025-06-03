@@ -4,7 +4,7 @@
     <div class="flex gap-2">
       <UInput
         v-model="searchQuery"
-        placeholder="Поиск пользователей..."
+        :placeholder="t('common.searchUsers')"
         icon="i-lucide-search"
         class="flex-1"
         :loading="pending"
@@ -15,7 +15,7 @@
         :disabled="!selectedUsers.length"
         @click="handleSelect"
       >
-        Выбрать ({{ selectedUsers.length }})
+        {{ t('common.select') }} ({{ selectedUsers.length }})
       </UButton>
     </div>
 
@@ -23,11 +23,11 @@
     <div class="flex gap-4">
       <UCheckbox
         v-model="showBlocked"
-        label="Показывать заблокированных"
+        :label="t('common.showBlocked')"
       />
       <UCheckbox
         v-model="friendsFirst"
-        label="Друзья в начале"
+        :label="t('common.friendsFirst')"
       />
     </div>
 
@@ -41,7 +41,7 @@
     </div>
 
     <div v-else-if="!users.length" class="text-center text-gray-500 py-4">
-      Пользователи не найдены
+      {{ t('common.noUsersFound') }}
     </div>
 
     <div v-else class="space-y-4">
@@ -60,13 +60,13 @@
                 selectedUsers = selectedUsers.filter(id => id !== user.id)
               }
             }"
-            :label="user.displayName || user.email || 'Anonymous User'"
+            :label="user.displayName || user.email || t('common.anonymousUser')"
             class="flex-1"
           />
           <Avatar
             :src="user.avatar || undefined"
             :email="user.email || undefined"
-            :alt="user.displayName || 'User avatar'"
+            :alt="user.displayName || t('common.userAvatar')"
             :isActive="user.emailVerified"
             size="sm"
           />
@@ -107,6 +107,9 @@
 <script setup lang="ts">
 import { useDebounceFn } from '@vueuse/core'
 import Avatar from '~/components/user/Avatar.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   modelValue?: string[]
@@ -140,7 +143,7 @@ watch(selectedUsers, (newValue) => {
 // Получаем имя пользователя по ID
 const getUserName = (userId: string) => {
   const user = users.value.find(u => u.id === userId)
-  return user?.displayName || user?.email || 'Unknown User'
+  return user?.displayName || user?.email || t('common.unknownUser')
 }
 
 // Поиск пользователей

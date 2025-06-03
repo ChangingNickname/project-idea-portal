@@ -18,11 +18,11 @@
           <template #leading>
             <UAvatar
               :src="userStore.user?.avatar || undefined"
-              :alt="userStore.user?.displayName || 'User'"
+              :alt="userStore.user?.displayName || t('common.user')"
               size="sm"
             />
           </template>
-          <span class="ml-2">{{ userStore.user?.displayName || 'User' }}</span>
+          <span class="ml-2">{{ userStore.user?.displayName || t('common.user') }}</span>
         </UButton>
       </UDropdown>
     </template>
@@ -33,7 +33,7 @@
         variant="soft"
         @click="showLoginModal = true"
       >
-        Sign in
+        {{ t('common.signIn') }}
       </UButton>
     </template>
 
@@ -52,7 +52,9 @@
 import { ref } from 'vue'
 import { useUserStore } from '~/stores/user'
 import { signOut } from '~/utils/firebase/auth'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const userStore = useUserStore()
 const showLoginModal = ref(false)
 const showRegisterModal = ref(false)
@@ -70,19 +72,19 @@ const openRegister = () => {
 const menuItems = [
   [
     {
-      label: 'Profile',
+      label: t('common.profile'),
       icon: 'i-heroicons-user-circle',
       to: '/profile'
     },
     {
-      label: 'Settings',
+      label: t('common.settings'),
       icon: 'i-heroicons-cog-6-tooth',
       to: '/settings'
     }
   ],
   [
     {
-      label: 'Sign out',
+      label: t('common.signOut'),
       icon: 'i-heroicons-arrow-right-on-rectangle',
       click: async () => {
         await signOut()

@@ -28,7 +28,7 @@
         color="error"
         variant="outline"
         :icon="isBlacklist ? 'i-lucide-user-check' : 'i-lucide-user-x'"
-        :label="isBlacklist ? 'Удалить из черного списка' : 'Добавить в черный список'"
+        :label="isBlacklist ? t('profile.removeFromBlacklist') : t('profile.addToBlacklist')"
         @click="toggleBlacklist"
         />
         <UButton
@@ -36,7 +36,7 @@
         variant="solid"
         :disabled="isBlacklist"
         :icon="isFriend ? 'i-lucide-user-minus' : 'i-lucide-user-plus'"
-        :label="isFriend ? 'Удалить из друзей' : 'Добавить в друзья'"
+        :label="isFriend ? t('profile.removeFromFriends') : t('profile.addFriends')"
         @click="toggleFriend"
         />
       </div>
@@ -192,7 +192,7 @@
             </button>
 
             <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white pr-8">
-              Добавить друзей
+              {{ t('profile.addFriends') }}
             </h2>
 
             <UserSearch
@@ -228,7 +228,7 @@
             </button>
 
             <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white pr-8">
-              Добавить в черный список
+              {{ t('profile.addToBlacklist') }}
             </h2>
 
             <UserSearch
@@ -517,19 +517,19 @@ const addBlacklist = async () => {
 
 const removeFriend = async (targetUid: string) => {
   const { id: toastId } = toast.add({
-    title: 'Удаление из друзей',
-    description: 'Вы уверены, что хотите удалить пользователя из друзей?',
+    title: t('profile.removeFromFriends'),
+    description: t('profile.removeFromFriendsConfirm'),
     color: 'neutral',
     icon: 'i-lucide-user-minus',
     actions: [
       {
-        label: 'Отмена',
+        label: t('profile.cancel'),
         onClick: () => {
           toast.remove(toastId)
         }
       },
       {
-        label: 'Удалить',
+        label: t('profile.remove'),
         color: 'error',
         onClick: async () => {
           try {
@@ -538,22 +538,21 @@ const removeFriend = async (targetUid: string) => {
               body: { status: null }
             })
             
-            // Обновляем список друзей
             await fetchFriends()
             
             toast.remove(toastId)
             toast.add({
-              title: 'Успешно',
-              description: 'Пользователь удален из друзей',
+              title: t('profile.success'),
+              description: t('profile.userRemovedFromFriends'),
               color: 'success',
               icon: 'i-lucide-user-minus'
             })
           } catch (error) {
-            console.error('Ошибка удаления из друзей:', error)
+            console.error(t('profile.removeFromFriendsError'), error)
             toast.remove(toastId)
             toast.add({
-              title: 'Ошибка',
-              description: 'Не удалось удалить пользователя из друзей',
+              title: t('common.error'),
+              description: t('profile.removeFromFriendsError'),
               color: 'error',
               icon: 'i-lucide-alert-circle'
             })
@@ -566,19 +565,19 @@ const removeFriend = async (targetUid: string) => {
 
 const removeBlocked = async (targetUid: string) => {
   const { id: toastId } = toast.add({
-    title: 'Удаление из черного списка',
-    description: 'Вы уверены, что хотите удалить пользователя из черного списка?',
+    title: t('profile.removeFromBlacklist'),
+    description: t('profile.removeFromBlacklistConfirm'),
     color: 'neutral',
     icon: 'i-lucide-user-x',
     actions: [
       {
-        label: 'Отмена',
+        label: t('profile.cancel'),
         onClick: () => {
           toast.remove(toastId)
         }
       },
       {
-        label: 'Удалить',
+        label: t('profile.remove'),
         color: 'error',
         onClick: async () => {
           try {
@@ -587,22 +586,21 @@ const removeBlocked = async (targetUid: string) => {
               body: { status: null }
             })
             
-            // Обновляем список заблокированных
             await fetchBlockedUsers()
             
             toast.remove(toastId)
             toast.add({
-              title: 'Успешно',
-              description: 'Пользователь удален из черного списка',
+              title: t('profile.success'),
+              description: t('profile.userRemovedFromBlacklist'),
               color: 'success',
               icon: 'i-lucide-user-x'
             })
           } catch (error) {
-            console.error('Ошибка удаления из черного списка:', error)
+            console.error(t('profile.removeFromBlacklistError'), error)
             toast.remove(toastId)
             toast.add({
-              title: 'Ошибка',
-              description: 'Не удалось удалить пользователя из черного списка',
+              title: t('common.error'),
+              description: t('profile.removeFromBlacklistError'),
               color: 'error',
               icon: 'i-lucide-alert-circle'
             })
@@ -634,16 +632,16 @@ const handleAddFriends = async (userIds: string[]) => {
 
     // Показываем уведомление
     toast.add({
-      title: 'Успешно',
-      description: 'Пользователи добавлены в друзья',
+      title: t('profile.success'),
+      description: t('profile.usersAddedToFriends'),
       color: 'success',
       icon: 'i-lucide-user-plus'
     })
   } catch (error) {
-    console.error('Ошибка добавления в друзья:', error)
+    console.error(t('profile.addToFriendsError'), error)
     toast.add({
-      title: 'Ошибка',
-      description: 'Не удалось добавить пользователей в друзья',
+      title: t('common.error'),
+      description: t('profile.addToFriendsError'),
       color: 'error',
       icon: 'i-lucide-alert-circle'
     })
@@ -670,16 +668,16 @@ const handleAddBlocked = async (userIds: string[]) => {
 
     // Показываем уведомление
     toast.add({
-      title: 'Успешно',
-      description: 'Пользователи добавлены в черный список',
+      title: t('profile.success'),
+      description: t('profile.usersAddedToBlacklist'),
       color: 'success',
       icon: 'i-lucide-user-x'
     })
   } catch (error) {
-    console.error('Ошибка добавления в черный список:', error)
+    console.error(t('profile.addToBlacklistError'), error)
     toast.add({
-      title: 'Ошибка',
-      description: 'Не удалось добавить пользователей в черный список',
+      title: t('common.error'),
+      description: t('profile.addToBlacklistError'),
       color: 'error',
       icon: 'i-lucide-alert-circle'
     })

@@ -78,12 +78,17 @@
 </template>
 
 <script setup lang="ts">
-import nav from '~/assets/nav.json'
 import { useI18n } from 'vue-i18n'
 import { computed, ref, watch } from 'vue'
 import { useColorMode } from '@vueuse/core'
 import { useUserStore } from '~/stores/user'
 import { useRoute } from 'vue-router'
+
+interface NavItem {
+  to: string
+  icon: string
+  label: string
+}
 
 const { t } = useI18n()
 const route = useRoute()
@@ -106,7 +111,28 @@ watch(isAuthenticated, (newValue) => {
   }
 })
 
-const navItems = computed(() => nav)
+const navItems = computed<NavItem[]>(() => [
+  {
+    to: '/',
+    icon: 'i-lucide-home',
+    label: 'navigation.home'
+  },
+  {
+    to: '/ideas',
+    icon: 'i-lucide-lightbulb',
+    label: 'navigation.ideas'
+  },
+  {
+    to: '/chat',
+    icon: 'i-lucide-message-square',
+    label: 'navigation.chat'
+  },
+  {
+    to: '/profile',
+    icon: 'i-lucide-user',
+    label: 'navigation.profile'
+  }
+])
 
 const isActiveRoute = (path: string) => {
   return route.path.startsWith(path)

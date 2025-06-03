@@ -5,19 +5,22 @@
             <div ref="endOfPost" style="height: 1px;"></div>
         </template>
         <div v-else class="text-center py-12 text-gray-500 dark:text-gray-400">
-            Загрузка...
+            {{ t('common.loading') }}
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
 import PostsFull from '~/components/posts/full.vue'
+import { useI18n } from 'vue-i18n'
 const route = useRoute()
 const post = ref<Post | null>(null)
 const endOfPost = ref<HTMLElement | null>(null)
 import { useUserStore } from '~/stores/user'
 const userStore = useUserStore()
 let hasMarkedViewed = false
+
+const { t } = useI18n()
 
 onMounted(async () => {
     try {

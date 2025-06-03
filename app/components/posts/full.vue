@@ -3,7 +3,7 @@
     <div class="max-w-4xl mx-auto">
       <!-- Заголовок -->
       <h1 class="text-3xl font-bold mb-6 text-gray-900 dark:text-white">
-        {{ post.title || 'Без названия' }}
+        {{ post.title || t('post.view.noTitle') }}
       </h1>
 
       <!-- Авторы -->
@@ -11,12 +11,12 @@
         <div class="flex flex-wrap gap-4 items-center">
           <!-- Владелец -->
           <div class="flex flex-col items-start mr-6">
-            <span class="text-xs text-gray-500 dark:text-gray-400 mb-1">Автор</span>
+            <span class="text-xs text-gray-500 dark:text-gray-400 mb-1">{{ t('post.author') }}</span>
             <UserCard v-if="post.owner" :user="post.owner" />
           </div>
           <!-- Соавторы -->
           <div v-if="post.author.filter(a => a?.id !== post.owner?.id).length" class="flex flex-col items-start gap-2">
-            <span class="text-xs text-gray-500 dark:text-gray-400 mb-1">Соавторы</span>
+            <span class="text-xs text-gray-500 dark:text-gray-400 mb-1">{{ t('post.coAuthors') }}</span>
             <template v-for="author in post.author.filter(a => a?.id !== post.owner?.id)" :key="author.id">
               <UserCard :user="author" />
             </template>
@@ -39,7 +39,7 @@
       <div v-if="post.cover" class="mb-8">
         <img 
           :src="post.cover" 
-          :alt="post.title || 'Обложка'"
+          :alt="post.title || t('post.view.cover')"
           class="w-full h-[400px] object-cover rounded-lg"
         />
       </div>
@@ -58,15 +58,15 @@
       <div class="mt-8 flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
         <div class="flex items-center gap-2">
           <Icon name="lucide:eye" class="w-4 h-4" />
-          {{ post.views || 0 }} просмотров
+          {{ post.views || 0 }} {{ t('post.view.views') }}
         </div>
         <div class="flex items-center gap-2">
           <Icon name="lucide:heart" class="w-4 h-4" />
-          {{ post.likes || 0 }} лайков
+          {{ post.likes || 0 }} {{ t('post.view.likes') }}
         </div>
         <div class="flex items-center gap-2">
           <Icon name="lucide:users" class="w-4 h-4" />
-          {{ post.currentParticipants || 0 }} участников
+          {{ post.currentParticipants || 0 }} {{ t('post.view.participants') }}
         </div>
       </div>
     </div>
@@ -80,10 +80,13 @@ import { computed, ref, watchEffect } from 'vue'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/vs2015.css'
 import UserCard from '~/components/user/Card.vue'
+import { useI18n } from 'vue-i18n'
 
 const props = defineProps<{
   post: Partial<Post>
 }>()
+
+const { t } = useI18n()
 
 // Настройка marked для безопасного рендеринга
 marked.setOptions({

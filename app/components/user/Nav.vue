@@ -140,7 +140,7 @@ const user = computed<User | null>(() => userStore.user)
 const isDark = computed(() => colorMode.value === 'dark')
 
 const truncateEmail = (email: string | null | undefined, maxLength = 10) => {
-  if (!email) return 'No email'
+  if (!email) return t('common.noEmail')
   if (email.length <= maxLength) return email
   
   const atIndex = email.indexOf('@')
@@ -204,8 +204,8 @@ onClickOutside(dropdownRef, () => {
 watch(() => unreadStore.totalUnread, (newCount, oldCount) => {
   if (newCount > oldCount && oldCount > 0) {
     toast.add({
-      title: 'Новые сообщения',
-      description: `У вас ${newCount} непрочитанных сообщений`,
+      title: t('common.newMessages'),
+      description: t('common.unreadMessages', { count: newCount }),
       color: 'primary',
       icon: 'i-lucide-mail',
       onClick: () => {

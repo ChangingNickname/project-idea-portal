@@ -46,23 +46,23 @@
         <div class="flex items-center gap-1" :class="{ 'ml-2': !isCurrentUser, 'mr-2': isCurrentUser }">
           <span v-if="readBy?.length" class="text-green-500">
             <Icon name="lucide:check-circle" class="w-4 h-4" />
-            {{ readBy.length }} {{ readBy.length === 1 ? 'read' : 'reads' }}
+            {{ readBy.length }} {{ readBy.length === 1 ? t('message.read.single') : t('message.read.multiple') }}
           </span>
           <span v-else-if="status === 'sending'" class="text-gray-400">
             <Icon name="lucide:loader-2" class="w-4 h-4 animate-spin" />
-            Sending...
+            {{ t('message.status.sending') }}
           </span>
           <span v-else-if="status === 'sent'" class="text-gray-400">
             <Icon name="lucide:check" class="w-4 h-4" />
-            Sent
+            {{ t('message.status.sent') }}
           </span>
           <span v-else-if="status === 'delivered'" class="text-blue-500">
             <Icon name="lucide:check-check" class="w-4 h-4" />
-            Delivered
+            {{ t('message.status.delivered') }}
           </span>
           <span v-else-if="status === 'error'" class="text-red-500">
             <Icon name="lucide:alert-circle" class="w-4 h-4" />
-            Error
+            {{ t('message.status.error') }}
           </span>
         </div>
       </div>
@@ -77,6 +77,7 @@ import Card from '~/components/user/Card.vue'
 import { computed, ref, watchEffect, onMounted, onUnmounted } from 'vue'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/vs2015.css'
+import { useI18n } from 'vue-i18n'
 
 const props = defineProps<{
   id?: string
@@ -104,6 +105,8 @@ const state = ref<MessageState>({
   error: null,
   isRead: false
 })
+
+const { t } = useI18n()
 
 // Настройка marked для безопасного рендеринга
 marked.setOptions({

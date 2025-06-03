@@ -8,7 +8,7 @@
       <Avatar
         :src="user?.avatar || undefined"
         :email="user?.email || undefined"
-        :alt="user?.displayName || 'User avatar'"
+        :alt="user?.displayName || t('common.userAvatar')"
         :isActive="user?.emailVerified"
         :isBlocked="isBlocked"
         size="md"
@@ -16,7 +16,7 @@
       <div class="flex-1 min-w-0">
         <div class="flex items-center gap-2">
           <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
-            {{ user?.displayName || user?.email || 'Anonymous User' }}
+            {{ user?.displayName || user?.email || t('common.anonymousUser') }}
           </p>
           <Icon 
             v-if="user?.emailVerified" 
@@ -74,7 +74,7 @@
                 @click="isModalOpen = false"
               >
                 <UIcon name="i-lucide-external-link" class="w-5 h-5" />
-                <span class="text-sm">Открыть профиль</span>
+                <span class="text-sm">{{ t('common.openProfile') }}</span>
               </NuxtLink>
             </div>
 
@@ -103,12 +103,15 @@
 <script setup lang="ts">
 import Avatar from '~/components/user/Avatar.vue'
 import UserProfile from '~/components/user/profile/index.vue'
+import { useI18n } from 'vue-i18n'
 
 const props = defineProps<{
   user: User | null
   isFriend?: boolean
   isBlocked?: boolean
 }>()
+
+const { t } = useI18n()
 
 const isModalOpen = ref(false)
 const modalRef = ref<HTMLElement | null>(null)

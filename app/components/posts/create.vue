@@ -3,7 +3,7 @@
     <!-- Заголовок -->
     <div>
       <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-        Заголовок
+        {{ t('post.create.title') }}
       </label>
       <input
         id="title"
@@ -12,14 +12,14 @@
         required
         :disabled="isDisabled"
         class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
-        placeholder="Введите заголовок статьи"
+        :placeholder="t('post.create.titlePlaceholder')"
       />
     </div>
 
     <!-- Авторы -->
     <div>
       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-        Авторы
+        {{ t('post.create.authors') }}
       </label>
       <div class="mt-1">
         <div class="flex flex-wrap gap-2 mb-2">
@@ -36,7 +36,7 @@
               size="sm"
             />
             <span class="ml-1">{{ userStore.user.displayName || userStore.user.email }}</span>
-            <span class="ml-1 text-xs text-primary-500">(владелец)</span>
+            <span class="ml-1 text-xs text-primary-500">({{ t('post.owner') }})</span>
           </div>
 
           <!-- Дополнительные авторы -->
@@ -74,7 +74,7 @@
             @click="showAuthorsSearch = true"
           >
             <Icon name="lucide:user-plus" class="w-4 h-4 mr-1" />
-            Добавить автора
+            {{ t('post.create.addAuthor') }}
           </UButton>
         </div>
       </div>
@@ -83,13 +83,13 @@
     <!-- Обложка -->
     <div>
       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-        Обложка
+        {{ t('post.create.cover') }}
       </label>
       <div class="mt-1 flex items-center gap-4">
         <img
           v-if="form.cover"
           :src="form.cover"
-          alt="Обложка"
+          :alt="t('post.create.cover')"
           class="h-32 w-32 object-cover rounded-lg"
         />
         <input
@@ -112,7 +112,7 @@
     <!-- Аннотация -->
     <div>
       <label for="annotation" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-        Аннотация
+        {{ t('post.create.annotation') }}
       </label>
       <textarea
         id="annotation"
@@ -120,14 +120,14 @@
         rows="3"
         :disabled="isDisabled"
         class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
-        placeholder="Краткое описание статьи"
+        :placeholder="t('post.create.annotationPlaceholder')"
       />
     </div>
 
     <!-- Ключевые слова -->
     <div>
       <label for="keywords" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-        Ключевые слова
+        {{ t('post.create.keywords') }}
       </label>
       <div class="mt-1">
         <div class="flex flex-wrap gap-2 mb-2">
@@ -154,7 +154,7 @@
             type="text"
             :disabled="isDisabled"
             class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            placeholder="Введите ключевые слова через запятую"
+            :placeholder="t('post.create.keywordsPlaceholder')"
             @keydown.enter.prevent="addKeywords"
           />
           <UButton
@@ -164,7 +164,7 @@
             :disabled="isDisabled"
             @click="addKeywords"
           >
-            Добавить
+            {{ t('post.create.add') }}
           </UButton>
         </div>
       </div>
@@ -173,7 +173,7 @@
     <!-- Домен -->
     <div>
       <label for="domain" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-        Домен
+        {{ t('post.create.domain') }}
       </label>
       <input
         id="domain"
@@ -182,14 +182,14 @@
         required
         :disabled="isDisabled"
         class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
-        placeholder="Например: web-development"
+        :placeholder="t('post.create.domainPlaceholder')"
       />
     </div>
 
     <!-- Контент -->
     <div>
       <label for="content" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-        Содержание
+        {{ t('post.create.content') }}
       </label>
       <textarea
         id="content"
@@ -198,14 +198,14 @@
         required
         :disabled="isDisabled"
         class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed font-mono"
-        placeholder="Напишите содержание статьи в формате Markdown"
+        :placeholder="t('post.create.contentPlaceholder')"
       />
     </div>
 
     <!-- Политика выполнения -->
     <div>
       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-        Политика выполнения
+        {{ t('post.create.executionPolicy') }}
       </label>
       <div class="mt-1 flex gap-4">
         <label class="inline-flex items-center">
@@ -216,7 +216,7 @@
             :disabled="isDisabled"
             class="form-radio text-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
           />
-          <span class="ml-2">Публичный</span>
+          <span class="ml-2">{{ t('post.create.public') }}</span>
         </label>
         <label class="inline-flex items-center">
           <input
@@ -226,7 +226,7 @@
             :disabled="isDisabled"
             class="form-radio text-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
           />
-          <span class="ml-2">Конкурс</span>
+          <span class="ml-2">{{ t('post.create.contest') }}</span>
         </label>
       </div>
     </div>
@@ -234,38 +234,28 @@
     <!-- Максимальное количество участников -->
     <div>
       <label for="maxParticipants" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-        Максимальное количество участников
+        {{ t('post.create.maxParticipants') }}
       </label>
       <div class="mt-1 flex items-center gap-4">
         <input
           id="maxParticipants"
-          v-model.number="form.maxParticipants"
+          v-model.number="form.currentParticipants"
           type="number"
           min="1"
           :disabled="isDisabled"
           class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          placeholder="Оставьте пустым для неограниченного количества"
+          :placeholder="t('post.create.maxParticipantsPlaceholder')"
         />
-        <UButton
-          v-if="form.maxParticipants"
-          type="button"
-          color="neutral"
-          variant="soft"
-          :disabled="isDisabled"
-          @click="form.maxParticipants = undefined"
-        >
-          <Icon name="lucide:infinity" class="w-4 h-4" />
-        </UButton>
       </div>
       <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-        Оставьте поле пустым для неограниченного количества участников
+        {{ t('post.create.maxParticipantsHelp') }}
       </p>
     </div>
 
     <!-- Дедлайн (только для конкурса) -->
     <div v-if="form.executionPolicy === 'contest'">
       <label for="deadline" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-        Дедлайн
+        {{ t('post.create.deadline') }}
       </label>
       <input
         id="deadline"
@@ -285,7 +275,7 @@
         :disabled="isDisabled"
         @click="resetForm"
       >
-        Сбросить
+        {{ t('post.create.reset') }}
       </UButton>
     </div>
 
@@ -316,7 +306,7 @@
             </button>
 
             <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white pr-8">
-              Добавить авторов
+              {{ t('post.create.addAuthors') }}
             </h2>
 
             <UserSearch
@@ -335,56 +325,36 @@ import { ref, watch, onMounted, onUnmounted, computed } from 'vue'
 import UserSearch from '~/components/user/search.vue'
 import { useUserStore } from '~/stores/user'
 import Avatar from '~/components/user/Avatar.vue'
+import { useI18n } from 'vue-i18n'
 
 const emit = defineEmits(['update'])
 const userStore = useUserStore()
+const { t } = useI18n()
 
 type ExecutionPolicy = 'public' | 'contest'
-
-interface FormData {
-  title: string
-  cover: string | null
-  annotation: string
-  keywords: string[]
-  domain: string
-  content: string
-  status: 'draft'
-  executionPolicy: ExecutionPolicy
-  participants: {
-    userId: string
-    user: User
-    status: 'pending' | 'approved' | 'rejected'
-    joinedAt: string
-    approvedAt?: string
-    approvedBy?: string
-  }[]
-  currentParticipants: number
-  views: number
-  likes: number
-  comments: number
-  author: User[]
-  authorId: string[]
-  maxParticipants?: number
-  deadline?: string
-}
+type PostStatus = 'draft' | 'published' | 'archived'
 
 // Форма
-const form = ref<FormData>({
+const form = ref<Post>({
+  id: '',
   title: '',
   cover: null,
   annotation: '',
+  owner: userStore.user!,
+  ownerId: userStore.user!.id,
+  author: [],
+  authorId: [],
   keywords: [],
   domain: '',
   content: '',
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
   status: 'draft',
-  executionPolicy: 'public',
-  participants: [],
-  currentParticipants: 0,
   views: 0,
   likes: 0,
-  comments: 0,
-  author: [],
-  authorId: []
+  executionPolicy: 'public',
+  currentParticipants: 0,
+  viewedBy: []
 })
 
 // Вычисляемое свойство для дополнительных авторов
@@ -412,22 +382,25 @@ onMounted(() => {
   // Безопасно обновляем форму из props
   if (props.modelValue) {
     form.value = {
+      id: props.modelValue.id || '',
       title: props.modelValue.title || '',
       cover: props.modelValue.cover || null,
       annotation: props.modelValue.annotation || '',
+      owner: props.modelValue.owner || userStore.user!,
+      ownerId: props.modelValue.ownerId || userStore.user!.id,
+      author: props.modelValue.author || [],
+      authorId: props.modelValue.authorId || [],
       keywords: props.modelValue.keywords || [],
       domain: props.modelValue.domain || '',
       content: props.modelValue.content || '',
-      status: 'draft',
-      executionPolicy: (props.modelValue.executionPolicy as ExecutionPolicy) || 'public',
-      participants: props.modelValue.participants || [],
-      currentParticipants: props.modelValue.currentParticipants || 0,
+      createdAt: props.modelValue.createdAt || new Date().toISOString(),
+      updatedAt: props.modelValue.updatedAt || new Date().toISOString(),
+      status: props.modelValue.status || 'draft',
       views: props.modelValue.views || 0,
       likes: props.modelValue.likes || 0,
-      comments: props.modelValue.comments || 0,
-      author: props.modelValue.author || [],
-      authorId: props.modelValue.authorId || [],
-      maxParticipants: props.modelValue.maxParticipants,
+      executionPolicy: (props.modelValue.executionPolicy as ExecutionPolicy) || 'public',
+      currentParticipants: props.modelValue.currentParticipants || 0,
+      viewedBy: props.modelValue.viewedBy || [],
       deadline: props.modelValue.deadline
     }
   }
@@ -477,21 +450,25 @@ const handleCoverUpload = async (event: Event) => {
 // Сброс формы
 const resetForm = () => {
   form.value = {
+    id: '',
     title: '',
     cover: null,
     annotation: '',
+    owner: userStore.user!,
+    ownerId: userStore.user!.id,
+    author: [],
+    authorId: [],
     keywords: [],
     domain: '',
     content: '',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
     status: 'draft',
-    executionPolicy: 'public',
-    participants: [],
-    currentParticipants: 0,
     views: 0,
     likes: 0,
-    comments: 0,
-    author: [],
-    authorId: []
+    executionPolicy: 'public',
+    currentParticipants: 0,
+    viewedBy: []
   }
   emit('update', form.value)
 }

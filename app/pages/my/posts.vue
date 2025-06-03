@@ -1,13 +1,13 @@
 <template>
   <div class="container mx-auto px-4 py-8">
-    <!-- Заголовок -->
+    <!-- Header -->
     <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Мои посты</h1>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ t('common.myPosts') }}</h1>
       
-      <!-- Поиск -->
+      <!-- Search -->
       <UInput
         v-model="searchQuery"
-        placeholder="Поиск по названию или ID..."
+        :placeholder="t('common.searchByTitleOrId')"
         icon="i-lucide-search"
         class="w-64"
         :loading="loading"
@@ -15,7 +15,7 @@
       />
     </div>
 
-    <!-- Фильтры и сортировка -->
+    <!-- Filters and sorting -->
     <div class="flex items-center gap-4 mb-6">
       <UDropdownMenu
         :items="sortOptions"
@@ -47,14 +47,14 @@
         @click="handleNewProject"
       >
         <Icon name="lucide:plus" class="w-5 h-5 mr-2" />
-        Создать проект
+        {{ t('common.createProject') }}
       </UButton>
     </div>
 
-    <!-- Посты где пользователь владелец или автор -->
+    <!-- Posts where user is owner or author -->
     <div class="mb-12">
       <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">
-        Мои проекты
+        {{ t('common.myProjects') }}
       </h2>
 
       <div v-if="loading" class="flex justify-center py-8">
@@ -64,14 +64,14 @@
       <div v-else-if="myPosts.length === 0" class="text-center py-12">
         <div class="text-gray-500 dark:text-gray-400">
           <Icon name="lucide:file-question" class="w-12 h-12 mx-auto mb-4" />
-          <p>У вас пока нет проектов</p>
+          <p>{{ t('common.noProjects') }}</p>
           <UButton
             color="primary"
             variant="soft"
             class="mt-4"
             @click="handleNewProject"
           >
-            Создать первый проект
+            {{ t('common.createFirstProject') }}
           </UButton>
         </div>
       </div>
@@ -88,13 +88,13 @@
                 class="inline-flex items-center"
               >
                 <Icon name="lucide:edit" class="w-5 h-5 mr-2" />
-                Редактировать
+                {{ t('common.edit') }}
               </UButton>
             </div>
           </div>
         </div>
         
-        <!-- Пагинация -->
+        <!-- Pagination -->
         <div class="flex justify-center mt-6">
           <template v-if="pagination.pages > 1">
             <UPagination
@@ -108,10 +108,10 @@
       </div>
     </div>
 
-    <!-- Посты где пользователь участник -->
+    <!-- Posts where user is participant -->
     <div>
       <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">
-        Проекты где я участвую
+        {{ t('common.projectsWhereIParticipate') }}
       </h2>
 
       <div v-if="loading" class="flex justify-center py-8">
@@ -121,7 +121,7 @@
       <div v-else-if="participantPosts.length === 0" class="text-center py-12">
         <div class="text-gray-500 dark:text-gray-400">
           <Icon name="lucide:users" class="w-12 h-12 mx-auto mb-4" />
-          <p>Вы пока не участвуете в проектах</p>
+          <p>{{ t('common.notParticipating') }}</p>
           <p class="text-sm mt-2">Debug: {{ JSON.stringify(participantPosts) }}</p>
         </div>
       </div>
@@ -138,13 +138,13 @@
                 class="inline-flex items-center"
               >
                 <Icon name="lucide:edit" class="w-5 h-5 mr-2" />
-                Редактировать
+                {{ t('common.edit') }}
               </UButton>
             </div>
           </div>
         </div>
         
-        <!-- Пагинация -->
+        <!-- Pagination -->
         <div class="flex justify-center mt-6">
           <template v-if="pagination.pages > 1">
             <UPagination
@@ -161,10 +161,71 @@
 </template>
 
 <script setup lang="ts">
+import { ref, computed, onMounted, watch } from 'vue'
 import { useUserStore } from '~/stores/user'
 import { useArticleBuilderStore } from '~/stores/articleBuilder'
 import { useDebounceFn } from '@vueuse/core'
+import { useI18n } from 'vue-i18n'
 
+interface User {
+  id: string
+  email: string | null
+  displayName: string | null
+  avatar: string | null
+  emailVerified: boolean
+  disabled: boolean
+  isAnonymous: boolean
+  providerData: any[]
+  customClaims: Record<string, any>
+  createdAt: string
+  lastLoginAt: string
+  lastSignInTime: string
+  metadata: {
+    creationTime: string
+    lastSignInTime: string
+  }
+  tenantId: string | null
+  multiFactor: {
+    enrolledFactors: any[]
+  }
+  contacts: {
+    email: string | null
+    phone: string | null
+    telegram: string | null
+    whatsapp: string | null
+    viber: string | null
+    discord: string | null
+    linkedin: string | null
+    github: string | null
+    website: string | null
+  }
+}
+
+interface Post {
+  id: string
+  title: string
+  cover: string | null
+  annotation: string
+  owner: User
+  ownerId: string
+  authorId: string[]
+  keywords: string[]
+  domain: string
+  content: string
+  author: User[]
+  viewedBy: string[]
+  createdAt: string
+  updatedAt: string
+  status: 'draft' | 'published' | 'archived'
+  views: number
+  likes: number
+  comments: number
+  participants: number
+  executionPolicy: 'contest' | 'public'
+  currentParticipants: number
+}
+
+const { t } = useI18n()
 const userStore = useUserStore()
 const articleBuilderStore = useArticleBuilderStore()
 const loading = ref(true)
@@ -184,36 +245,44 @@ const pagination = ref({
 
 const sortOptions = [
   { 
-    label: 'По дате создания', 
+    label: t('common.sortByCreationDate'), 
     value: 'createdAt',
     icon: 'i-lucide-clock'
   },
   { 
-    label: 'По просмотрам', 
+    label: t('common.sortByViews'), 
     value: 'views',
     icon: 'i-lucide-eye'
   },
   { 
-    label: 'По лайкам', 
+    label: t('common.sortByLikes'), 
     value: 'likes',
     icon: 'i-lucide-heart'
   },
   { 
-    label: 'По комментариям', 
+    label: t('common.sortByComments'), 
     value: 'comments',
     icon: 'i-lucide-message-circle'
   }
 ]
 
-// Загрузка постов
+// Load posts
 const loadPosts = async () => {
   if (!userStore.user?.id) return
   
   try {
     loading.value = true
     
-    // Загрузка постов где пользователь владелец или автор
-    const myPostsResponse = await $fetch('/api/posts', {
+    // Load posts where user is owner or author
+    const myPostsResponse = await $fetch<{
+      posts: Post[]
+      pagination: {
+        total: number
+        page: number
+        limit: number
+        pages: number
+      }
+    }>('/api/posts', {
       query: {
         ownerId: userStore.user.id,
         authorId: userStore.user.id,
@@ -228,8 +297,16 @@ const loadPosts = async () => {
     myPosts.value = myPostsResponse.posts
     pagination.value = myPostsResponse.pagination
 
-    // Загрузка постов где пользователь участник
-    const participantResponse = await $fetch('/api/posts', {
+    // Load posts where user is participant
+    const participantResponse = await $fetch<{
+      posts: Post[]
+      pagination: {
+        total: number
+        page: number
+        limit: number
+        pages: number
+      }
+    }>('/api/posts', {
       query: {
         participantId: userStore.user.id,
         page: currentPage.value,
@@ -242,7 +319,7 @@ const loadPosts = async () => {
     console.log('Participant posts response:', participantResponse)
     console.log('Participant posts before filter:', participantResponse.posts)
     
-    // Фильтруем посты где пользователь не владелец
+    // Filter posts where user is not owner
     participantPosts.value = participantResponse.posts.filter(post => {
       const isNotOwner = post.ownerId !== userStore.user?.id
       console.log('Post:', post.id, 'isNotOwner:', isNotOwner)
@@ -250,15 +327,15 @@ const loadPosts = async () => {
     })
     console.log('Participant posts after filter:', participantPosts.value)
 
-    // Добавим проверку на пустой массив
+    // Add check for empty array
     if (participantPosts.value.length === 0) {
       console.log('No participant posts after filtering')
     }
   } catch (error) {
     console.error('Error loading posts:', error)
     useToast().add({
-      title: 'Ошибка',
-      description: 'Не удалось загрузить посты',
+      title: t('common.error'),
+      description: t('common.failedToLoadPosts'),
       color: 'error'
     })
   } finally {
@@ -266,14 +343,14 @@ const loadPosts = async () => {
   }
 }
 
-// Следим за изменениями параметров
+// Watch for parameter changes
 watch([currentPage, sortBy, sortDirection], () => {
   loadPosts()
 })
 
-// Дебаунс поиска
+// Debounce search
 const debouncedSearch = useDebounceFn(() => {
-  currentPage.value = 1 // Сбрасываем страницу при поиске
+  currentPage.value = 1 // Reset page on search
   loadPosts()
 }, 300)
 
@@ -290,17 +367,17 @@ const getSortIcon = (value: string) => {
 }
 
 const getSortLabel = (value: string) => {
-  return sortOptions.find(option => option.value === value)?.label || 'По дате создания'
+  return sortOptions.find(option => option.value === value)?.label || t('common.sortByCreationDate')
 }
 
-// Загружаем посты при монтировании компонента
+// Load posts when component is mounted
 onMounted(() => {
   if (userStore.isAuthenticated) {
     loadPosts()
   }
 })
 
-// Следим за изменением состояния аутентификации
+// Watch for authentication state changes
 watch(() => userStore.isAuthenticated, (isAuthenticated) => {
   if (isAuthenticated) {
     loadPosts()

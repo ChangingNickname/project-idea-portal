@@ -3,10 +3,10 @@
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-2xl font-bold">{{ $t('navigation.mails') }}</h1>
       
-      <!-- Поиск -->
+      <!-- Search -->
       <UInput
         v-model="searchQuery"
-        placeholder="Поиск по имени или email..."
+        :placeholder="t('common.searchByNameOrEmail')"
         icon="i-lucide-search"
         class="w-64"
         :loading="pending"
@@ -14,7 +14,7 @@
       />
     </div>
 
-    <!-- Фильтры и сортировка -->
+    <!-- Filters and sorting -->
     <div class="flex items-center gap-4 mb-6">
       <UDropdownMenu
         :items="sortOptions"
@@ -48,7 +48,7 @@
       </div>
 
       <div v-else-if="!filteredChats.length" class="text-center text-gray-500 py-4">
-        {{ searchQuery ? 'Чаты не найдены' : 'Нет активных чатов' }}
+        {{ searchQuery ? t('common.noChatsFound') : t('common.noActiveChats') }}
       </div>
 
       <div v-else v-for="chat in filteredChats" :key="chat.userId" class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
@@ -84,7 +84,7 @@
         </NuxtLink>
       </div>
 
-      <!-- Пагинация -->
+      <!-- Pagination -->
       <div class="flex justify-center mt-6">
         <template v-if="pagination.pages > 1">
           <UPagination
@@ -108,6 +108,9 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { useUnreadMessagesStore } from '~/stores/unreadMessages'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 interface ChatUser {
   id: string
@@ -146,41 +149,41 @@ const pagination = ref({
 
 const sortOptions = [
   { 
-    label: 'По дате сообщения', 
+    label: t('common.sortByMessageDate'), 
     value: 'lastMessage',
     icon: 'i-lucide-clock'
   },
   { 
-    label: 'По имени', 
+    label: t('common.sortByName'), 
     value: 'name',
     icon: 'i-lucide-user'
   },
   { 
-    label: 'По email', 
+    label: t('common.sortByEmail'), 
     value: 'email',
     icon: 'i-lucide-mail'
   },
   { 
-    label: 'По непрочитанным', 
+    label: t('common.sortByUnread'), 
     value: 'unread',
     icon: 'i-lucide-message-circle'
   }
 ]
 
-// Получаем количество непрочитанных сообщений для пользователя
+// Get unread messages count for user
 const unreadCount = (userId: string) => unreadStore.getUnreadCount(userId)
 
-// Форматирование даты
+// Format date
 const formatDate = (date: string | undefined) => {
   if (!date) return ''
   return new Date(date).toLocaleDateString()
 }
 
-// Фильтрация и сортировка чатов
+// Filter and sort chats
 const filteredChats = computed(() => {
   let result = [...chats.value]
 
-  // Поиск
+  // Search
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
     result = result.filter(chat => 
@@ -189,7 +192,7 @@ const filteredChats = computed(() => {
     )
   }
 
-  // Сортировка
+  // Sort
   result.sort((a, b) => {
     let comparison = 0
 
@@ -218,12 +221,12 @@ const filteredChats = computed(() => {
   return result
 })
 
-// Переключение направления сортировки
+// Toggle sort direction
 const toggleSortDirection = () => {
   sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
 }
 
-// Загрузка списка чатов
+// Load chats list
 const loadChats = async () => {
   pending.value = true
   try {
@@ -254,14 +257,14 @@ const loadChats = async () => {
   }
 }
 
-// Следим за изменениями параметров
+// Watch for parameter changes
 watch([currentPage, sortBy, sortDirection], () => {
   loadChats()
 })
 
-// Дебаунс поиска
+// Debounce search
 const debouncedSearch = useDebounceFn(() => {
-  currentPage.value = 1 // Сбрасываем страницу при поиске
+  currentPage.value = 1 // Reset page on search
   loadChats()
 }, 300)
 
@@ -274,7 +277,7 @@ const getSortIcon = (value: string) => {
 }
 
 const getSortLabel = (value: string) => {
-  return sortOptions.find(option => option.value === value)?.label || 'По дате сообщения'
+  return sortOptions.find(option => option.value === value)?.label || t('common.sortByMessageDate')
 }
 
 onMounted(() => {

@@ -96,7 +96,7 @@
         <div class="flex items-center justify-between">
           <div class="flex-1">
             <div class="flex flex-col items-start mr-2">
-              <span class="text-xs text-gray-500 dark:text-gray-400 mb-1">Автор</span>
+              <span class="text-xs text-gray-500 dark:text-gray-400 mb-1">{{ t('post.author') }}</span>
               <div v-if="post?.owner" class="flex items-center gap-2 mb-2">
                 <Avatar
                   :src="post.owner.avatar || undefined"
@@ -107,12 +107,12 @@
                 />
                 <div class="text-sm text-gray-600 dark:text-gray-300">
                   {{ post.owner.displayName || post.owner.email }}
-                  <span class="text-xs text-gray-500 dark:text-gray-400">(владелец)</span>
+                  <span class="text-xs text-gray-500 dark:text-gray-400">({{ t('post.owner') }})</span>
                 </div>
               </div>
             </div>
             <div v-if="post?.author?.filter(a => a?.id !== post?.owner?.id).length" class="flex flex-col items-start gap-1">
-              <span class="text-xs text-gray-500 dark:text-gray-400 mb-1">Соавторы</span>
+              <span class="text-xs text-gray-500 dark:text-gray-400 mb-1">{{ t('post.coAuthors') }}</span>
               <div class="flex items-center gap-2">
                 <div v-for="author in post?.author?.filter(a => a?.id !== post?.owner?.id).slice(0, 3) || []" :key="author.id" class="relative">
                   <Avatar
@@ -150,14 +150,14 @@
               </div>
             </div>
             <div class="text-sm text-gray-500 dark:text-gray-400">
-              Обновлено: {{ formatDate(post.updatedAt) }}
+              {{ t('post.updated') }}: {{ formatDate(post.updatedAt) }}
             </div>
           </div>
 
           <!-- Список всех авторов в полном режиме -->
           <div v-if="post?.author?.length > 1" class="pt-4 border-t dark:border-gray-700">
             <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-3">
-              Авторы ({{ post.author.length }})
+              {{ t('post.authors') }} ({{ post.author.length }})
             </h4>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <!-- Владелец -->
@@ -174,7 +174,7 @@
                     {{ post.owner.displayName || post.owner.email }}
                   </div>
                   <div class="text-sm text-gray-500 dark:text-gray-400">
-                    Владелец
+                    {{ t('post.owner') }}
                   </div>
                 </div>
               </div>
@@ -196,7 +196,7 @@
                     {{ author.displayName || author.email }}
                   </div>
                   <div class="text-sm text-gray-500 dark:text-gray-400">
-                    Автор
+                    {{ t('post.author') }}
                   </div>
                 </div>
               </div>
@@ -223,8 +223,10 @@
 <script setup lang="ts">
 import Avatar from '~/components/user/Avatar.vue'
 import { useUserStore } from '~/stores/user'
+import { useI18n } from 'vue-i18n'
 
 const userStore = useUserStore()
+const { t } = useI18n()
 const props = defineProps<{
   post: Post | null
   isFull?: boolean

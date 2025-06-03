@@ -23,7 +23,7 @@
       <template #leading>
         <i class="i-heroicons-user text-lg" />
       </template>
-      {{ $t('common.anonymous') }}
+      {{ $t('common.continueAsGuest') }}
     </UButton>
   </div>
 </template>

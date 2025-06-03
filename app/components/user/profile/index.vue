@@ -14,7 +14,7 @@
           <div class="flex-1">
             <div class="flex items-center gap-2">
               <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
-                {{ user.displayName || 'Anonymous User' }}
+                {{ user.displayName || t('common.anonymousUser') }}
               </h1>
               <Icon 
                 v-if="user.emailVerified" 
@@ -23,7 +23,7 @@
               />
             </div>
             <p class="text-sm text-gray-500 dark:text-gray-400">
-              {{ user.email || 'No email provided' }}
+              {{ user.email || t('common.noEmailProvided') }}
             </p>
           </div>
         </div>
@@ -31,34 +31,34 @@
         <!-- User info -->
         <div class="grid grid-cols-2 gap-4 text-sm">
           <div class="space-y-1">
-            <p class="text-gray-500 dark:text-gray-400">Account Status</p>
+            <p class="text-gray-500 dark:text-gray-400">{{ t('common.accountStatus') }}</p>
             <p :class="[
               'font-medium',
               user.disabled ? 'text-red-500 dark:text-red-400' : 'text-gray-900 dark:text-white'
             ]">
-              {{ user.disabled ? 'Disabled' : 'Active' }}
+              {{ user.disabled ? t('common.disabled') : t('common.active') }}
             </p>
           </div>
           <div class="space-y-1">
-            <p class="text-gray-500 dark:text-gray-400">Account Type</p>
+            <p class="text-gray-500 dark:text-gray-400">{{ t('common.accountType') }}</p>
             <p :class="[
               'font-medium',
               user.isAnonymous ? 'text-red-500 dark:text-red-400' : 'text-gray-900 dark:text-white'
             ]">
-              {{ user.isAnonymous ? 'Anonymous' : 'Registered' }}
+              {{ user.isAnonymous ? t('common.anonymous') : t('common.registered') }}
             </p>
           </div>
           <div class="space-y-1">
-            <p class="text-gray-500 dark:text-gray-400">Phone</p>
+            <p class="text-gray-500 dark:text-gray-400">{{ t('common.phone') }}</p>
             <p :class="[
               'font-medium',
               !user.contacts?.phone ? 'text-red-500 dark:text-red-400' : 'text-gray-900 dark:text-white'
             ]">
-              {{ user.contacts?.phone || 'Not provided' }}
+              {{ user.contacts?.phone || t('common.notProvided') }}
             </p>
           </div>
           <div class="space-y-1">
-            <p class="text-gray-500 dark:text-gray-400">Member Since</p>
+            <p class="text-gray-500 dark:text-gray-400">{{ t('common.memberSince') }}</p>
             <p class="font-medium text-gray-900 dark:text-white">
               {{ formatDate(user.metadata?.creationTime || null) }}
             </p>
@@ -68,9 +68,9 @@
         <!-- Contacts -->
         <div class="space-y-4">
           <div class="flex items-center justify-between">
-            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Contacts</h2>
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('common.contacts') }}</h2>
             <div v-if="!hasContacts" class="text-sm text-red-500 dark:text-red-400">
-              No contacts provided
+              {{ t('common.noContactsProvided') }}
             </div>
           </div>
           
@@ -161,10 +161,13 @@
 
 <script setup lang="ts">
 import Avatar from '~/components/user/Avatar.vue'
+import { useI18n } from 'vue-i18n'
 
 const props = defineProps<{
   user: User
 }>()
+
+const { t } = useI18n()
 
 const hasContacts = computed(() => {
   if (!props.user.contacts) return !!props.user.email

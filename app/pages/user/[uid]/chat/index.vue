@@ -12,7 +12,7 @@
         />
         <div>
           <h1 class="text-lg font-semibold text-gray-900 dark:text-white">
-            {{ user?.displayName || user?.email }}
+            {{ user?.displayName || user?.email || t('common.chat.noEmail') }}
           </h1>
           <p v-if="user?.email && user?.displayName" class="text-sm text-gray-500 dark:text-gray-400">
             {{ user?.email }}
@@ -49,6 +49,7 @@
         color="primary"
         variant="soft"
         class="fixed bottom-24 left-1/2 -translate-x-1/2 rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
+        :title="t('common.chat.scrollToBottom')"
         @click="scrollToBottom"
       />
     </div>
@@ -66,6 +67,7 @@
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useUserStore } from '~/stores/user'
 import { useUnreadMessagesStore } from '~/stores/unreadMessages'
+import { useI18n } from 'vue-i18n'
 
 const route = useRoute()
 const { t } = useI18n()
@@ -125,7 +127,7 @@ const loadMessages = async () => {
       }
     }
   } catch (error) {
-    console.error('Error loading messages:', error)
+    console.error(t('common.chat.error.loadingMessages'), error)
   }
 }
 
@@ -219,7 +221,7 @@ const markMessageAsRead = async (messageId: string) => {
       }
     }
   } catch (error) {
-    console.error('Error marking message as read:', error)
+    console.error(t('common.chat.error.markingAsRead'), error)
   }
 }
 
@@ -248,7 +250,7 @@ const checkUnreadMessages = async () => {
     const data = await $fetch<{ count: number }>(`/api/user/${route.params.uid}/message`)
     unreadMessages.value = data?.count || 0
   } catch (error) {
-    console.error('Error checking unread messages:', error)
+    console.error(t('common.chat.error.checkingUnread'), error)
   }
 }
 

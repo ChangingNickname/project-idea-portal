@@ -15,7 +15,7 @@
               @click="store.toggleCreate"
             >
               <Icon name="lucide:edit" class="w-5 h-5 mr-2" />
-              Создание
+              {{ t('common.create') }}
             </UButton>
             <UButton
               :color="store.showPreview ? 'primary' : 'neutral'"
@@ -23,7 +23,7 @@
               @click="store.togglePreview"
             >
               <Icon name="lucide:eye" class="w-5 h-5 mr-2" />
-              Превью
+              {{ t('common.preview') }}
             </UButton>
             <UButton
               :color="store.showAiAgent ? 'primary' : 'neutral'"
@@ -31,7 +31,7 @@
               @click="store.toggleAiAgent"
             >
               <Icon name="lucide:bot" class="w-5 h-5 mr-2" />
-              AI-ассистент
+              {{ t('common.aiAssistant') }}
             </UButton>
           </div>
 
@@ -46,7 +46,7 @@
                 @click="handleRestore"
               >
                 <Icon name="lucide:archive-restore" class="w-5 h-5 mr-2" />
-                Восстановить
+                {{ t('common.restore') }}
               </UButton>
               <UButton
                 v-else-if="store.draft.id && store.draft.status !== 'archived'"
@@ -55,7 +55,7 @@
                 @click="handleArchive"
               >
                 <Icon name="lucide:archive" class="w-5 h-5 mr-2" />
-                Архивировать
+                {{ t('common.archive') }}
               </UButton>
               <UButton
                 v-if="store.draft.id && store.draft.status === 'draft'"
@@ -64,7 +64,7 @@
                 @click="handlePublish"
               >
                 <Icon name="lucide:send" class="w-5 h-5 mr-2" />
-                Опубликовать
+                {{ t('common.publish') }}
               </UButton>
               <UButton
                 v-else-if="store.draft.id && store.draft.status === 'published'"
@@ -73,7 +73,7 @@
                 @click="handleUnpublish"
               >
                 <Icon name="lucide:archive" class="w-5 h-5 mr-2" />
-                В черновики
+                {{ t('common.unpublish') }}
               </UButton>
             </template>
 
@@ -85,7 +85,7 @@
               @click="handleSave"
             >
               <Icon name="lucide:save" class="w-5 h-5 mr-2" />
-              {{ store.draft.id ? 'Обновить' : 'Сохранить' }}
+              {{ store.draft.id ? t('common.update') : t('common.save') }}
             </UButton>
           </div>
         </div>
@@ -93,7 +93,7 @@
         <!-- Нижняя панель - ID поста -->
         <div v-if="store.draft.id" class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
           <Icon name="lucide:hash" class="w-4 h-4" />
-          <span>ID: {{ store.draft.id }}</span>
+          <span>{{ t('common.id') }}: {{ store.draft.id }}</span>
           <UButton
             color="neutral"
             variant="ghost"
@@ -110,13 +110,14 @@
     <div class="container mx-auto px-4 py-8">
       <div v-if="isLoading" class="flex justify-center items-center min-h-[50vh]">
         <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-primary animate-spin" />
+        <span class="ml-2">{{ t('common.loading') }}</span>
       </div>
       <div v-else class="grid gap-6" :class="gridClass">
         <!-- Левая панель -->
         <div v-if="store.leftPanel" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
           <div class="p-4 border-b border-gray-200 dark:border-gray-700">
             <h2 class="text-lg font-medium">
-              {{ store.leftPanel === 'create' ? 'Создание' : 'Превью' }}
+              {{ store.leftPanel === 'create' ? t('common.create') : t('common.preview') }}
             </h2>
           </div>
           <div class="p-4" :class="{ 'opacity-50 pointer-events-none': !canEditPost && store.leftPanel === 'create' }">
@@ -134,7 +135,7 @@
         <div v-if="store.rightPanel" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
           <div class="p-4 border-b border-gray-200 dark:border-gray-700">
             <h2 class="text-lg font-medium">
-              {{ store.rightPanel === 'create' ? 'Создание' : 'Превью' }}
+              {{ store.rightPanel === 'create' ? t('common.create') : t('common.preview') }}
             </h2>
           </div>
           <div class="p-4" :class="{ 'opacity-50 pointer-events-none': !canEditPost && store.rightPanel === 'create' }">
@@ -162,10 +163,12 @@ import PostsFull from '~/components/posts/full.vue'
 import PostsAiagent from '~/components/posts/aiagent.vue'
 import { useUserStore } from '~/stores/user'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 
 const store = useArticleBuilderStore()
 const userStore = useUserStore()
 const route = useRoute()
+const { t } = useI18n()
 const previewKey = ref(0)
 const isLoading = ref(false)
 
@@ -215,10 +218,10 @@ const loadPost = async (id: string) => {
       previewKey.value++
     }
   } catch (error) {
-    console.error('Error loading post:', error)
+    console.error(t('common.loadError'), error)
     useToast().add({
-      title: 'Ошибка',
-      description: 'Не удалось загрузить пост',
+      title: t('common.error'),
+      description: t('common.loadError'),
       color: 'error'
     })
   } finally {
@@ -269,18 +272,16 @@ const handleSave = async () => {
     
     if (response) {
       store.updateDraft(response)
-      // Show success notification
       useToast().add({
-        title: 'Успех',
-        description: store.draft.id ? 'Пост обновлен' : 'Пост создан',
+        title: t('common.success'),
+        description: store.draft.id ? t('common.postUpdated') : t('common.postCreated'),
         color: 'success'
       })
     }
   } catch (error) {
-    // Show error notification
     useToast().add({
-      title: 'Ошибка',
-      description: 'Не удалось сохранить пост',
+      title: t('common.error'),
+      description: t('common.saveError'),
       color: 'error'
     })
   }
@@ -293,14 +294,14 @@ const copyId = async () => {
   try {
     await navigator.clipboard.writeText(store.draft.id)
     useToast().add({
-      title: 'ID скопирован',
-      description: 'ID поста скопирован в буфер обмена',
+      title: t('common.success'),
+      description: t('common.idCopied'),
       color: 'success'
     })
   } catch (error) {
     useToast().add({
-      title: 'Ошибка',
-      description: 'Не удалось скопировать ID',
+      title: t('common.error'),
+      description: t('common.idCopyError'),
       color: 'error'
     })
   }
@@ -321,18 +322,16 @@ const handlePublish = async () => {
     
     if (response) {
       store.updateDraft(response)
-      // Show success notification
       useToast().add({
-        title: 'Успех',
-        description: 'Пост опубликован',
+        title: t('common.success'),
+        description: t('common.postPublished'),
         color: 'success'
       })
     }
   } catch (error) {
-    // Show error notification
     useToast().add({
-      title: 'Ошибка',
-      description: 'Не удалось опубликовать пост',
+      title: t('common.error'),
+      description: t('common.publishError'),
       color: 'error'
     })
   }
@@ -353,18 +352,16 @@ const handleUnpublish = async () => {
     
     if (response) {
       store.updateDraft(response)
-      // Show success notification
       useToast().add({
-        title: 'Успех',
-        description: 'Пост перемещен в черновики',
+        title: t('common.success'),
+        description: t('common.postUnpublished'),
         color: 'success'
       })
     }
   } catch (error) {
-    // Show error notification
     useToast().add({
-      title: 'Ошибка',
-      description: 'Не удалось переместить пост в черновики',
+      title: t('common.error'),
+      description: t('common.unpublishError'),
       color: 'error'
     })
   }
@@ -385,18 +382,16 @@ const handleArchive = async () => {
     
     if (response) {
       store.updateDraft(response)
-      // Show success notification
       useToast().add({
-        title: 'Успех',
-        description: 'Пост архивирован',
+        title: t('common.success'),
+        description: t('common.postArchived'),
         color: 'success'
       })
     }
   } catch (error) {
-    // Show error notification
     useToast().add({
-      title: 'Ошибка',
-      description: 'Не удалось архивировать пост',
+      title: t('common.error'),
+      description: t('common.archiveError'),
       color: 'error'
     })
   }
@@ -417,18 +412,16 @@ const handleRestore = async () => {
     
     if (response) {
       store.updateDraft(response)
-      // Show success notification
       useToast().add({
-        title: 'Успех',
-        description: 'Пост восстановлен',
+        title: t('common.success'),
+        description: t('common.postRestored'),
         color: 'success'
       })
     }
   } catch (error) {
-    // Show error notification
     useToast().add({
-      title: 'Ошибка',
-      description: 'Не удалось восстановить пост',
+      title: t('common.error'),
+      description: t('common.restoreError'),
       color: 'error'
     })
   }

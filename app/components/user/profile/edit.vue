@@ -27,7 +27,7 @@
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('common.basicInfo') }}</h2>
             <div class="grid grid-cols-2 gap-4">
               <UFormField
-                label="ID"
+                :label="t('common.id')"
                 name="id"
               >
                 <UInput
@@ -41,7 +41,7 @@
                 </UInput>
               </UFormField>
               <UFormField
-                label="Email"
+                :label="t('common.email')"
                 name="email"
               >
                 <UInput
@@ -84,7 +84,7 @@
             </div>
             <div class="flex-1 space-y-4">
               <UFormField
-                label="Display Name"
+                :label="t('common.displayName')"
                 name="displayName"
               >
                 <UInput
@@ -126,7 +126,7 @@
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('common.contacts') }}</h2>
             <div class="grid grid-cols-2 gap-4">
               <UFormField
-                label="Phone"
+                :label="t('common.phone')"
                 name="contacts.phone"
               >
                 <UInput
@@ -141,7 +141,7 @@
                 </UInput>
               </UFormField>
               <UFormField
-                label="Telegram"
+                :label="t('common.telegram')"
                 name="contacts.telegram"
               >
                 <UInput
@@ -154,7 +154,7 @@
                 </UInput>
               </UFormField>
               <UFormField
-                label="WhatsApp"
+                :label="t('common.whatsapp')"
                 name="contacts.whatsapp"
               >
                 <UInput
@@ -167,7 +167,7 @@
                 </UInput>
               </UFormField>
               <UFormField
-                label="Viber"
+                :label="t('common.viber')"
                 name="contacts.viber"
               >
                 <UInput
@@ -180,7 +180,7 @@
                 </UInput>
               </UFormField>
               <UFormField
-                label="Discord"
+                :label="t('common.discord')"
                 name="contacts.discord"
               >
                 <UInput
@@ -193,7 +193,7 @@
                 </UInput>
               </UFormField>
               <UFormField
-                label="LinkedIn"
+                :label="t('common.linkedin')"
                 name="contacts.linkedin"
               >
                 <UInput
@@ -206,7 +206,7 @@
                 </UInput>
               </UFormField>
               <UFormField
-                label="GitHub"
+                :label="t('common.github')"
                 name="contacts.github"
               >
                 <UInput
@@ -219,7 +219,7 @@
                 </UInput>
               </UFormField>
               <UFormField
-                label="Website"
+                :label="t('common.website')"
                 name="contacts.website"
               >
                 <UInput

@@ -2,10 +2,10 @@
     <div class="container mx-auto px-4 py-8">
       <!-- Заголовок и поиск -->
       <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Статьи</h1>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ t('common.articles') }}</h1>
         <UInput
           v-model="searchQuery"
-          placeholder="Поиск по названию или ID..."
+          :placeholder="t('common.searchByTitleOrId')"
           icon="i-lucide-search"
           class="w-64"
           :loading="loading"
@@ -45,7 +45,7 @@
           @click="handleNewProject"
         >
           <Icon name="lucide:plus" class="w-5 h-5 mr-2" />
-          Создать проект
+          {{ t('common.createProject') }}
         </UButton>
       </div>
   
@@ -56,14 +56,14 @@
       <div v-else-if="posts.length === 0" class="text-center py-12">
         <div class="text-gray-500 dark:text-gray-400">
           <Icon name="lucide:file-question" class="w-12 h-12 mx-auto mb-4" />
-          <p>Нет статей по вашему запросу</p>
+          <p>{{ t('common.noArticlesFound') }}</p>
           <UButton
             color="primary"
             variant="soft"
             class="mt-4"
             @click="handleNewProject"
           >
-            Создать первую статью
+            {{ t('common.createFirstArticle') }}
           </UButton>
         </div>
       </div>
@@ -80,7 +80,7 @@
                 class="inline-flex items-center"
               >
                 <Icon name="lucide:edit" class="w-5 h-5 mr-2" />
-                Редактировать
+                {{ t('common.edit') }}
               </UButton>
             </div>
           </div>
@@ -104,7 +104,9 @@
   import { useArticleBuilderStore } from '~/stores/articleBuilder'
   import { useDebounceFn } from '@vueuse/core'
   import { useUserStore } from '~/stores/user'
+  import { useI18n } from 'vue-i18n'
   
+  const { t } = useI18n()
   const loading = ref(true)
   const posts = ref<Post[]>([])
   const searchQuery = ref('')
@@ -120,10 +122,10 @@
   })
   
   const sortOptions = [
-    { label: 'По дате создания', value: 'createdAt', icon: 'i-lucide-clock' },
-    { label: 'По просмотрам', value: 'views', icon: 'i-lucide-eye' },
-    { label: 'По лайкам', value: 'likes', icon: 'i-lucide-heart' },
-    { label: 'По комментариям', value: 'comments', icon: 'i-lucide-message-circle' }
+    { label: t('common.sortByCreationDate'), value: 'createdAt', icon: 'i-lucide-clock' },
+    { label: t('common.sortByViews'), value: 'views', icon: 'i-lucide-eye' },
+    { label: t('common.sortByLikes'), value: 'likes', icon: 'i-lucide-heart' },
+    { label: t('common.sortByComments'), value: 'comments', icon: 'i-lucide-message-circle' }
   ]
   
   const userStore = useUserStore()
@@ -153,8 +155,8 @@
     } catch (error) {
       console.error('Error loading posts:', error)
       useToast().add({
-        title: 'Ошибка',
-        description: 'Не удалось загрузить статьи',
+        title: t('common.error'),
+        description: t('common.failedToLoadArticles'),
         color: 'error'
       })
     } finally {
@@ -186,7 +188,7 @@
   }
   
   const getSortLabel = (value: string) => {
-    return sortOptions.find(option => option.value === value)?.label || 'По дате создания'
+    return sortOptions.find(option => option.value === value)?.label || t('common.sortByCreationDate')
   }
   
   // Загружаем статьи при монтировании
