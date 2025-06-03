@@ -1,4 +1,4 @@
-import { getAuth } from 'firebase-admin/auth'
+import { auth } from './firebase-admin'
 import { H3Event } from 'h3'
 
 export interface AuthResult {
@@ -39,7 +39,7 @@ export const checkAuth = async (event: H3Event): Promise<AuthResult> => {
   }
 
   try {
-    const decodedToken = await getAuth().verifyIdToken(token)
+    const decodedToken = await auth.verifyIdToken(token)
     return {
       isAuthenticated: true,
       currentUserId: decodedToken.uid

@@ -1,19 +1,6 @@
-import { initializeApp, getApps, cert } from 'firebase-admin/app'
-import { getAuth } from 'firebase-admin/auth'
-import { getFirestore, Query, CollectionReference } from 'firebase-admin/firestore'
+import { db } from '~~/server/utils/firebase-admin'
 import { defineEventHandler, createError } from 'h3'
 import { checkAuth } from '~~/server/utils/auth'
-
-// Initialize Firebase Admin if not already initialized
-if (!getApps().length) {
-  initializeApp({
-    credential: cert({
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
-    })
-  })
-}
 
 export default defineEventHandler(async (event) => {
   try {
@@ -36,11 +23,8 @@ export default defineEventHandler(async (event) => {
     const skip = (Number(page) - 1) * Number(limit)
     const take = Number(limit)
 
-    // Initialize Firestore
-    const db = getFirestore()
-    
     // Build query
-    let postsQuery: Query = db.collection('posts')
+    let postsQuery = db.collection('posts')
     
     // Apply filters
     if (domain) {
