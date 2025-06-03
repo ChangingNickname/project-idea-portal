@@ -123,7 +123,7 @@ const navItems = computed<NavItem[]>(() => [
     label: 'navigation.ideas'
   },
   {
-    to: '/chat',
+    to: '/my/mails',
     icon: 'i-lucide-message-square',
     label: 'navigation.chat'
   },
