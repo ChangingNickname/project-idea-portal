@@ -1,5 +1,7 @@
 export default {
+  title: 'Portale delle Idee',
   common: {
+    title: 'Generale',
     typeMessage: 'Scrivi un messaggio...',
     signIn: 'Accedi',
     signUp: 'Registrati',
@@ -170,6 +172,7 @@ export default {
     search: 'Cerca',
   },
   message: {
+    title: 'Messaggi',
     status: {
       sending: 'Invio in corso...',
       sent: 'Inviato',
@@ -182,12 +185,14 @@ export default {
     }
   },
   navigation: {
+    title: 'Navigazione',
     home: 'Home',
     ideas: 'Idee',
     chat: 'Chat',
     profile: 'Profilo'
   },
   post: {
+    title: 'Post',
     author: 'Autore',
     coAuthors: 'Co-autori',
     owner: 'Proprietario',
@@ -229,6 +234,7 @@ export default {
     }
   },
   profile: {
+    title: 'Profilo',
     friends: 'Amici',
     noFriends: 'Non hai ancora amici',
     blockedUsers: 'Utenti bloccati',
@@ -254,6 +260,7 @@ export default {
     removeFromBlacklistError: 'Impossibile rimuovere l\'utente dalla lista nera'
   },
   index: {
+    title: 'Home',
     title1: 'Condividi le tue idee',
     title2: 'Trova il tuo team',
     subtitle: 'Connettiti con persone che la pensano come te, condividi le tue idee e realizza i tuoi progetti insieme.',
@@ -262,6 +269,7 @@ export default {
     searchPlaceholder: 'Cerca progetti...'
   },
   core: {
+    title: 'Nucleo',
     desc: 'Il nostro assistente AI ti aiuterà a creare e strutturare il tuo progetto, suggerire miglioramenti e metterti in contatto con potenziali membri del team.'
   }
 } 

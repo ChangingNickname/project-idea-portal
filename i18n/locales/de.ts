@@ -1,5 +1,7 @@
 export default {
+  title: 'Ideenportal',
   common: {
+    title: 'Allgemein',
     typeMessage: 'Nachricht eingeben...',
     signIn: 'Anmelden',
     signUp: 'Registrieren',
@@ -170,6 +172,7 @@ export default {
     search: 'Suchen',
   },
   message: {
+    title: 'Nachrichten',
     status: {
       sending: 'Wird gesendet...',
       sent: 'Gesendet',
@@ -182,12 +185,14 @@ export default {
     }
   },
   navigation: {
+    title: 'Navigation',
     home: 'Startseite',
     ideas: 'Ideen',
     chat: 'Chat',
     profile: 'Profil'
   },
   post: {
+    title: 'Beiträge',
     author: 'Autor',
     coAuthors: 'Co-Autoren',
     owner: 'Besitzer',
@@ -229,6 +234,7 @@ export default {
     }
   },
   profile: {
+    title: 'Profil',
     friends: 'Freunde',
     noFriends: 'Noch keine Freunde',
     blockedUsers: 'Blockierte Benutzer',
@@ -254,6 +260,7 @@ export default {
     removeFromBlacklistError: 'Entfernen aus schwarzer Liste fehlgeschlagen'
   },
   index: {
+    title: 'Startseite',
     title1: 'Teilen Sie Ihre Ideen',
     title2: 'Finden Sie Ihr Team',
     subtitle: 'Verbinden Sie sich mit Gleichgesinnten, teilen Sie Ihre Ideen und verwirklichen Sie Ihre Projekte gemeinsam.',
@@ -262,6 +269,7 @@ export default {
     searchPlaceholder: 'Projekte suchen...'
   },
   core: {
+    title: 'Kern',
     desc: 'Unser KI-Assistent hilft Ihnen bei der Erstellung und Strukturierung Ihres Projekts, schlägt Verbesserungen vor und verbindet Sie mit potenziellen Teammitgliedern.'
   }
 } 

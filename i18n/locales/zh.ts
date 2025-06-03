@@ -1,5 +1,7 @@
 export default {
+  title: '创意门户',
   common: {
+    title: '通用',
     typeMessage: '输入消息...',
     signIn: '登录',
     signUp: '注册',
@@ -170,6 +172,7 @@ export default {
     search: '搜索',
   },
   message: {
+    title: '消息',
     status: {
       sending: '发送中...',
       sent: '已发送',
@@ -182,12 +185,14 @@ export default {
     }
   },
   navigation: {
+    title: '导航',
     home: '首页',
     ideas: '创意',
     chat: '聊天',
     profile: '个人资料'
   },
   post: {
+    title: '帖子',
     author: '作者',
     coAuthors: '合著者',
     owner: '所有者',
@@ -229,6 +234,7 @@ export default {
     }
   },
   profile: {
+    title: '个人资料',
     friends: '好友',
     noFriends: '您还没有好友',
     blockedUsers: '已屏蔽用户',
@@ -254,6 +260,7 @@ export default {
     removeFromBlacklistError: '从黑名单中移除失败'
   },
   index: {
+    title: '首页',
     title1: '分享您的创意',
     title2: '找到您的团队',
     subtitle: '与志同道合的人交流，分享创意，一起实现项目。',
@@ -262,6 +269,7 @@ export default {
     searchPlaceholder: '搜索项目...'
   },
   core: {
+    title: '核心',
     desc: '我们的 AI 助手将帮助您创建和构建项目，提供改进建议，并帮助您与潜在的团队成员建立联系。'
   }
 } 

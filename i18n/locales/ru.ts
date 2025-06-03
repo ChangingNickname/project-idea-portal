@@ -1,4 +1,5 @@
 export default {
+  title: 'Портал идей',
   common: {
     typeMessage: 'Введите сообщение...',
     signIn: 'Войти',
@@ -170,6 +171,7 @@ export default {
     search: 'Поиск',
   },
   message: {
+    title: 'Сообщения',
     status: {
       sending: 'Отправка...',
       sent: 'Отправлено',
@@ -182,12 +184,14 @@ export default {
     }
   },
   navigation: {
+    title: 'Навигация',
     home: 'Главная',
     ideas: 'Идеи',
     chat: 'Чат',
     profile: 'Профиль'
   },
   post: {
+    title: 'Публикации',
     author: 'Автор',
     coAuthors: 'Соавторы',
     owner: 'Владелец',
@@ -229,6 +233,7 @@ export default {
     }
   },
   profile: {
+    title: 'Профиль',
     friends: 'Друзья',
     noFriends: 'У вас пока нет друзей',
     blockedUsers: 'Заблокированные пользователи',
@@ -254,6 +259,7 @@ export default {
     removeFromBlacklistError: 'Не удалось удалить пользователя из черного списка'
   },
   index: {
+    title: 'Главная',
     title1: 'Делитесь своими идеями',
     title2: 'Найдите свою команду',
     subtitle: 'Общайтесь с единомышленниками, делитесь идеями и воплощайте проекты вместе.',
@@ -262,6 +268,7 @@ export default {
     searchPlaceholder: 'Поиск проектов...'
   },
   core: {
+    title: 'Основное',
     desc: 'Наш AI ассистент поможет вам создать и структурировать ваш проект, предложит улучшения и свяжет вас с потенциальными участниками команды.'
   }
 } 

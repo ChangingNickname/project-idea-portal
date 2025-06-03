@@ -1,5 +1,7 @@
 export default {
+  title: 'आइडिया पोर्टल',
   common: {
+    title: 'सामान्य',
     typeMessage: 'संदेश लिखें...',
     signIn: 'साइन इन करें',
     signUp: 'साइन अप करें',
@@ -170,6 +172,7 @@ export default {
     search: 'खोजें',
   },
   message: {
+    title: 'संदेश',
     status: {
       sending: 'भेज रहा है...',
       sent: 'भेजा गया',
@@ -182,12 +185,14 @@ export default {
     }
   },
   navigation: {
+    title: 'नेविगेशन',
     home: 'होम',
     ideas: 'विचार',
     chat: 'चैट',
     profile: 'प्रोफ़ाइल'
   },
   post: {
+    title: 'पोस्ट',
     author: 'लेखक',
     coAuthors: 'सह-लेखक',
     owner: 'मालिक',
@@ -229,6 +234,7 @@ export default {
     }
   },
   profile: {
+    title: 'प्रोफ़ाइल',
     friends: 'दोस्त',
     noFriends: 'अभी तक कोई दोस्त नहीं',
     blockedUsers: 'ब्लॉक किए गए उपयोगकर्ता',
@@ -254,6 +260,7 @@ export default {
     removeFromBlacklistError: 'ब्लैकलिस्ट से हटाने में विफल'
   },
   index: {
+    title: 'होम',
     title1: 'अपने विचार साझा करें',
     title2: 'अपनी टीम खोजें',
     subtitle: 'समान विचारधारा वाले लोगों से जुड़ें, अपने विचार साझा करें और अपने प्रोजेक्ट्स को एक साथ साकार करें।',
@@ -262,6 +269,7 @@ export default {
     searchPlaceholder: 'प्रोजेक्ट खोजें...'
   },
   core: {
+    title: 'कोर',
     desc: 'हमारा AI सहायक आपके प्रोजेक्ट को बनाने और संरचित करने, सुधार सुझाने और संभावित टीम सदस्यों से जुड़ने में आपकी मदद करेगा।'
   }
 } 

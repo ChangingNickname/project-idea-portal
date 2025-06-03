@@ -1,5 +1,7 @@
 export default {
+  title: 'Portail d\'Idées',
   common: {
+    title: 'Général',
     typeMessage: 'Tapez un message...',
     signIn: 'Se connecter',
     signUp: "S'inscrire",
@@ -170,6 +172,7 @@ export default {
     search: 'Rechercher',
   },
   message: {
+    title: 'Messages',
     status: {
       sending: 'Envoi en cours...',
       sent: 'Envoyé',
@@ -182,12 +185,14 @@ export default {
     }
   },
   navigation: {
+    title: 'Navigation',
     home: 'Accueil',
     ideas: 'Idées',
     chat: 'Chat',
     profile: 'Profil'
   },
   post: {
+    title: 'Publications',
     author: 'Auteur',
     coAuthors: 'Co-auteurs',
     owner: 'Propriétaire',
@@ -229,6 +234,7 @@ export default {
     }
   },
   profile: {
+    title: 'Profil',
     friends: 'Amis',
     noFriends: 'Pas encore d\'amis',
     blockedUsers: 'Utilisateurs bloqués',
@@ -254,6 +260,7 @@ export default {
     removeFromBlacklistError: 'Échec du retrait de la liste noire'
   },
   index: {
+    title: 'Accueil',
     title1: 'Partagez vos idées',
     title2: 'Trouvez votre équipe',
     subtitle: 'Connectez-vous avec des personnes partageant les mêmes idées, partagez vos idées et réalisez vos projets ensemble.',
@@ -262,6 +269,7 @@ export default {
     searchPlaceholder: 'Rechercher des projets...'
   },
   core: {
+    title: 'Noyau',
     desc: 'Notre assistant IA vous aidera à créer et structurer votre projet, suggérer des améliorations et vous connecter avec des membres potentiels de l\'équipe.'
   }
 } 

@@ -1,5 +1,7 @@
 export default {
+  title: '아이디어 포털',
   common: {
+    title: '일반',
     typeMessage: '메시지를 입력하세요...',
     signIn: '로그인',
     signUp: '회원가입',
@@ -170,6 +172,7 @@ export default {
     search: '검색',
   },
   message: {
+    title: '메시지',
     status: {
       sending: '전송 중...',
       sent: '전송됨',
@@ -182,12 +185,14 @@ export default {
     }
   },
   navigation: {
+    title: '내비게이션',
     home: '홈',
     ideas: '아이디어',
     chat: '채팅',
     profile: '프로필'
   },
   post: {
+    title: '게시물',
     author: '작성자',
     coAuthors: '공동 작성자',
     owner: '소유자',
@@ -229,6 +234,7 @@ export default {
     }
   },
   profile: {
+    title: '프로필',
     friends: '친구',
     noFriends: '아직 친구가 없습니다',
     blockedUsers: '차단된 사용자',
@@ -254,6 +260,7 @@ export default {
     removeFromBlacklistError: '차단 목록에서 제거 실패'
   },
   index: {
+    title: '홈',
     title1: '아이디어를 공유하세요',
     title2: '팀을 찾으세요',
     subtitle: '같은 생각을 가진 사람들과 연결하고, 아이디어를 공유하며, 함께 프로젝트를 실현하세요.',
@@ -262,6 +269,7 @@ export default {
     searchPlaceholder: '프로젝트 검색...'
   },
   core: {
+    title: '핵심',
     desc: '우리의 AI 어시스턴트가 프로젝트 생성과 구조화, 개선 사항 제안, 잠재적 팀원과의 연결을 도와드립니다.'
   }
 } 

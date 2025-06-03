@@ -159,7 +159,7 @@ const navigationLinks = computed(() => [
   {
     label: t('navigation.posts'),
     icon: 'i-lucide-file-text',
-    path: '/my/posts'
+    path: '/my/ideas'
   },
   {
     label: t('navigation.mails'),

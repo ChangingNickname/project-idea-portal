@@ -65,11 +65,11 @@ const searchQuery = ref('')
 const handleSearch = () => {
   if (searchQuery.value.trim()) {
     navigateTo({
-      path: '/posts',
+      path: '/ideas',
       query: { search: searchQuery.value }
     })
   } else {
-    navigateTo('/posts')
+    navigateTo('/ideas')
   }
 }
 </script>

@@ -1,5 +1,7 @@
 export default {
+  title: 'アイデアポータル',
   common: {
+    title: '一般',
     typeMessage: 'メッセージを入力...',
     signIn: 'ログイン',
     signUp: '新規登録',
@@ -170,6 +172,7 @@ export default {
     search: '検索',
   },
   message: {
+    title: 'メッセージ',
     status: {
       sending: '送信中...',
       sent: '送信済み',
@@ -182,12 +185,14 @@ export default {
     }
   },
   navigation: {
+    title: 'ナビゲーション',
     home: 'ホーム',
     ideas: 'アイデア',
     chat: 'チャット',
     profile: 'プロフィール'
   },
   post: {
+    title: '投稿',
     author: '著者',
     coAuthors: '共同著者',
     owner: '所有者',
@@ -229,6 +234,7 @@ export default {
     }
   },
   profile: {
+    title: 'プロフィール',
     friends: '友達',
     noFriends: 'まだ友達がいません',
     blockedUsers: 'ブロックしたユーザー',
@@ -254,6 +260,7 @@ export default {
     removeFromBlacklistError: 'ブラックリストからの削除に失敗しました'
   },
   index: {
+    title: 'ホーム',
     title1: 'アイデアを共有しましょう',
     title2: 'チームを見つけましょう',
     subtitle: '同じ考えを持つ人々とつながり、アイデアを共有し、一緒にプロジェクトを実現しましょう。',
@@ -262,6 +269,7 @@ export default {
     searchPlaceholder: 'プロジェクトを検索...'
   },
   core: {
+    title: 'コア',
     desc: 'AIアシスタントがプロジェクトの作成と構造化、改善提案、潜在的なチームメンバーとのマッチングをお手伝いします。'
   }
 } 
