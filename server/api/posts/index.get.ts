@@ -25,6 +25,7 @@ export default defineEventHandler(async (event) => {
       status,
       search,
       authorId,
+      authorIds,
       ownerId,
       sortBy = 'createdAt',
       sortOrder = 'desc',
@@ -49,9 +50,16 @@ export default defineEventHandler(async (event) => {
       postsQuery = postsQuery.where('status', '==', status as string)
     }
     if (authorId) {
+      console.log('Searching for posts with authorId:', authorId)
       postsQuery = postsQuery.where('authorId', 'array-contains', authorId as string)
     }
+    if (authorIds) {
+      const authorIdsArray = Array.isArray(authorIds) ? authorIds : [authorIds]
+      console.log('Searching for posts with authorIds:', authorIdsArray)
+      postsQuery = postsQuery.where('authorId', 'array-contains-any', authorIdsArray)
+    }
     if (ownerId) {
+      console.log('Searching for posts with ownerId:', ownerId)
       postsQuery = postsQuery.where('ownerId', '==', ownerId as string)
     }
     if (executionPolicy) {

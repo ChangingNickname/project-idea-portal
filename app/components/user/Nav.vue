@@ -159,18 +159,13 @@ const navigationLinks = computed(() => [
   {
     label: t('navigation.posts'),
     icon: 'i-lucide-file-text',
-    path: '/posts'
+    path: '/my/posts'
   },
   {
     label: t('navigation.mails'),
     icon: 'i-lucide-mail',
-    path: '/mails'
+    path: '/my/mails'
   },
-  {
-    label: t('navigation.articleBuilder'),
-    icon: 'i-lucide-pen-tool',
-    path: '/article-builder'
-  }
 ])
 
 const handleNavigation = (path: string) => {

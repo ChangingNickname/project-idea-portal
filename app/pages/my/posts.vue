@@ -51,7 +51,7 @@
       </UButton>
     </div>
 
-    <!-- Посты где пользователь владелец -->
+    <!-- Посты где пользователь владелец или автор -->
     <div class="mb-12">
       <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">
         Мои проекты
@@ -61,7 +61,7 @@
         <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-primary animate-spin" />
       </div>
 
-      <div v-else-if="ownedPosts.length === 0" class="text-center py-12">
+      <div v-else-if="myPosts.length === 0" class="text-center py-12">
         <div class="text-gray-500 dark:text-gray-400">
           <Icon name="lucide:file-question" class="w-12 h-12 mx-auto mb-4" />
           <p>У вас пока нет проектов</p>
@@ -78,7 +78,7 @@
 
       <div v-else>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div v-for="post in ownedPosts" :key="post.id" class="relative">
+          <div v-for="post in myPosts" :key="post.id" class="relative">
             <PostsCard :post="post" />
             <div class="mt-2 text-right">
               <UButton
@@ -108,7 +108,7 @@
       </div>
     </div>
 
-    <!-- Посты где пользователь автор -->
+    <!-- Посты где пользователь участник -->
     <div>
       <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">
         Проекты где я участвую
@@ -118,16 +118,17 @@
         <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-primary animate-spin" />
       </div>
 
-      <div v-else-if="authoredPosts.length === 0" class="text-center py-12">
+      <div v-else-if="participantPosts.length === 0" class="text-center py-12">
         <div class="text-gray-500 dark:text-gray-400">
           <Icon name="lucide:users" class="w-12 h-12 mx-auto mb-4" />
           <p>Вы пока не участвуете в проектах</p>
+          <p class="text-sm mt-2">Debug: {{ JSON.stringify(participantPosts) }}</p>
         </div>
       </div>
 
       <div v-else>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div v-for="post in authoredPosts" :key="post.id" class="relative">
+          <div v-for="post in participantPosts" :key="post.id" class="relative">
             <PostsCard :post="post" />
             <div class="mt-2 text-right">
               <UButton
@@ -167,8 +168,8 @@ import { useDebounceFn } from '@vueuse/core'
 const userStore = useUserStore()
 const articleBuilderStore = useArticleBuilderStore()
 const loading = ref(true)
-const ownedPosts = ref<Post[]>([])
-const authoredPosts = ref<Post[]>([])
+const myPosts = ref<Post[]>([])
+const participantPosts = ref<Post[]>([])
 const searchQuery = ref('')
 const currentPage = ref(1)
 const itemsPerPage = ref(9)
@@ -211,23 +212,10 @@ const loadPosts = async () => {
   try {
     loading.value = true
     
-    // Загрузка постов где пользователь владелец
-    const ownedResponse = await $fetch('/api/posts', {
+    // Загрузка постов где пользователь владелец или автор
+    const myPostsResponse = await $fetch('/api/posts', {
       query: {
         ownerId: userStore.user.id,
-        page: currentPage.value,
-        limit: itemsPerPage.value,
-        search: searchQuery.value,
-        sortBy: sortBy.value,
-        sortDirection: sortDirection.value
-      }
-    })
-    ownedPosts.value = ownedResponse.posts
-    pagination.value = ownedResponse.pagination
-
-    // Загрузка постов где пользователь автор
-    const authoredResponse = await $fetch('/api/posts', {
-      query: {
         authorId: userStore.user.id,
         page: currentPage.value,
         limit: itemsPerPage.value,
@@ -236,10 +224,36 @@ const loadPosts = async () => {
         sortDirection: sortDirection.value
       }
     })
+    console.log('My posts response:', myPostsResponse)
+    myPosts.value = myPostsResponse.posts
+    pagination.value = myPostsResponse.pagination
+
+    // Загрузка постов где пользователь участник
+    const participantResponse = await $fetch('/api/posts', {
+      query: {
+        participantId: userStore.user.id,
+        page: currentPage.value,
+        limit: itemsPerPage.value,
+        search: searchQuery.value,
+        sortBy: sortBy.value,
+        sortDirection: sortDirection.value
+      }
+    })
+    console.log('Participant posts response:', participantResponse)
+    console.log('Participant posts before filter:', participantResponse.posts)
+    
     // Фильтруем посты где пользователь не владелец
-    authoredPosts.value = authoredResponse.posts.filter(
-      post => post.ownerId !== userStore.user?.id
-    )
+    participantPosts.value = participantResponse.posts.filter(post => {
+      const isNotOwner = post.ownerId !== userStore.user?.id
+      console.log('Post:', post.id, 'isNotOwner:', isNotOwner)
+      return isNotOwner
+    })
+    console.log('Participant posts after filter:', participantPosts.value)
+
+    // Добавим проверку на пустой массив
+    if (participantPosts.value.length === 0) {
+      console.log('No participant posts after filtering')
+    }
   } catch (error) {
     console.error('Error loading posts:', error)
     useToast().add({
@@ -291,8 +305,8 @@ watch(() => userStore.isAuthenticated, (isAuthenticated) => {
   if (isAuthenticated) {
     loadPosts()
   } else {
-    ownedPosts.value = []
-    authoredPosts.value = []
+    myPosts.value = []
+    participantPosts.value = []
   }
 })
 
