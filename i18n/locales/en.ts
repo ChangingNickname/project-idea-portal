@@ -1,6 +1,6 @@
 export default {
+  title: 'Idea Portal',
   common: {
-    title: 'Idea Portal',
     typeMessage: 'Type a message...',
     signIn: 'Sign In',
     signUp: 'Sign Up',
