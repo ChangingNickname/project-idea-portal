@@ -94,12 +94,12 @@ export const useAiAgentStore = defineStore('aiagent', {
       }
     },
 
-    async sendMessage(message: string) {
+    async sendMessage(message: string): Promise<string> {
       console.log('sendMessage called with:', message)
       
       if (!message) {
         console.log('Empty message, skipping')
-        return
+        return ''
       }
 
       if (!this.sessionToken) {
@@ -110,7 +110,7 @@ export const useAiAgentStore = defineStore('aiagent', {
       // Проверяем, не отправляется ли уже сообщение
       if (this.isProcessing) {
         console.log('Message is already being processed in store')
-        return
+        return ''
       }
 
       const articleBuilderStore = useArticleBuilderStore()
@@ -124,7 +124,7 @@ export const useAiAgentStore = defineStore('aiagent', {
         const lastMessage = this.messages[this.messages.length - 1]
         if (lastMessage?.role === 'user' && lastMessage.content === message) {
           console.log('Duplicate message detected in store, skipping')
-          return
+          return ''
         }
 
         // Извлекаем изображения из сообщения и articleDraft
@@ -237,8 +237,25 @@ export const useAiAgentStore = defineStore('aiagent', {
         }
 
         return aiResponse
-      } catch (error) {
+      } catch (error: any) {
         console.error('Failed to send message to AI agent:', error)
+        
+        // Проверяем, является ли ошибка связанной с невалидным токеном
+        if (error.data?.message?.includes('Invalid session token')) {
+          console.log('Invalid session token detected, generating new one')
+          try {
+            // Генерируем новый токен
+            await this.generateToken()
+            
+            // Повторяем отправку сообщения с новым токеном
+            console.log('Retrying message send with new token')
+            return await this.sendMessage(message)
+          } catch (retryError) {
+            console.error('Failed to retry with new token:', retryError)
+            throw retryError
+          }
+        }
+        
         throw error
       } finally {
         this.isProcessing = false
