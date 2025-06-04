@@ -49,23 +49,6 @@ const handleKeyDown = (event: KeyboardEvent) => {
 const sendMessage = async () => {
   if (!message.value.trim()) return
 
-  // Создаем временное сообщение со статусом "sending"
-  const tempMessage: Message = {
-    id: 'temp-' + Date.now(),
-    from_user_id: '',
-    to_user_id: props.userId,
-    message: message.value,
-    type: 'text',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    read_at: null,
-    read_by: [],
-    status: 'sending',
-    timestamp: Date.now()
-  }
-
-  // Эмитим временное сообщение
-  emit('messageSent', tempMessage)
   const messageText = message.value
   message.value = ''
 
@@ -79,7 +62,7 @@ const sendMessage = async () => {
     })
 
     if (newMessage) {
-      // Обновляем сообщение со статусом "sent"
+      // Эмитим сообщение только один раз после успешной отправки
       emit('messageSent', {
         ...newMessage,
         read_by: [],
@@ -90,8 +73,17 @@ const sendMessage = async () => {
     console.error('Error sending message:', error)
     // В случае ошибки эмитим сообщение со статусом "error"
     emit('messageSent', {
-      ...tempMessage,
-      status: 'error'
+      id: 'temp-' + Date.now(),
+      from_user_id: '',
+      to_user_id: props.userId,
+      message: messageText,
+      type: 'text',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      read_at: null,
+      read_by: [],
+      status: 'error',
+      timestamp: Date.now()
     })
   }
 }
