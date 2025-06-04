@@ -26,7 +26,8 @@
     "marked": "^15.0.12",
     "nuxt": "^3.17.4",
     "nuxt-app": "link:",
-    "pinia": "^3.0.2"
+    "pinia": "^3.0.2",
+    "pinia-plugin-persistedstate": "^4.3.0"
   },
   "devDependencies": {
     "@nuxt/eslint": "^1.4.1",

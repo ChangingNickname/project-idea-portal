@@ -18,14 +18,6 @@
               {{ t('common.create') }}
             </UButton>
             <UButton
-              :color="store.showPreview ? 'primary' : 'neutral'"
-              variant="soft"
-              @click="store.togglePreview"
-            >
-              <Icon name="lucide:eye" class="w-5 h-5 mr-2" />
-              {{ t('common.preview') }}
-            </UButton>
-            <UButton
               :color="store.showAiAgent ? 'primary' : 'neutral'"
               variant="soft"
               @click="store.toggleAiAgent"
@@ -33,6 +25,15 @@
               <Icon name="lucide:bot" class="w-5 h-5 mr-2" />
               {{ t('common.aiAssistant') }}
             </UButton>
+            <UButton
+              :color="store.showPreview ? 'primary' : 'neutral'"
+              variant="soft"
+              @click="store.togglePreview"
+            >
+              <Icon name="lucide:eye" class="w-5 h-5 mr-2" />
+              {{ t('common.preview') }}
+            </UButton>
+            
           </div>
 
           <!-- Правая сторона - кнопки действий -->
@@ -143,7 +144,7 @@
               :disabled="!canEditPost"
               @update="handleFormUpdate"
             />
-            <PostsFull v-else :post="store.draft" :key="previewKey" />
+            <PostsAiagent v-else :post="store.draft" :key="previewKey" />
           </div>
         </div>
 

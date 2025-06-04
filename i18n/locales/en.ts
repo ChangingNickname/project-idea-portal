@@ -267,5 +267,11 @@ export default {
   },
   core: {
     desc: 'Our AI assistant will help you create and structure your project, suggest improvements, and connect you with potential team members.'
+  },
+  aiAgent: {
+    resetChat: 'Reset chat and generate new token',
+    clearHistory: 'Clear chat history',
+    chatReset: 'Chat has been reset successfully',
+    resetError: 'Failed to reset chat'
   }
 } 
