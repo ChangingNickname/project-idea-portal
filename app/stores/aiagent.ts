@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { useArticleBuilderStore } from '~/stores/articleBuilder'
+import { useUserStore } from '~/stores/user'
 
 interface AiAgentState {
   sessionToken: string | null
@@ -8,20 +9,76 @@ interface AiAgentState {
     role: 'user' | 'assistant'
     content: string
     timestamp: string
+    user?: {
+      id: string
+      email: string
+      avatar: string
+      displayName: string
+    }
+    images?: Array<{
+      id: string
+      data: string
+    }>
   }>
 }
+
+const STORAGE_KEY = 'ai_agent_session'
+const TOKEN_KEY = 'ai_agent_token'
 
 const welcomeMessage = {
   role: 'assistant' as const,
   content: 'Привет! Я ваш AI ассистент. Я готов помочь вам с вашими вопросами и задачами. Как я могу вам помочь сегодня?',
-  timestamp: new Date().toISOString()
+  timestamp: new Date().toISOString(),
+  user: {
+    id: 'assistant',
+    email: 'ai@assistant.com',
+    avatar: '/images/ai-avatar.png',
+    displayName: 'AI Assistant'
+  }
+}
+
+// Функция для загрузки состояния из sessionStorage
+const loadState = (): Partial<AiAgentState> => {
+  if (process.server) return {}
+  
+  try {
+    const storedState = sessionStorage.getItem(STORAGE_KEY)
+    const storedToken = sessionStorage.getItem(TOKEN_KEY)
+    return {
+      messages: storedState ? JSON.parse(storedState) : [welcomeMessage],
+      sessionToken: storedToken
+    }
+  } catch (error) {
+    console.error('Failed to load AI agent state from sessionStorage:', error)
+    return {
+      messages: [welcomeMessage],
+      sessionToken: null
+    }
+  }
+}
+
+// Функция для сохранения состояния в sessionStorage
+const saveState = (state: Partial<AiAgentState>) => {
+  if (process.server) return
+
+  try {
+    if (state.messages) {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state.messages))
+    }
+    if (state.sessionToken) {
+      sessionStorage.setItem(TOKEN_KEY, state.sessionToken)
+    }
+  } catch (error) {
+    console.error('Failed to save AI agent state to sessionStorage:', error)
+  }
 }
 
 export const useAiAgentStore = defineStore('aiagent', {
   state: (): AiAgentState => ({
     sessionToken: null,
     isProcessing: false,
-    messages: [welcomeMessage]
+    messages: [welcomeMessage],
+    ...loadState()
   }),
 
   actions: {
@@ -29,6 +86,7 @@ export const useAiAgentStore = defineStore('aiagent', {
       try {
         const response = await $fetch<{ token: string }>('/api/aiagent/token.generate')
         this.sessionToken = response.token
+        saveState({ sessionToken: response.token })
         return response.token
       } catch (error) {
         console.error('Failed to generate AI agent token:', error)
@@ -37,36 +95,135 @@ export const useAiAgentStore = defineStore('aiagent', {
     },
 
     async sendMessage(message: string) {
+      console.log('sendMessage called with:', message)
+      
+      if (!message) {
+        console.log('Empty message, skipping')
+        return
+      }
+
       if (!this.sessionToken) {
+        console.log('No session token, generating new one')
         await this.generateToken()
       }
 
+      // Проверяем, не отправляется ли уже сообщение
+      if (this.isProcessing) {
+        console.log('Message is already being processed in store')
+        return
+      }
+
       const articleBuilderStore = useArticleBuilderStore()
+      const userStore = useUserStore()
       
       try {
         this.isProcessing = true
-        this.messages.push({
-          role: 'user',
-          content: message,
-          timestamp: new Date().toISOString()
+        console.log('Store processing message:', message)
+
+        // Проверяем, не было ли уже отправлено такое сообщение
+        const lastMessage = this.messages[this.messages.length - 1]
+        if (lastMessage?.role === 'user' && lastMessage.content === message) {
+          console.log('Duplicate message detected in store, skipping')
+          return
+        }
+
+        // Извлекаем изображения из сообщения и articleDraft
+        const images: Array<{ id: string; data: string }> = []
+        
+        // Функция для обработки base64 в объекте
+        const processBase64InObject = (obj: any): any => {
+          if (!obj) return obj
+          
+          if (typeof obj === 'string' && obj.startsWith('data:image/')) {
+            const id = `img_${Date.now()}_${images.length}`
+            images.push({ id, data: obj })
+            return `[image:${id}]`
+          }
+          
+          if (Array.isArray(obj)) {
+            return obj.map(item => processBase64InObject(item))
+          }
+          
+          if (typeof obj === 'object') {
+            const result: any = {}
+            for (const [key, value] of Object.entries(obj)) {
+              result[key] = processBase64InObject(value)
+            }
+            return result
+          }
+          
+          return obj
+        }
+
+        // Обрабатываем сообщение и articleDraft
+        const processedMessage = processBase64InObject(message)
+        const processedDraft = processBase64InObject(articleBuilderStore.draft)
+
+        // Добавляем сообщение пользователя
+        const userMessage = {
+          role: 'user' as const,
+          content: processedMessage,
+          timestamp: new Date().toISOString(),
+          images,
+          user: {
+            id: userStore.user?.id || 'anonymous',
+            email: userStore.user?.email || '',
+            avatar: userStore.user?.avatar || '',
+            displayName: userStore.user?.displayName || userStore.user?.email || 'Anonymous User'
+          }
+        }
+
+        console.log('Adding user message to store:', userMessage)
+        this.messages = [...this.messages, userMessage]
+        saveState({ messages: this.messages })
+
+        console.log('Sending to API:', {
+          message: processedMessage,
+          sessionToken: this.sessionToken,
+          imagesCount: images.length
         })
 
-        const response = await $fetch<{ response: string }>('/api/aiagent', {
+        const response = await $fetch<{ answer: string; schema: any }>('/api/aiagent', {
           method: 'POST',
           body: {
-            message,
+            message: processedMessage,
             sessionToken: this.sessionToken,
-            articleDraft: articleBuilderStore.draft
+            articleDraft: processedDraft,
+            images
           }
         })
 
-        this.messages.push({
-          role: 'assistant',
-          content: response.response,
-          timestamp: new Date().toISOString()
-        })
+        // Обрабатываем ответ AI, восстанавливая изображения
+        let aiResponse = response.answer
+        if (images.length > 0) {
+          images.forEach(({ id, data }) => {
+            aiResponse = aiResponse.replace(`[image:${id}]`, data)
+          })
+        }
 
-        return response.response
+        const assistantMessage = {
+          role: 'assistant' as const,
+          content: aiResponse,
+          timestamp: new Date().toISOString(),
+          user: {
+            id: 'assistant',
+            email: 'ai@assistant.com',
+            avatar: '/images/ai-avatar.png',
+            displayName: 'AI Assistant'
+          }
+        }
+
+        console.log('Adding assistant message to store:', assistantMessage)
+        this.messages = [...this.messages, assistantMessage]
+        saveState({ messages: this.messages })
+
+        // Обновляем схему статьи, если она есть
+        if (response.schema) {
+          console.log('Received schema update:', response.schema)
+          articleBuilderStore.updateDraft(response.schema)
+        }
+
+        return aiResponse
       } catch (error) {
         console.error('Failed to send message to AI agent:', error)
         throw error
@@ -78,6 +235,7 @@ export const useAiAgentStore = defineStore('aiagent', {
     clearSession() {
       this.sessionToken = null
       this.messages = [welcomeMessage]
+      saveState({ sessionToken: null, messages: [welcomeMessage] })
     }
   }
 })

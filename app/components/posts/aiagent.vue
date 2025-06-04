@@ -2,7 +2,6 @@
   <div class="flex flex-col h-full">
     <!-- Header -->
     <div class="flex items-center justify-between p-4 border-b">
-      <h2 class="text-xl font-semibold">{{ $t('aiAgent.title') }}</h2>
       <div class="flex items-center gap-2">
         <UButton
           v-if="messages.length > 0"
@@ -33,11 +32,11 @@
           :message="message.content"
           :timestamp="new Date(message.timestamp).getTime()"
           :user="{
-            id: message.role,
-            email: message.role === 'user' ? userEmail : 'ai@assistant.com',
-            avatar: message.role === 'user' ? userAvatar : '/images/ai-avatar.png',
+            id: message.user?.id || message.role,
+            email: message.user?.email || (message.role === 'user' ? userEmail : 'ai@assistant.com'),
+            avatar: message.user?.avatar || (message.role === 'user' ? userAvatar : '/images/ai-avatar.png'),
             emailVerified: true,
-            displayName: message.role === 'user' ? $t('aiAgent.user') : $t('aiAgent.assistant'),
+            displayName: message.user?.displayName || (message.role === 'user' ? $t('aiAgent.user') : $t('aiAgent.assistant')),
             disabled: false,
             isAnonymous: false,
             providerData: [],
@@ -66,9 +65,9 @@
         >
           <template #avatar>
             <Avatar
-              :src="message.role === 'user' ? userAvatar : '/images/ai-avatar.png'"
-              :email="message.role === 'user' ? userEmail : 'ai@assistant.com'"
-              :alt="message.role === 'user' ? $t('aiAgent.user') : $t('aiAgent.assistant')"
+              :src="message.user?.avatar || (message.role === 'user' ? userAvatar : '/images/ai-avatar.png')"
+              :email="message.user?.email || (message.role === 'user' ? userEmail : 'ai@assistant.com')"
+              :alt="message.user?.displayName || (message.role === 'user' ? $t('aiAgent.user') : $t('aiAgent.assistant'))"
               size="sm"
             />
           </template>
@@ -79,7 +78,8 @@
     <!-- Input -->
     <ChatCreate
       :user-id="'assistant'"
-      @message-sent="handleMessageSent"
+      :disabled="isSending || aiAgentStore.isProcessing"
+      @message-sent.once="handleMessageSent"
     />
   </div>
 </template>
@@ -96,20 +96,38 @@ const { t } = useI18n()
 const aiAgentStore = useAiAgentStore()
 const userStore = useUserStore()
 const isResetting = ref(false)
+const isSending = ref(false)
 
 const messages = computed(() => aiAgentStore.messages)
 const userEmail = computed(() => userStore.user?.email || '')
 const userAvatar = computed(() => userStore.user?.avatar || '')
 
 const handleMessageSent = async (message: any) => {
+  console.log('handleMessageSent triggered with:', message)
+  
+  if (isSending.value) {
+    console.log('Message is already being sent, skipping')
+    return
+  }
+  
+  if (!message?.message) {
+    console.log('Invalid message format, skipping')
+    return
+  }
+  
   try {
+    isSending.value = true
+    console.log('Starting message send:', message.message)
     await aiAgentStore.sendMessage(message.message)
   } catch (error) {
+    console.error('Error sending message:', error)
     useToast().add({
       title: t('common.error'),
       description: t('aiAgent.messageError'),
       color: 'error'
     })
+  } finally {
+    isSending.value = false
   }
 }
 

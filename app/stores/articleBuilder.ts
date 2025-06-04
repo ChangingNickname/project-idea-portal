@@ -11,15 +11,50 @@ interface ArticleBuilderState {
   isEditing: boolean
 }
 
+const STORAGE_KEY = 'article_builder_panels'
+
+// Функция для загрузки состояния из sessionStorage
+const loadPanelState = (): Partial<ArticleBuilderState> => {
+  if (process.server) return {}
+  
+  try {
+    const storedState = sessionStorage.getItem(STORAGE_KEY)
+    return storedState ? JSON.parse(storedState) : {}
+  } catch (error) {
+    console.error('Failed to load article builder state from sessionStorage:', error)
+    return {}
+  }
+}
+
+// Функция для сохранения состояния в sessionStorage
+const savePanelState = (state: Partial<ArticleBuilderState>) => {
+  if (process.server) return
+
+  try {
+    const stateToSave = {
+      showCreate: state.showCreate,
+      showPreview: state.showPreview,
+      showAiAgent: state.showAiAgent,
+      leftPanel: state.leftPanel,
+      rightPanel: state.rightPanel
+    }
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave))
+  } catch (error) {
+    console.error('Failed to save article builder state to sessionStorage:', error)
+  }
+}
+
 export const useArticleBuilderStore = defineStore('articleBuilder', {
   state: (): ArticleBuilderState => {
     const userStore = useUserStore()
+    const savedState = loadPanelState()
+    
     return {
-      showCreate: true,
-      showPreview: false,
-      showAiAgent: false,
-      leftPanel: 'create',
-      rightPanel: null,
+      showCreate: savedState.showCreate ?? true,
+      showPreview: savedState.showPreview ?? false,
+      showAiAgent: savedState.showAiAgent ?? false,
+      leftPanel: savedState.leftPanel ?? 'create',
+      rightPanel: savedState.rightPanel ?? null,
       isEditing: false,
       draft: {
         title: '',
@@ -44,15 +79,18 @@ export const useArticleBuilderStore = defineStore('articleBuilder', {
     toggleCreate() {
       this.showCreate = !this.showCreate
       this.updatePanels()
+      savePanelState(this)
     },
 
     togglePreview() {
       this.showPreview = !this.showPreview
       this.updatePanels()
+      savePanelState(this)
     },
 
     toggleAiAgent() {
       this.showAiAgent = !this.showAiAgent
+      savePanelState(this)
     },
 
     updatePanels() {
@@ -73,6 +111,7 @@ export const useArticleBuilderStore = defineStore('articleBuilder', {
         this.leftPanel = null
         this.rightPanel = null
       }
+      savePanelState(this)
     },
 
     // Обновление черновика
