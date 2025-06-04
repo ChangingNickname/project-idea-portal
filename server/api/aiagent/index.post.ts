@@ -26,9 +26,10 @@ export default defineEventHandler(async (event) => {
     // 2. Call your AI service
     // 3. Return the response
 
-    // Always return schema with current state
+    // Always return schema with current state and increment title
     const schema = {
       ...articleDraft,
+      title: articleDraft.title ? `${articleDraft.title} +1` : 'New Title +1',
       lastUpdated: new Date().toISOString(),
       message: message, // Include the current message in schema
       status: 'processed' // Add status to track processing state

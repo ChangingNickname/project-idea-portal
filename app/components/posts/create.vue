@@ -260,10 +260,12 @@
 import { ref, watch, onMounted, onUnmounted, computed } from 'vue'
 import UserSearch from '~/components/user/search.vue'
 import { useUserStore } from '~/stores/user'
+import { useArticleBuilderStore } from '~/stores/articleBuilder'
 import Avatar from '~/components/user/Avatar.vue'
 
 const emit = defineEmits(['update'])
 const userStore = useUserStore()
+const articleBuilderStore = useArticleBuilderStore()
 const { t } = useI18n()
 
 type ExecutionPolicy = 'public' | 'contest'
@@ -469,5 +471,16 @@ onUnmounted(() => {
 // Вычисляемое свойство для определения, заблокирована ли форма
 const isDisabled = computed(() => {
   return props.disabled || form.value.status === 'published' || form.value.status === 'archived'
+})
+
+// Следим за внешними обновлениями в store
+watch(() => articleBuilderStore.lastExternalUpdate, (newTimestamp) => {
+  if (newTimestamp > 0) {
+    // Обновляем форму только если timestamp изменился
+    form.value = {
+      ...form.value,
+      ...articleBuilderStore.draft
+    }
+  }
 })
 </script>

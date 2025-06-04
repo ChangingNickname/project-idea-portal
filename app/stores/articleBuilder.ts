@@ -9,6 +9,7 @@ interface ArticleBuilderState {
   rightPanel: 'create' | 'preview' | null
   draft: Partial<Post>
   isEditing: boolean
+  lastExternalUpdate: number
 }
 
 const STORAGE_KEY = 'article_builder_panels'
@@ -56,6 +57,7 @@ export const useArticleBuilderStore = defineStore('articleBuilder', {
       leftPanel: savedState.leftPanel ?? 'create',
       rightPanel: savedState.rightPanel ?? null,
       isEditing: false,
+      lastExternalUpdate: 0,
       draft: {
         title: '',
         cover: null,
@@ -115,7 +117,7 @@ export const useArticleBuilderStore = defineStore('articleBuilder', {
     },
 
     // Обновление черновика
-    updateDraft(updates: Partial<Post>) {
+    updateDraft(updates: Partial<Post>, isExternal: boolean = false) {
       const userStore = useUserStore()
       const currentUser = userStore.user
 
@@ -143,11 +145,17 @@ export const useArticleBuilderStore = defineStore('articleBuilder', {
         this.isEditing = true
       }
 
+      // Обновляем черновик
       this.draft = {
         ...this.draft,
         ...updates,
         updatedAt: new Date().toISOString()
       } as Partial<Post>
+
+      // Если это внешнее обновление, обновляем timestamp
+      if (isExternal) {
+        this.lastExternalUpdate = Date.now()
+      }
     },
 
     // Сброс черновика

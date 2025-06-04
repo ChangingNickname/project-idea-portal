@@ -276,8 +276,11 @@ const gridClass = computed(() => {
 
 // Обработчик обновления формы
 const handleFormUpdate = (newForm: Partial<Post>) => {
-  store.updateDraft(newForm)
-  previewKey.value++
+  // Обновляем store только если это не внешнее обновление
+  if (store.lastExternalUpdate === 0 || Date.now() - store.lastExternalUpdate > 1000) {
+    store.updateDraft(newForm, false)
+    previewKey.value++
+  }
 }
 
 // Handle save/update
@@ -289,7 +292,8 @@ const handleSave = async () => {
     })
     
     if (response) {
-      store.updateDraft(response)
+      store.updateDraft(response, true)
+      previewKey.value++ // Обновляем превью после сохранения
       useToast().add({
         title: t('common.success'),
         description: store.draft.id ? t('common.postUpdated') : t('common.postCreated'),

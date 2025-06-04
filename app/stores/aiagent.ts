@@ -220,7 +220,20 @@ export const useAiAgentStore = defineStore('aiagent', {
         // Обновляем схему статьи, если она есть
         if (response.schema) {
           console.log('Received schema update:', response.schema)
-          articleBuilderStore.updateDraft(response.schema)
+          // Применяем изменения к articleBuilder с флагом внешнего обновления
+          articleBuilderStore.updateDraft(response.schema, true)
+          
+          // Обновляем сообщение ассистента, чтобы включить информацию об изменениях
+          const updatedMessage = {
+            ...assistantMessage,
+            content: `${aiResponse}\n\nArticle updated: ${response.schema.title}`
+          }
+          
+          this.messages = [...this.messages.slice(0, -1), updatedMessage]
+          saveState({ messages: this.messages })
+        } else {
+          this.messages = [...this.messages, assistantMessage]
+          saveState({ messages: this.messages })
         }
 
         return aiResponse

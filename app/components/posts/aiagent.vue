@@ -79,7 +79,7 @@
     <ChatCreate
       :user-id="'assistant'"
       :disabled="isSending || aiAgentStore.isProcessing"
-      @message-sent.once="handleMessageSent"
+      @message-sent="handleMessageSent"
     />
   </div>
 </template>
