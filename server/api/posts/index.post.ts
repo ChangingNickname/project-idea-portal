@@ -14,10 +14,10 @@ export default defineEventHandler(async (event) => {
     }
 
     const body = await readBody(event)
-    const { title, cover, annotation, keywords, domain, content, executionPolicy, maxParticipants, deadline } = body
+    const { title, cover, annotation, keywords, domain, content, deadline } = body
 
     // Validate required fields
-    if (!title || !annotation || !keywords || !domain || !content || !executionPolicy) {
+    if (!title || !annotation || !keywords || !domain || !content) {
       throw createError({
         statusCode: 400,
         message: 'Missing required fields'
@@ -37,8 +37,6 @@ export default defineEventHandler(async (event) => {
       keywords,
       domain,
       content,
-      executionPolicy,
-      maxParticipants: maxParticipants || null,
       deadline: deadline || null,
       status: 'draft',
       ownerId: userRecord.uid,

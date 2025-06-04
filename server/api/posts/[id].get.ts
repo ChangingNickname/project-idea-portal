@@ -1,5 +1,6 @@
 import { db } from '~~/server/utils/firebase-admin'
 import { defineEventHandler, createError } from 'h3'
+import { checkAuth } from '~~/server/utils/auth'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -28,11 +29,45 @@ export default defineEventHandler(async (event) => {
       ...postDoc.data()
     } as Post
 
-    // Only allow published posts
-    if (post.status !== 'published') {
+    // Если пост опубликован, возвращаем его без проверки авторизации
+    if (post.status === 'published') {
+      // Fetch author profiles
+      const authorProfiles = await Promise.all(
+        (post.authorId || []).map(async (authorId: string) => {
+          const profileDoc = await db.collection('profiles').doc(authorId).get()
+          if (profileDoc.exists) {
+            return {
+              id: profileDoc.id,
+              ...profileDoc.data()
+            }
+          }
+          return null
+        })
+      )
+
+      return {
+        ...post,
+        author: authorProfiles.filter(Boolean)
+      }
+    }
+
+    // Для неопубликованных постов проверяем авторизацию
+    const authResult = await checkAuth(event)
+    if (!authResult.isAuthenticated || !authResult.currentUserId) {
       throw createError({
-        statusCode: 404,
-        message: 'Post not found'
+        statusCode: 401,
+        message: 'Требуется авторизация'
+      })
+    }
+
+    // Проверяем, является ли пользователь владельцем или автором
+    const isOwner = post.ownerId === authResult.currentUserId
+    const isAuthor = post.authorId?.includes(authResult.currentUserId)
+
+    if (!isOwner && !isAuthor) {
+      throw createError({
+        statusCode: 403,
+        message: 'Only the post owner or author can access unpublished posts'
       })
     }
 

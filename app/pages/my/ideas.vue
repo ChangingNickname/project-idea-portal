@@ -122,7 +122,6 @@
         <div class="text-gray-500 dark:text-gray-400">
           <Icon name="lucide:users" class="w-12 h-12 mx-auto mb-4" />
           <p>{{ t('common.notParticipating') }}</p>
-          <p class="text-sm mt-2">Debug: {{ JSON.stringify(participantPosts) }}</p>
         </div>
       </div>
 
@@ -317,19 +316,11 @@ const loadPosts = async () => {
       }
     })
     console.log('Participant posts response:', participantResponse)
-    console.log('Participant posts before filter:', participantResponse.posts)
-    
-    // Filter posts where user is not owner
-    participantPosts.value = participantResponse.posts.filter(post => {
-      const isNotOwner = post.ownerId !== userStore.user?.id
-      console.log('Post:', post.id, 'isNotOwner:', isNotOwner)
-      return isNotOwner
-    })
-    console.log('Participant posts after filter:', participantPosts.value)
+    participantPosts.value = participantResponse.posts
 
     // Add check for empty array
     if (participantPosts.value.length === 0) {
-      console.log('No participant posts after filtering')
+      console.log('No participant posts found')
     }
   } catch (error) {
     console.error('Error loading posts:', error)

@@ -19,8 +19,6 @@ declare global {
         views: number // Количество просмотров
         likes: number // Количество лайков
         deadline?: string
-        executionPolicy: 'contest' | 'public'
-        currentParticipants: number
         viewedBy: string[] // ID пользователей, просмотревших пост
     }
 }

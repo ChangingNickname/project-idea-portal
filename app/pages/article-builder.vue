@@ -210,8 +210,6 @@ const loadPost = async (id: string) => {
         domain: response.domain || '',
         content: response.content || '',
         status: response.status || 'draft',
-        executionPolicy: response.executionPolicy || 'public',
-        currentParticipants: response.currentParticipants || 0,
         views: response.views || 0,
         likes: response.likes || 0,
         owner: response.owner,
@@ -297,12 +295,18 @@ const handleSave = async () => {
         color: 'success'
       })
     }
-  } catch (error) {
+  } catch (error: any) {
+    console.error('Error saving post:', error)
     useToast().add({
       title: t('common.error'),
-      description: t('common.saveError'),
+      description: error.data?.message || t('common.saveError'),
       color: 'error'
     })
+    
+    // If unauthorized, redirect to home
+    if (error.statusCode === 401 || error.statusCode === 403) {
+      navigateTo('/')
+    }
   }
 }
 
@@ -347,12 +351,18 @@ const handlePublish = async () => {
         color: 'success'
       })
     }
-  } catch (error) {
+  } catch (error: any) {
+    console.error('Error publishing post:', error)
     useToast().add({
       title: t('common.error'),
-      description: t('common.publishError'),
+      description: error.data?.message || t('common.publishError'),
       color: 'error'
     })
+    
+    // If unauthorized, redirect to home
+    if (error.statusCode === 401 || error.statusCode === 403) {
+      navigateTo('/')
+    }
   }
 }
 
@@ -377,12 +387,18 @@ const handleUnpublish = async () => {
         color: 'success'
       })
     }
-  } catch (error) {
+  } catch (error: any) {
+    console.error('Error unpublishing post:', error)
     useToast().add({
       title: t('common.error'),
-      description: t('common.unpublishError'),
+      description: error.data?.message || t('common.unpublishError'),
       color: 'error'
     })
+    
+    // If unauthorized, redirect to home
+    if (error.statusCode === 401 || error.statusCode === 403) {
+      navigateTo('/')
+    }
   }
 }
 
@@ -407,12 +423,18 @@ const handleArchive = async () => {
         color: 'success'
       })
     }
-  } catch (error) {
+  } catch (error: any) {
+    console.error('Error archiving post:', error)
     useToast().add({
       title: t('common.error'),
-      description: t('common.archiveError'),
+      description: error.data?.message || t('common.archiveError'),
       color: 'error'
     })
+    
+    // If unauthorized, redirect to home
+    if (error.statusCode === 401 || error.statusCode === 403) {
+      navigateTo('/')
+    }
   }
 }
 
@@ -437,12 +459,18 @@ const handleRestore = async () => {
         color: 'success'
       })
     }
-  } catch (error) {
+  } catch (error: any) {
+    console.error('Error restoring post:', error)
     useToast().add({
       title: t('common.error'),
-      description: t('common.restoreError'),
+      description: error.data?.message || t('common.restoreError'),
       color: 'error'
     })
+    
+    // If unauthorized, redirect to home
+    if (error.statusCode === 401 || error.statusCode === 403) {
+      navigateTo('/')
+    }
   }
 }
 </script>

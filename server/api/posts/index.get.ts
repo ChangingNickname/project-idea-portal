@@ -15,6 +15,7 @@ export default defineEventHandler(async (event) => {
       authorId,
       authorIds,
       ownerId,
+      participantId,
       sortBy = 'createdAt',
       sortOrder = 'desc',
       executionPolicy,
@@ -50,6 +51,10 @@ export default defineEventHandler(async (event) => {
     if (ownerId) {
       console.log('Searching for posts with ownerId:', ownerId)
       postsQuery = postsQuery.where('ownerId', '==', ownerId as string)
+    }
+    if (participantId) {
+      console.log('Searching for posts where user is participant:', participantId)
+      postsQuery = postsQuery.where('participants', 'array-contains', participantId as string)
     }
     if (executionPolicy) {
       postsQuery = postsQuery.where('executionPolicy', '==', executionPolicy as string)

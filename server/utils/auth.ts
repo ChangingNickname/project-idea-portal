@@ -1,78 +1,87 @@
-import { auth } from './firebase-admin'
-import { H3Event } from 'h3'
+import { auth, type AuthResult } from './firebase-admin'
+import { getRequestHeader, createError } from 'h3'
+import type { H3Event } from 'h3'
 
-export interface AuthResult {
+export interface AuthResponse {
   isAuthenticated: boolean
   currentUserId: string | null
-  error?: {
-    statusCode: number
-    message: string
-  }
+  emailVerified: boolean
 }
 
-export const checkAuth = async (event: H3Event): Promise<AuthResult> => {
-  const cookies = event.node.req.headers.cookie
-  if (!cookies) {
-    return {
-      isAuthenticated: false,
-      currentUserId: null,
-      error: {
-        statusCode: 401,
-        message: 'Отсутствует токен авторизации'
-      }
-    }
-  }
-
-  const token = cookies.split(';')
-    .find(c => c.trim().startsWith('auth_token='))
-    ?.split('=')[1]
-
-  if (!token) {
-    return {
-      isAuthenticated: false,
-      currentUserId: null,
-      error: {
-        statusCode: 401,
-        message: 'Отсутствует токен авторизации'
-      }
-    }
-  }
-
+export const checkAuth = async (event: H3Event): Promise<AuthResponse> => {
   try {
+    const authHeader = getRequestHeader(event, 'authorization')
+    if (!authHeader) {
+      // Проверяем куки, если нет заголовка
+      const cookies = getRequestHeader(event, 'cookie')
+      if (!cookies) {
+        return {
+          isAuthenticated: false,
+          currentUserId: null,
+          emailVerified: false
+        }
+      }
+
+      const tokenCookie = cookies.split(';').find(c => c.trim().startsWith('auth_token='))
+      if (!tokenCookie) {
+        return {
+          isAuthenticated: false,
+          currentUserId: null,
+          emailVerified: false
+        }
+      }
+
+      const [, token] = tokenCookie.split('=')
+      if (!token) {
+        return {
+          isAuthenticated: false,
+          currentUserId: null,
+          emailVerified: false
+        }
+      }
+
+      const decodedToken = await auth.verifyIdToken(token.trim())
+      
+      return {
+        isAuthenticated: true,
+        currentUserId: decodedToken.uid,
+        emailVerified: decodedToken.email_verified || false
+      }
+    }
+
+    const token = authHeader.replace('Bearer ', '')
     const decodedToken = await auth.verifyIdToken(token)
+    
     return {
       isAuthenticated: true,
-      currentUserId: decodedToken.uid
+      currentUserId: decodedToken.uid,
+      emailVerified: decodedToken.email_verified || false
     }
   } catch (error) {
-    console.error('Ошибка проверки токена:', error)
+    console.error('Auth error:', error)
     return {
       isAuthenticated: false,
       currentUserId: null,
-      error: {
-        statusCode: 401,
-        message: 'Недействительный токен'
-      }
+      emailVerified: false
     }
   }
 }
 
-export const requireAuth = async (event: H3Event, uid?: string): Promise<AuthResult> => {
+export const requireAuth = async (event: H3Event, uid?: string): Promise<AuthResponse> => {
   const authResult = await checkAuth(event)
 
   if (!authResult.isAuthenticated) {
-    return authResult
+    throw createError({
+      statusCode: 401,
+      message: 'Unauthorized'
+    })
   }
 
   if (uid && authResult.currentUserId !== uid) {
-    return {
-      isAuthenticated: false,
-      currentUserId: null,
-      error: {
-        statusCode: 403,
-        message: 'Нет доступа к этому ресурсу'
-      }
-    }
+    throw createError({
+      statusCode: 403,
+      message: 'Access denied'
+    })
   }
 
   return authResult

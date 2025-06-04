@@ -5,8 +5,8 @@ export default defineEventHandler(async (event) => {
   const db = getFirestore()
 
   // Проверяем авторизацию
-  const authResult = await checkAuth(event)
-  if (!authResult.isAuthenticated || !authResult.currentUserId) {
+  const { isAuthenticated, currentUserId } = await checkAuth(event)
+  if (!isAuthenticated || !currentUserId) {
     throw createError({
       statusCode: 401,
       message: 'Требуется авторизация'
@@ -16,7 +16,7 @@ export default defineEventHandler(async (event) => {
   try {
     // Получаем все непрочитанные сообщения для текущего пользователя
     const messagesRef = db.collection('messages')
-      .where('to_user_id', '==', authResult.currentUserId)
+      .where('to_user_id', '==', currentUserId)
       .where('read_at', '==', null)
 
     const messages = await messagesRef.get()

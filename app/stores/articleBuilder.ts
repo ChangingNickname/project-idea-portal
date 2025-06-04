@@ -29,14 +29,13 @@ export const useArticleBuilderStore = defineStore('articleBuilder', {
         domain: '',
         content: '',
         status: 'draft',
-        executionPolicy: 'public',
-        currentParticipants: 0,
         views: 0,
         likes: 0,
         owner: userStore.user || undefined,
         ownerId: userStore.user?.id,
         author: userStore.user ? [userStore.user] : [],
-        authorId: userStore.user ? [userStore.user.id] : []
+        authorId: userStore.user ? [userStore.user.id] : [],
+        deadline: undefined
       }
     }
   },
@@ -123,14 +122,13 @@ export const useArticleBuilderStore = defineStore('articleBuilder', {
         domain: '',
         content: '',
         status: 'draft',
-        executionPolicy: 'public',
-        currentParticipants: 0,
         views: 0,
         likes: 0,
         owner: userStore.user || undefined,
         ownerId: userStore.user?.id,
         author: userStore.user ? [userStore.user] : [],
-        authorId: userStore.user ? [userStore.user.id] : []
+        authorId: userStore.user ? [userStore.user.id] : [],
+        deadline: undefined
       }
       this.isEditing = false
     }

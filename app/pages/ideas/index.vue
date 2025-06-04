@@ -1,76 +1,76 @@
 <template>
     <div class="container mx-auto px-4 py-8">
-
-      
       <!-- Заголовок и поиск -->
-      <div class="flex items-center justify-between mb-6">
-              <!-- Search Section -->
-      <div class="w-full mx-auto mb-16">
-        <div class="relative">
-          <UInput
-            v-model="searchQuery"
-            :placeholder="$t('common.search')"
-            icon="i-heroicons-magnifying-glass"
-            size="xl"
-            class="w-full"
-            @keyup.enter="handleSearch"
-          />
+      <div class="flex flex-col gap-6 mb-8">
+        <!-- Search Section -->
+        <div class="w-full">
+          <div class="relative flex items-center">
+            <UInput
+              v-model="searchQuery"
+              :placeholder="$t('common.search')"
+              icon="i-heroicons-magnifying-glass"
+              size="xl"
+              class="w-full"
+              @keyup.enter="handleSearch"
+            />
+            <UButton
+              color="primary"
+              size="xl"
+              class="absolute right-0 top-1/2 -translate-y-1/2"
+              @click="handleSearch"
+            >
+              {{ $t('common.search') }}
+            </UButton>
+          </div>
+        </div>
+
+        <!-- Фильтры и сортировка -->
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-center gap-4">
+            <UDropdownMenu
+              :items="sortOptions"
+              :model-value="sortBy"
+              class="w-64"
+              @update:model-value="handleSortChange"
+            >
+              <UButton
+                color="neutral"
+                variant="soft"
+                class="w-64 justify-between"
+              >
+                <div class="flex items-center gap-2">
+                  <UIcon :name="getSortIcon(sortBy)" class="w-4 h-4" />
+                  <span>{{ getSortLabel(sortBy) }}</span>
+                </div>
+                <UIcon name="i-lucide-chevron-down" class="w-4 h-4" />
+              </UButton>
+            </UDropdownMenu>
+            <UButton
+              :icon="sortDirection === 'asc' ? 'i-lucide-arrow-up' : 'i-lucide-arrow-down'"
+              color="neutral"
+              variant="ghost"
+              @click="toggleSortDirection"
+            />
+          </div>
           <UButton
             color="primary"
-            size="xl"
-            class="absolute right-0 top-1/2 -translate-y-1/2"
-            @click="handleSearch"
+            variant="soft"
+            @click="handleNewProject"
           >
-            {{ $t('common.search') }}
+            <Icon name="lucide:plus" class="w-5 h-5 mr-2" />
+            {{ t('common.createProject') }}
           </UButton>
         </div>
-      </div>
-      </div>
-  
-      <!-- Фильтры и сортировка -->
-      <div class="flex items-center gap-4 mb-6">
-        <UDropdownMenu
-          :items="sortOptions"
-          :model-value="sortBy"
-          class="w-64"
-          @update:model-value="handleSortChange"
-        >
-          <UButton
-            color="neutral"
-            variant="soft"
-            class="w-64 justify-between"
-          >
-            <div class="flex items-center gap-2">
-              <UIcon :name="getSortIcon(sortBy)" class="w-4 h-4" />
-              <span>{{ getSortLabel(sortBy) }}</span>
-            </div>
-            <UIcon name="i-lucide-chevron-down" class="w-4 h-4" />
-          </UButton>
-        </UDropdownMenu>
-        <UButton
-          :icon="sortDirection === 'asc' ? 'i-lucide-arrow-up' : 'i-lucide-arrow-down'"
-          color="neutral"
-          variant="ghost"
-          @click="toggleSortDirection"
-        />
-        <UButton
-          color="primary"
-          variant="soft"
-          @click="handleNewProject"
-        >
-          <Icon name="lucide:plus" class="w-5 h-5 mr-2" />
-          {{ t('common.createProject') }}
-        </UButton>
       </div>
   
       <!-- Список статей -->
       <div v-if="loading" class="flex justify-center py-8">
         <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-primary animate-spin" />
       </div>
-      <div v-else-if="posts.length === 0" class="text-center py-12">
-        <div class="text-gray-500 dark:text-gray-400">
+      <div v-else-if="posts.length === 0" class="flex flex-col items-center justify-center py-12">
+        <div class="text-center">
           <Icon name="lucide:file-question" class="w-12 h-12 mx-auto mb-4" />
-          <p>{{ t('common.noArticlesFound') }}</p>
+          <p class="text-gray-500 dark:text-gray-400">{{ t('common.noArticlesFound') }}</p>
           <UButton
             color="primary"
             variant="soft"
@@ -81,11 +81,11 @@
           </UButton>
         </div>
       </div>
-      <div v-else>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div v-for="post in posts" :key="post.id" class="relative">
+      <div v-else class="flex flex-col gap-6">
+        <div class="flex flex-wrap gap-8">
+          <div v-for="post in posts" :key="post.id" class="flex flex-col w-full md:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1.33rem)]">
             <PostsCard :post="post" />
-            <div class="mt-2 text-right">
+            <div class="m-2 flex justify-end">
               <UButton
                 v-if="post.status === 'draft' && post.ownerId === userStore.user?.id"
                 :to="`/article-builder?id=${post.id}`"
@@ -100,7 +100,7 @@
           </div>
         </div>
         <!-- Пагинация -->
-        <div class="flex justify-center mt-6">
+        <div class="flex justify-center ">
           <template v-if="pagination.pages > 1">
             <UPagination
               v-model="currentPage"
@@ -161,13 +161,33 @@
       }
 
       // Всегда используем эндпоинт поиска
-      const response = await $fetch<{ posts: any[], pagination: any }>('/api/posts/search', { query })
-      posts.value = Array.isArray(response.posts)
-        ? response.posts.map((post: any) => ({
-            ...post,
-            author: Array.isArray(post.author) ? post.author.filter(Boolean) : []
-          }))
-        : []
+      const response = await $fetch<{ posts: Post[], pagination: any }>('/api/posts/search', { query })
+      console.log('Posts response:', response.posts)
+      
+      // Загружаем профили авторов для каждого поста
+      const postsWithAuthors = await Promise.all(response.posts.map(async (post) => {
+        // Загружаем профиль владельца
+        const owner = post.ownerId ? await $fetch<User>(`/api/user/${post.ownerId}/profile`) : null
+        
+        // Загружаем профили авторов
+        const authors = await Promise.all(
+          (post.authorId || [])
+            .filter(id => id !== post.ownerId) // Исключаем владельца из списка авторов
+            .map(id => $fetch<User>(`/api/user/${id}/profile`))
+        )
+
+        // Создаем новый объект поста с правильными типами
+        const processedPost: Post = {
+          ...post,
+          owner: owner as User, // Приводим к типу User, так как мы знаем, что owner не может быть null
+          author: [owner, ...authors].filter(Boolean) as User[] // Фильтруем null и приводим к типу User[]
+        }
+
+        return processedPost
+      }))
+      
+      console.log('Processed posts with authors:', postsWithAuthors)
+      posts.value = postsWithAuthors
       pagination.value = response.pagination
     } catch (error) {
       console.error('Error loading posts:', error)

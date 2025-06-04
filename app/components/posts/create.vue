@@ -202,70 +202,6 @@
       />
     </div>
 
-    <!-- Политика выполнения -->
-    <div>
-      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-        {{ t('post.create.executionPolicy') }}
-      </label>
-      <div class="mt-1 flex gap-4">
-        <label class="inline-flex items-center">
-          <input
-            type="radio"
-            v-model="form.executionPolicy"
-            value="public"
-            :disabled="isDisabled"
-            class="form-radio text-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
-          />
-          <span class="ml-2">{{ t('post.create.public') }}</span>
-        </label>
-        <label class="inline-flex items-center">
-          <input
-            type="radio"
-            v-model="form.executionPolicy"
-            value="contest"
-            :disabled="isDisabled"
-            class="form-radio text-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
-          />
-          <span class="ml-2">{{ t('post.create.contest') }}</span>
-        </label>
-      </div>
-    </div>
-
-    <!-- Максимальное количество участников -->
-    <div>
-      <label for="maxParticipants" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-        {{ t('post.create.maxParticipants') }}
-      </label>
-      <div class="mt-1 flex items-center gap-4">
-        <input
-          id="maxParticipants"
-          v-model.number="form.currentParticipants"
-          type="number"
-          min="1"
-          :disabled="isDisabled"
-          class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          :placeholder="t('post.create.maxParticipantsPlaceholder')"
-        />
-      </div>
-      <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-        {{ t('post.create.maxParticipantsHelp') }}
-      </p>
-    </div>
-
-    <!-- Дедлайн (только для конкурса) -->
-    <div v-if="form.executionPolicy === 'contest'">
-      <label for="deadline" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-        {{ t('post.create.deadline') }}
-      </label>
-      <input
-        id="deadline"
-        v-model="form.deadline"
-        type="datetime-local"
-        :disabled="isDisabled"
-        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
-      />
-    </div>
-
     <!-- Кнопки управления -->
     <div class="flex justify-end">
       <UButton
@@ -351,9 +287,8 @@ const form = ref<Post>({
   status: 'draft',
   views: 0,
   likes: 0,
-  executionPolicy: 'public',
-  currentParticipants: 0,
-  viewedBy: []
+  viewedBy: [],
+  deadline: undefined
 })
 
 // Вычисляемое свойство для дополнительных авторов
@@ -397,8 +332,6 @@ onMounted(() => {
       status: props.modelValue.status || 'draft',
       views: props.modelValue.views || 0,
       likes: props.modelValue.likes || 0,
-      executionPolicy: (props.modelValue.executionPolicy as ExecutionPolicy) || 'public',
-      currentParticipants: props.modelValue.currentParticipants || 0,
       viewedBy: props.modelValue.viewedBy || [],
       deadline: props.modelValue.deadline
     }
@@ -465,9 +398,8 @@ const resetForm = () => {
     status: 'draft',
     views: 0,
     likes: 0,
-    executionPolicy: 'public',
-    currentParticipants: 0,
-    viewedBy: []
+    viewedBy: [],
+    deadline: undefined
   }
   emit('update', form.value)
 }

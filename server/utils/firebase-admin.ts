@@ -1,6 +1,6 @@
 import { initializeApp, getApps, cert, type App } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
-import { getAuth } from 'firebase-admin/auth'
+import { getAuth, type DecodedIdToken } from 'firebase-admin/auth'
 
 let app: App | undefined
 
@@ -19,3 +19,8 @@ if (!getApps().length) {
 export { app }
 export const db = getFirestore(app as App)
 export const auth = getAuth(app as App)
+
+// Define AuthResult type
+export interface AuthResult extends DecodedIdToken {
+  uid: string
+}

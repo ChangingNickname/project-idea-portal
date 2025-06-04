@@ -1,8 +1,18 @@
 import { db } from '~~/server/utils/firebase-admin'
 import { defineEventHandler, createError, readBody } from 'h3'
+import { checkAuth } from '~~/server/utils/auth'
 
 export default defineEventHandler(async (event) => {
   try {
+    // Check authentication
+    const authResult = await checkAuth(event)
+    if (!authResult.isAuthenticated || !authResult.currentUserId) {
+      throw createError({
+        statusCode: 401,
+        message: 'Требуется авторизация'
+      })
+    }
+
     // Get post ID from route params
     const id = event.context.params?.id
     if (!id) {
@@ -29,6 +39,25 @@ export default defineEventHandler(async (event) => {
       throw createError({
         statusCode: 404,
         message: 'Post not found'
+      })
+    }
+
+    // Check if user is the owner or author
+    const postData = postDoc.data()
+    if (!postData) {
+      throw createError({
+        statusCode: 404,
+        message: 'Пост не найден'
+      })
+    }
+
+    const isOwner = postData.ownerId === authResult.currentUserId
+    const isAuthor = postData.authorId?.includes(authResult.currentUserId)
+
+    if (!isOwner && !isAuthor) {
+      throw createError({
+        statusCode: 403,
+        message: 'Только владелец или автор может редактировать пост'
       })
     }
 

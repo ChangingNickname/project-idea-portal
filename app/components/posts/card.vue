@@ -1,7 +1,7 @@
 <template>
   <div v-if="post">
     <NuxtLink 
-      :to="props.isFull ? undefined : `/posts/${post.id}`"
+      :to="props.isFull ? undefined : `/ideas/${post.id}`"
       :class="[
         'block bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow duration-200 overflow-hidden relative',
         props.isFull ? 'cursor-default' : 'cursor-pointer w-128 h-128',
@@ -26,7 +26,7 @@
           />
         </NuxtLink>
         <NuxtLink 
-          :to="`/posts/${post.id}`"
+          :to="`/ideas/${post.id}`"
           class="p-1 rounded-full bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-800 transition-colors"
           @click.stop
         >
