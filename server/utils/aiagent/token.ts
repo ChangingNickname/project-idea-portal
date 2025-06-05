@@ -5,7 +5,7 @@ import { getRequestIP } from 'h3'
 import { getRequestHeader } from 'h3'
 import crypto from 'crypto'
 
-interface TokenPayload {
+export interface TokenPayload {
   type: 'ai-agent-session'
   timestamp: number
   deviceId: string

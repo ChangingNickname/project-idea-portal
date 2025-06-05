@@ -1,52 +1,27 @@
-import { validateToken, getTokenFromEvent } from '../../utils/aiagent/token'
+import { ask } from '~~/server/utils/aiagent/model'
+import { H3Error } from 'h3'
 
 export default defineEventHandler(async (event) => {
   try {
-    const config = useRuntimeConfig()
     const body = await readBody(event)
-    const { message, articleDraft, images } = body
-
-    // Validate session token
-    const sessionToken = await getTokenFromEvent(event)
-    if (!config.jwtSecret) {
-      throw new Error('JWT secret is not configured')
-    }
-    validateToken(sessionToken, { jwtSecret: config.jwtSecret as string }, event)
-
-    // Log session info
-    console.log('AI Agent Session:', {
-      token: sessionToken,
-      message,
-      articleDraft,
-      imagesCount: images?.length || 0
-    })
-
-    // Here you would typically:
-    // 1. Process the message and article draft
-    // 2. Call your AI service
-    // 3. Return the response
-
-    // Always return schema with current state and increment title
-    const schema = {
-      ...articleDraft,
-      title: articleDraft.title ? `${articleDraft.title} +1` : 'New Title +1',
-      lastUpdated: new Date().toISOString(),
-      message: message, // Include the current message in schema
-      status: 'processed' // Add status to track processing state
+    if (!body?.message) {
+      throw createError({
+        statusCode: 400,
+        message: 'Message is required'
+      })
     }
 
-    // Log schema to console
-    console.log('Article Schema:', JSON.stringify(schema, null, 2))
-
-    return {
-      answer: `Processed message: "${message}"`,
-      schema
+    const { text, schema } = await ask(body.message, event, body.articleDraft)
+    return { 
+      answer: text,
+      schema: schema || body.articleDraft || null
     }
   } catch (error) {
-    console.error('Error processing AI agent message:', error)
+    console.error('Error in AI agent request:', error)
+    const h3Error = error as H3Error
     throw createError({
-      statusCode: 500,
-      message: 'Failed to process AI agent message'
+      statusCode: h3Error.statusCode || 500,
+      message: h3Error.message || 'Internal server error'
     })
   }
 }) 

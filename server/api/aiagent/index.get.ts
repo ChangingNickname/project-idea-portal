@@ -1,4 +1,4 @@
-import { validateToken, getTokenFromEvent } from '../../utils/aiagent/token'
+import { validateToken, getTokenFromEvent } from '~~/server/utils/aiagent/token'
 
 export default defineEventHandler(async (event) => {
   try {
