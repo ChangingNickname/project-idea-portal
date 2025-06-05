@@ -7,12 +7,31 @@ import { H3Event } from 'h3';
 import { validateToken, getTokenFromEvent } from './token';
 import jwt from 'jsonwebtoken';
 import type { TokenPayload } from './token';
+import { $fetch } from 'ofetch';
+import type { Post } from '~/types/posts';
 
 // configure a Genkit instance
 export const ai = genkit({
   plugins: [googleAI()],
   model: googleAI.model('gemini-2.0-flash'), // set default model
 });
+
+interface ArticleDraft {
+  title: string;
+  annotation: string;
+  content: string;
+  keywords: string[];
+  sections: Array<{
+    title: string;
+    content: string;
+    subsections?: Array<{
+      title: string;
+      content: string;
+    }>;
+  }>;
+  references: string[];
+  lastUpdated: string;
+}
 
 interface TaskOrder {
   analyzeText: boolean;
@@ -21,6 +40,7 @@ interface TaskOrder {
   maxIterations: number;
   needUserClarification: boolean;
   needFeatureInfo: boolean;
+  updateArticle: boolean;
 }
 
 interface TaskAnalysisState {
@@ -31,6 +51,7 @@ interface TaskAnalysisState {
   searchResults: string[];
   userClarification: string | null;
   featureInfo: string | null;
+  articleDraft: ArticleDraft | null;
 }
 
 interface ChatMessage {
@@ -51,7 +72,17 @@ interface ChatMessage {
 
 interface ChatSession {
   messages: ChatMessage[];
-  send: (message: string, articleDraft?: any) => Promise<{ text: string; schema?: any }>;
+  send: (message: string, articleDraft?: ArticleDraft) => Promise<{ text: string; schema?: ArticleDraft }>;
+}
+
+interface SearchResult {
+  posts: Post[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
 }
 
 // Define the task analysis graph
@@ -220,7 +251,133 @@ taskAnalysisGraph.addNode(
   )
 );
 
-// Add node for processing tasks
+// Add node for knowledge base search
+taskAnalysisGraph.addNode(
+  defineFlow(
+    {
+      name: 'searchKnowledgeBase'
+    },
+    async (state: TaskAnalysisState) => {
+      try {
+        // Search in knowledge base using posts API
+        const searchResult = await $fetch<SearchResult>('/api/posts/search', {
+          params: {
+            search: state.message,
+            limit: 5 // Limit to 5 most relevant results
+          }
+        });
+
+        // Format search results
+        const formattedResults = searchResult.posts.map(post => ({
+          title: post.title,
+          annotation: post.annotation,
+          content: post.content,
+          keywords: post.keywords,
+          author: post.author.map(a => a.displayName).join(', ')
+        }));
+
+        // Add formatted results to state
+        state.searchResults.push(
+          'Knowledge Base Search Results:',
+          ...formattedResults.map(result => 
+            `Title: ${result.title}\n` +
+            `Annotation: ${result.annotation}\n` +
+            `Content: ${result.content}\n` +
+            `Keywords: ${result.keywords.join(', ')}\n` +
+            `Authors: ${result.author}\n`
+          )
+        );
+
+        return {
+          state,
+          nextNode: state.currentIteration < state.taskOrder.maxIterations ? 'processTasks' : 'finalizeOutput'
+        };
+      } catch (error) {
+        console.error('Error searching knowledge base:', error);
+        state.searchResults.push('Error searching knowledge base. Please try again later.');
+        return {
+          state,
+          nextNode: 'finalizeOutput'
+        };
+      }
+    }
+  )
+);
+
+// Add node for article building
+taskAnalysisGraph.addNode(
+  defineFlow(
+    {
+      name: 'buildArticle'
+    },
+    async (state: TaskAnalysisState) => {
+      const prompt = `
+        Based on the conversation history and search results, update the article draft.
+        
+        Current Article Draft:
+        ${state.articleDraft ? JSON.stringify(state.articleDraft, null, 2) : 'No draft yet'}
+        
+        Conversation Context:
+        ${state.context}
+        
+        Search Results:
+        ${state.searchResults.join('\n')}
+        
+        User's Latest Message:
+        ${state.message}
+        
+        Update the article draft in markdown format. Include:
+        1. Title
+        2. Annotation
+        3. Main content with sections and subsections
+        4. Keywords
+        5. References
+        
+        Return the updated article as a JSON object with the following structure:
+        {
+          "title": string,
+          "annotation": string,
+          "content": string (in markdown),
+          "keywords": string[],
+          "sections": [
+            {
+              "title": string,
+              "content": string,
+              "subsections": [
+                {
+                  "title": string,
+                  "content": string
+                }
+              ]
+            }
+          ],
+          "references": string[],
+          "lastUpdated": string (ISO date)
+        }
+      `;
+
+      const { text } = await ai.generate(prompt);
+      
+      try {
+        const updatedDraft = JSON.parse(text) as ArticleDraft;
+        state.articleDraft = {
+          ...updatedDraft,
+          lastUpdated: new Date().toISOString()
+        };
+      } catch (error) {
+        console.error('Error updating article draft:', error);
+        // Keep existing draft if update fails
+      }
+
+      return {
+        state,
+        nextNode: 'finalizeOutput'
+      };
+    }
+  )
+);
+
+// Update processTasks node to include article building
 taskAnalysisGraph.addNode(
   defineFlow(
     {
@@ -230,26 +387,34 @@ taskAnalysisGraph.addNode(
       if (state.currentIteration >= state.taskOrder.maxIterations) {
         return {
           state,
-          nextNode: 'finalizeOutput'
+          nextNode: state.taskOrder.updateArticle ? 'buildArticle' : 'finalizeOutput'
         };
       }
 
       // Process current iteration
       state.currentIteration++;
       
-      // Here we would implement actual search logic
-      // For now, just add a placeholder result
+      // Execute tasks based on taskOrder
+      if (state.taskOrder.searchKnowledgeBase) {
+        return {
+          state,
+          nextNode: 'searchKnowledgeBase'
+        };
+      }
+
+      // Here we would implement other search logic (web search, etc.)
       state.searchResults.push(`Search iteration ${state.currentIteration} completed`);
 
       return {
         state,
-        nextNode: state.currentIteration < state.taskOrder.maxIterations ? 'processTasks' : 'finalizeOutput'
+        nextNode: state.currentIteration < state.taskOrder.maxIterations ? 'processTasks' : 
+                 state.taskOrder.updateArticle ? 'buildArticle' : 'finalizeOutput'
       };
     }
   )
 );
 
-// Update finalizeOutput node
+// Update finalizeOutput node to include article draft
 taskAnalysisGraph.addNode(
   defineFlow(
     {
@@ -265,8 +430,10 @@ taskAnalysisGraph.addNode(
         Search Results: ${state.searchResults.join('\n')}
         User Clarification: ${state.userClarification || 'Not needed'}
         Feature Info: ${state.featureInfo || 'Not needed'}
+        Article Draft: ${state.articleDraft ? JSON.stringify(state.articleDraft, null, 2) : 'No draft yet'}
         
         Generate a helpful and informative response that addresses the user's needs.
+        If there's an article draft, include information about the updates made.
       `;
 
       const { text } = await ai.generate(prompt);
@@ -276,6 +443,7 @@ taskAnalysisGraph.addNode(
         searchResults: state.searchResults,
         userClarification: state.userClarification,
         featureInfo: state.featureInfo,
+        articleDraft: state.articleDraft,
         finalResponse: text
       };
     }
@@ -300,7 +468,7 @@ export async function createValidatedChat(event: H3Event) {
   if (!chatSession) {
     const newSession: ChatSession = {
       messages: [],
-      send: async (message: string, articleDraft?: any) => {
+      send: async (message: string, articleDraft?: ArticleDraft) => {
         // Add user message to history
         const userMessage: ChatMessage = {
           role: 'user',
@@ -364,7 +532,7 @@ export async function createValidatedChat(event: H3Event) {
   return chatSession;
 }
 
-export async function ask(message: string, event: H3Event, articleDraft?: any) {
+export async function ask(message: string, event: H3Event, articleDraft?: ArticleDraft) {
   const chat = await createValidatedChat(event);
   const context = chat.messages
     .map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
@@ -398,7 +566,7 @@ export async function ask(message: string, event: H3Event, articleDraft?: any) {
 
   return { 
     text: result.finalResponse,
-    schema: articleDraft || null,
+    schema: result.articleDraft || articleDraft || null,
     taskOrder: result.taskOrder,
     userClarification: result.userClarification,
     featureInfo: result.featureInfo

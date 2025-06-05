@@ -1,4 +1,5 @@
 import { validateToken, getTokenFromEvent } from '~~/server/utils/aiagent/token'
+import { createValidatedChat } from '~~/server/utils/aiagent/model'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -11,10 +12,19 @@ export default defineEventHandler(async (event) => {
     }
     validateToken(sessionToken, { jwtSecret: config.jwtSecret as string }, event)
 
-    // Return current session status
+    // Get chat session
+    const chat = await createValidatedChat(event)
+    
+    // Get last message and article draft
+    const lastMessage = chat.messages[chat.messages.length - 1]
+    const articleDraft = lastMessage?.schema || null
+
+    // Return current session status and article draft
     return {
       status: 'active',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      answer: lastMessage?.content || '',
+      schema: articleDraft
     }
   } catch (error) {
     console.error('Error validating AI agent session:', error)

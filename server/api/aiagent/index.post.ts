@@ -1,27 +1,41 @@
+import { validateToken, getTokenFromEvent } from '~~/server/utils/aiagent/token'
 import { ask } from '~~/server/utils/aiagent/model'
-import { H3Error } from 'h3'
 
 export default defineEventHandler(async (event) => {
   try {
+    const config = useRuntimeConfig()
+    
+    // Validate session token
+    const sessionToken = await getTokenFromEvent(event)
+    if (!config.jwtSecret) {
+      throw new Error('JWT secret is not configured')
+    }
+    validateToken(sessionToken, { jwtSecret: config.jwtSecret as string }, event)
+
+    // Get request body
     const body = await readBody(event)
-    if (!body?.message) {
+    const { message, articleDraft } = body
+
+    if (!message) {
       throw createError({
         statusCode: 400,
         message: 'Message is required'
       })
     }
 
-    const { text, schema } = await ask(body.message, event, body.articleDraft)
-    return { 
-      answer: text,
-      schema: schema || body.articleDraft || null
+    // Process message and get response
+    const result = await ask(message, event, articleDraft)
+
+    // Return response in the correct format
+    return {
+      answer: result.text,
+      schema: result.schema || articleDraft // Return original schema if no changes
     }
   } catch (error) {
-    console.error('Error in AI agent request:', error)
-    const h3Error = error as H3Error
+    console.error('Error processing AI agent message:', error)
     throw createError({
-      statusCode: h3Error.statusCode || 500,
-      message: h3Error.message || 'Internal server error'
+      statusCode: 500,
+      message: 'Failed to process message'
     })
   }
 }) 
