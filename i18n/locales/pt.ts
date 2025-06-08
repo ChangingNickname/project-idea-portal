@@ -170,6 +170,8 @@ export default {
     restoreError: 'Falha ao restaurar',
     loadError: 'Falha ao carregar publicação',
     search: 'Pesquisar',
+    dateRange: 'Intervalo de datas',
+    selectDate: 'Selecionar data',
   },
   message: {
     title: 'Mensagens',

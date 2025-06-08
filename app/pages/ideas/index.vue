@@ -22,6 +22,168 @@
               {{ $t('common.search') }}
             </UButton>
           </div>
+          
+          <!-- Advanced Search -->
+          <div class="mt-4">
+            <UButton
+              color="neutral"
+              variant="ghost"
+              class="w-full flex items-center justify-between"
+              @click="isAdvancedSearchOpen = !isAdvancedSearchOpen"
+            >
+              <span>{{ $t('common.advancedSearch') }}</span>
+              <UIcon
+                :name="isAdvancedSearchOpen ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
+                class="w-5 h-5"
+              />
+            </UButton>
+            
+            <div v-if="isAdvancedSearchOpen" class="mt-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+              <UForm :schema="searchSchema" :state="searchState" class="space-y-6" @submit="handleAdvancedSearch">
+                <div class="flex flex-col gap-6">
+                  <!-- Title -->
+                  <UFormField :label="$t('post.create.title')" name="title">
+                    <UInput v-model="searchState.title" :placeholder="$t('post.create.titlePlaceholder')" class="w-full" />
+                  </UFormField>
+                  
+                  <!-- Domain -->
+                  <UFormField :label="$t('post.create.domain')" name="domain">
+                    <UInput v-model="searchState.domain" :placeholder="$t('post.create.domainPlaceholder')" class="w-full" />
+                  </UFormField>
+                  
+                  <!-- Keywords -->
+                  <UFormField :label="$t('post.create.keywords')" name="keywords">
+                    <UInput v-model="searchState.keywords" :placeholder="$t('post.create.keywordsPlaceholder')" class="w-full" />
+                  </UFormField>
+                  
+                  <!-- Authors -->
+                  <UFormField :label="$t('post.authors')" name="authors">
+                    <div class="space-y-4">
+                      <UInput
+                        v-model="searchQuery"
+                        :placeholder="$t('common.searchUsers')"
+                        icon="i-lucide-search"
+                        class="w-full"
+                        :loading="pendingAuthors"
+                        @input="debouncedAuthorSearch"
+                      />
+                      
+                      <div v-if="pendingAuthors" class="flex justify-center py-4">
+                        <UIcon name="i-heroicons-arrow-path" class="w-6 h-6 text-primary animate-spin" />
+                      </div>
+
+                      <div v-else-if="errorAuthors" class="text-center text-red-500 py-2">
+                        {{ errorAuthors.message }}
+                      </div>
+
+                      <div v-else-if="authors.length" class="space-y-2">
+                        <div
+                          v-for="user in authors"
+                          :key="user.id"
+                          class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                        >
+                          <UCheckbox
+                            :model-value="selectedAuthors.includes(user.id)"
+                            @update:model-value="(value: boolean) => {
+                              if (value) {
+                                selectedAuthors.push(user.id)
+                                searchState.authors = [...selectedAuthors]
+                                searchFilterStore.addAuthor(user.id)
+                              } else {
+                                selectedAuthors = selectedAuthors.filter((id: string) => id !== user.id)
+                                searchState.authors = [...selectedAuthors]
+                                searchFilterStore.removeAuthor(user.id)
+                              }
+                            }"
+                            :label="user.displayName || user.email || t('common.anonymousUser')"
+                            class="flex-1"
+                          />
+                          <Avatar
+                            :src="user.avatar || undefined"
+                            :email="user.email || undefined"
+                            :alt="user.displayName || t('common.userAvatar')"
+                            :isActive="user.emailVerified"
+                            size="sm"
+                          />
+                        </div>
+                      </div>
+
+                      <!-- Выбранные авторы -->
+                      <div v-if="selectedAuthors.length" class="space-y-2">
+                        <div
+                          v-for="userId in selectedAuthors"
+                          :key="userId"
+                          class="relative group"
+                        >
+                          <UserCard
+                            :user="authors.find((u: User) => u.id === userId) || null"
+                            class="w-full"
+                          />
+                          <UButton
+                            color="red"
+                            variant="soft"
+                            size="xs"
+                            class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                            @click="() => {
+                              selectedAuthors = selectedAuthors.filter((id: string) => id !== userId)
+                              searchState.authors = [...selectedAuthors]
+                              searchFilterStore.removeAuthor(userId)
+                            }"
+                          >
+                            <UIcon name="i-lucide-x" class="w-4 h-4" />
+                          </UButton>
+                        </div>
+                      </div>
+                    </div>
+                  </UFormField>
+                  
+                  <!-- Date Range -->
+                  <UFormField :label="$t('common.dateRange')" name="dateRange">
+                    <UPopover>
+                      <UButton color="neutral" variant="subtle" icon="i-lucide-calendar" class="w-full justify-between">
+                        <template v-if="searchState.dateRange?.start">
+                          <template v-if="searchState.dateRange?.end">
+                            {{ df.format(searchState.dateRange.start.toDate(getLocalTimeZone())) }} - {{ df.format(searchState.dateRange.end.toDate(getLocalTimeZone())) }}
+                          </template>
+                          <template v-else>
+                            {{ df.format(searchState.dateRange.start.toDate(getLocalTimeZone())) }}
+                          </template>
+                        </template>
+                        <template v-else>
+                          {{ $t('common.selectDate') }}
+                        </template>
+                      </UButton>
+
+                      <template #content>
+                        <UCalendar 
+                          v-model="searchState.dateRange" 
+                          class="p-2" 
+                          :number-of-months="2" 
+                          range 
+                        />
+                      </template>
+                    </UPopover>
+                  </UFormField>
+                </div>
+                
+                <div class="flex justify-end gap-2">
+                  <UButton
+                    color="neutral"
+                    variant="ghost"
+                    @click="resetAdvancedSearch"
+                  >
+                    {{ $t('common.reset') }}
+                  </UButton>
+                  <UButton
+                    type="submit"
+                    color="primary"
+                  >
+                    {{ $t('common.search') }}
+                  </UButton>
+                </div>
+              </UForm>
+            </div>
+          </div>
         </div>
 
         <!-- Фильтры и сортировка -->
@@ -120,6 +282,11 @@
   import { useUserStore } from '~/stores/user'
   import { useI18n } from 'vue-i18n'
   import { useRoute } from 'vue-router'
+  import { z } from 'zod'
+  import { CalendarDate, type DateValue, DateFormatter, getLocalTimeZone } from '@internationalized/date'
+  import Avatar from '~/components/user/Avatar.vue'
+  import UserCard from '~/components/user/Card.vue'
+  import { useSearchFilterStore } from '~/stores/searchFilter'
   
   const { t } = useI18n()
   const loading = ref(true)
@@ -139,11 +306,133 @@
   const sortOptions = [
     { label: t('common.sortByCreationDate'), value: 'createdAt', icon: 'i-lucide-clock' },
     { label: t('common.sortByViews'), value: 'views', icon: 'i-lucide-eye' },
-    { label: t('common.sortByLikes'), value: 'likes', icon: 'i-lucide-heart' },
-    { label: t('common.sortByComments'), value: 'comments', icon: 'i-lucide-message-circle' }
+    { label: t('common.sortByLikes'), value: 'likes', icon: 'i-lucide-heart' }
   ]
   
   const userStore = useUserStore()
+  
+  const isAdvancedSearchOpen = ref(false)
+
+  const df = new DateFormatter('ru-RU', {
+    dateStyle: 'medium'
+  })
+
+  const searchFilterStore = useSearchFilterStore()
+
+  const searchSchema = z.object({
+    title: z.string().optional(),
+    domain: z.string().optional(),
+    keywords: z.string().optional(),
+    dateRange: z.object({
+      start: z.custom<DateValue>().optional(),
+      end: z.custom<DateValue>().optional()
+    }).optional(),
+    authors: z.array(z.string()).optional()
+  })
+
+  type SearchState = z.infer<typeof searchSchema>
+
+  const searchState = ref<SearchState>({
+    title: searchFilterStore.title,
+    domain: searchFilterStore.domain,
+    keywords: searchFilterStore.keywords,
+    dateRange: {
+      start: searchFilterStore.dateRange.start ? new CalendarDate(
+        searchFilterStore.dateRange.start.getFullYear(),
+        searchFilterStore.dateRange.start.getMonth() + 1,
+        searchFilterStore.dateRange.start.getDate()
+      ) : undefined,
+      end: searchFilterStore.dateRange.end ? new CalendarDate(
+        searchFilterStore.dateRange.end.getFullYear(),
+        searchFilterStore.dateRange.end.getMonth() + 1,
+        searchFilterStore.dateRange.end.getDate()
+      ) : undefined
+    },
+    authors: searchFilterStore.selectedAuthors
+  })
+  
+  const selectedAuthors = ref<string[]>(searchFilterStore.selectedAuthors)
+  const authors = ref<User[]>([])
+  const pendingAuthors = ref(false)
+  const errorAuthors = ref<Error | null>(null)
+
+  // Загружаем профили выбранных авторов при монтировании и при изменении selectedAuthors
+  watch(selectedAuthors, async (newAuthors) => {
+    if (newAuthors.length) {
+      const authorsData = await Promise.all(
+        newAuthors.map((id: string) => $fetch<User>(`/api/user/${id}/profile`))
+      )
+      authors.value = authorsData
+    } else {
+      authors.value = []
+    }
+  }, { immediate: true })
+
+  // Поиск авторов
+  const searchAuthors = async () => {
+    if (!searchQuery.value) {
+      authors.value = selectedAuthors.value.length ? authors.value : []
+      return
+    }
+
+    pendingAuthors.value = true
+    errorAuthors.value = null
+
+    try {
+      const response = await $fetch<{
+        users: User[]
+        pagination: {
+          total: number
+          page: number
+          limit: number
+          pages: number
+        }
+      }>('/api/user/search', {
+        query: {
+          q: searchQuery.value,
+          page: 1,
+          limit: 10
+        }
+      })
+
+      // Добавляем выбранных авторов в результаты поиска, если их там нет
+      const selectedUsers = authors.value.filter(user => selectedAuthors.value.includes(user.id))
+      const newUsers = response.users.filter(user => !selectedAuthors.value.includes(user.id))
+      authors.value = [...selectedUsers, ...newUsers]
+    } catch (e) {
+      errorAuthors.value = e as Error
+      console.error('Ошибка поиска авторов:', e)
+    } finally {
+      pendingAuthors.value = false
+    }
+  }
+
+  // Дебаунс поиска авторов
+  const debouncedAuthorSearch = useDebounceFn(() => {
+    searchAuthors()
+  }, 300)
+  
+  const resetAdvancedSearch = () => {
+    searchState.value = {
+      title: '',
+      domain: '',
+      keywords: '',
+      dateRange: {
+        start: undefined,
+        end: undefined
+      },
+      authors: []
+    }
+    selectedAuthors.value = []
+    authors.value = []
+    searchQuery.value = ''
+    searchFilterStore.reset()
+  }
+  
+  const handleAdvancedSearch = () => {
+    currentPage.value = 1
+    loadPosts()
+  }
   
   // Загрузка статей
   const loadPosts = async () => {
@@ -154,13 +443,48 @@
         limit: itemsPerPage.value,
         search: searchQuery.value,
         sortBy: sortBy.value,
-        sortDirection: sortDirection.value
+        sortDirection: sortDirection.value,
+        title: searchState.value.title,
+        domain: searchState.value.domain,
+        keywords: searchState.value.keywords,
+        authors: searchState.value.authors
       }
+      
+      // Добавляем даты из dateRange если они есть
+      if (searchState.value.dateRange?.start) {
+        const date = searchState.value.dateRange.start as CalendarDate
+        query.dateFrom = new Date(date.year, date.month - 1, date.day).toISOString()
+        searchFilterStore.setDateRange(
+          new Date(date.year, date.month - 1, date.day),
+          searchState.value.dateRange.end ? new Date(
+            (searchState.value.dateRange.end as CalendarDate).year,
+            (searchState.value.dateRange.end as CalendarDate).month - 1,
+            (searchState.value.dateRange.end as CalendarDate).day
+          ) : null
+        )
+      }
+      if (searchState.value.dateRange?.end) {
+        const date = searchState.value.dateRange.end as CalendarDate
+        query.dateTo = new Date(date.year, date.month - 1, date.day).toISOString()
+      }
+      
+      // Удаляем пустые значения
+      Object.keys(query).forEach(key => {
+        if (query[key] === '' || query[key] === null || query[key] === undefined || (Array.isArray(query[key]) && !query[key].length)) {
+          delete query[key]
+        }
+      })
+
+      // Сохраняем значения в store
+      searchFilterStore.setTitle(searchState.value.title || '')
+      searchFilterStore.setDomain(searchState.value.domain || '')
+      searchFilterStore.setKeywords(searchState.value.keywords || '')
+      searchFilterStore.setSelectedAuthors(searchState.value.authors || [])
+
       if (userStore.user) {
         query.ownerId = userStore.user.id
       }
 
-      // Всегда используем эндпоинт поиска
       const response = await $fetch<{ posts: Post[], pagination: any }>('/api/posts/search', { query })
       console.log('Posts response:', response.posts)
       

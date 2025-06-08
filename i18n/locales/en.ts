@@ -169,6 +169,8 @@ export default {
     restoreError: 'Failed to restore post',
     loadError: 'Failed to load post',
     search: 'Search',
+    dateRange: 'Date Range',
+    selectDate: 'Select date',
   },
   message: {
     status: {

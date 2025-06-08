@@ -170,6 +170,8 @@ export default {
     restoreError: 'Échec de la restauration',
     loadError: 'Échec du chargement de la publication',
     search: 'Rechercher',
+    dateRange: 'Plage de dates',
+    selectDate: 'Sélectionner une date',
   },
   message: {
     title: 'Messages',

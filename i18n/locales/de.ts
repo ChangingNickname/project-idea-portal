@@ -170,6 +170,8 @@ export default {
     restoreError: 'Wiederherstellung fehlgeschlagen',
     loadError: 'Beitrag konnte nicht geladen werden',
     search: 'Suchen',
+    dateRange: 'Datumsbereich',
+    selectDate: 'Datum auswählen',
   },
   message: {
     title: 'Nachrichten',

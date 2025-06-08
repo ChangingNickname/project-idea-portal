@@ -170,6 +170,8 @@ export default {
     restoreError: 'Impossibile ripristinare',
     loadError: 'Impossibile caricare il post',
     search: 'Cerca',
+    dateRange: 'Intervallo di date',
+    selectDate: 'Seleziona data',
   },
   message: {
     title: 'Messaggi',

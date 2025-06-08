@@ -170,6 +170,8 @@ export default {
     restoreError: '復元に失敗しました',
     loadError: '投稿の読み込みに失敗しました',
     search: '検索',
+    dateRange: '日付範囲',
+    selectDate: '日付を選択',
   },
   message: {
     title: 'メッセージ',

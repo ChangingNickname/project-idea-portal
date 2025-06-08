@@ -7,7 +7,7 @@ import { validateToken, getTokenFromEvent } from './token';
 import jwt from 'jsonwebtoken';
 import type { TokenPayload } from './token';
 import { $fetch } from 'ofetch';
-
+// TODO: ADD RAG FOR KNOWLEDGE BASE
 // configure a Genkit instance
 const ai = genkit({
   plugins: [googleAI()],

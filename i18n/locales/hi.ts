@@ -170,6 +170,8 @@ export default {
     restoreError: 'पुनर्स्थापित करने में विफल',
     loadError: 'पोस्ट लोड करने में विफल',
     search: 'खोजें',
+    dateRange: 'दिनांक सीमा',
+    selectDate: 'दिनांक चुनें',
   },
   message: {
     title: 'संदेश',

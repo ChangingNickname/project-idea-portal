@@ -170,6 +170,8 @@ export default {
     restoreError: 'Error al restaurar',
     loadError: 'Error al cargar la publicación',
     search: 'Buscar',
+    dateRange: 'Rango de fechas',
+    selectDate: 'Seleccionar fecha',
   },
   message: {
     title: 'Mensajes',

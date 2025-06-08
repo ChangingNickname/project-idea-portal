@@ -170,6 +170,8 @@ export default {
     restoreError: '복원 실패',
     loadError: '게시물 로드 실패',
     search: '검색',
+    dateRange: '날짜 범위',
+    selectDate: '날짜 선택',
   },
   message: {
     title: '메시지',

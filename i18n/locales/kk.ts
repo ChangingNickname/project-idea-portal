@@ -168,6 +168,8 @@ export default {
     restoreError: 'Қалпына келтіру сәтсіз аяқталды',
     loadError: 'Жарияланымды жүктеу сәтсіз аяқталды',
     search: 'Іздеу',
+    dateRange: 'Күн аралығы',
+    selectDate: 'Күнді таңдаңыз',
   },
   message: {
     status: {

@@ -170,6 +170,8 @@ export default {
     restoreError: '恢复失败',
     loadError: '加载帖子失败',
     search: '搜索',
+    dateRange: '日期范围',
+    selectDate: '选择日期',
   },
   message: {
     title: '消息',
