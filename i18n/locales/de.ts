@@ -13,7 +13,7 @@ export default {
     settings: 'Einstellungen',
     signOut: 'Abmelden',
     // User search translations
-    searchUsers: 'Benutzer suchen...',
+    searchUsers: 'Benutzer suchen',
     select: 'Auswählen',
     selected: 'Ausgewählt',
     showBlocked: 'Blockierte Benutzer anzeigen',
@@ -118,7 +118,6 @@ export default {
     sortByCreationDate: 'Nach Erstellungsdatum sortieren',
     sortByViews: 'Nach Aufrufen sortieren',
     sortByLikes: 'Nach Likes sortieren',
-    sortByComments: 'Nach Kommentaren sortieren',
     createProject: 'Projekt erstellen',
     createFirstProject: 'Erstellen Sie Ihr erstes Projekt',
     myProjects: 'Meine Projekte',
@@ -129,7 +128,7 @@ export default {
     failedToLoadPosts: 'Beiträge konnten nicht geladen werden',
     loading: 'Wird geladen...',
     articles: 'Artikel',
-    createFirstArticle: 'Erstellen Sie Ihren ersten Artikel',
+    createFirstArticle: 'Ersten Artikel erstellen',
     noArticlesFound: 'Keine Artikel gefunden',
     failedToLoadArticles: 'Artikel konnten nicht geladen werden',
     chat: {
@@ -172,6 +171,8 @@ export default {
     search: 'Suchen',
     dateRange: 'Datumsbereich',
     selectDate: 'Datum auswählen',
+    advancedSearch: 'Erweiterte Suche',
+    reset: 'Zurücksetzen',
   },
   message: {
     title: 'Nachrichten',
@@ -216,7 +217,7 @@ export default {
       keywordsPlaceholder: 'Schlüsselwörter durch Kommas getrennt eingeben',
       add: 'Hinzufügen',
       domain: 'Domain',
-      domainPlaceholder: 'Beispiel: web-development',
+      domainPlaceholder: 'Domain eingeben',
       content: 'Inhalt',
       contentPlaceholder: 'Artikelinhalt im Markdown-Format schreiben',
       executionPolicy: 'Ausführungsrichtlinie',

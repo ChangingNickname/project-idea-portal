@@ -73,7 +73,7 @@
                       </div>
 
                       <div v-else-if="errorAuthors" class="text-center text-red-500 py-2">
-                        {{ errorAuthors.message }}
+                        {{ $t('common.error') }}
                       </div>
 
                       <div v-else-if="authors.length" class="space-y-2">
@@ -95,13 +95,13 @@
                                 searchFilterStore.removeAuthor(user.id)
                               }
                             }"
-                            :label="user.displayName || user.email || t('common.anonymousUser')"
+                            :label="user.displayName || user.email || $t('common.anonymousUser')"
                             class="flex-1"
                           />
                           <Avatar
                             :src="user.avatar || undefined"
                             :email="user.email || undefined"
-                            :alt="user.displayName || t('common.userAvatar')"
+                            :alt="user.displayName || $t('common.userAvatar')"
                             :isActive="user.emailVerified"
                             size="sm"
                           />
@@ -220,7 +220,7 @@
             @click="handleNewProject"
           >
             <Icon name="lucide:plus" class="w-5 h-5 mr-2" />
-            {{ t('common.createProject') }}
+            {{ $t('common.createProject') }}
           </UButton>
         </div>
       </div>
@@ -232,14 +232,14 @@
       <div v-else-if="posts.length === 0" class="flex flex-col items-center justify-center py-12">
         <div class="text-center">
           <Icon name="lucide:file-question" class="w-12 h-12 mx-auto mb-4" />
-          <p class="text-gray-500 dark:text-gray-400">{{ t('common.noArticlesFound') }}</p>
+          <p class="text-gray-500 dark:text-gray-400">{{ $t('common.noArticlesFound') }}</p>
           <UButton
             color="primary"
             variant="soft"
             class="mt-4"
             @click="handleNewProject"
           >
-            {{ t('common.createFirstArticle') }}
+            {{ $t('common.createFirstArticle') }}
           </UButton>
         </div>
       </div>
@@ -256,7 +256,7 @@
                 class="inline-flex items-center"
               >
                 <Icon name="lucide:edit" class="w-5 h-5 mr-2" />
-                {{ t('common.edit') }}
+                {{ $t('common.edit') }}
               </UButton>
             </div>
           </div>
@@ -357,7 +357,7 @@
   const errorAuthors = ref<Error | null>(null)
 
   // Загружаем профили выбранных авторов при монтировании и при изменении selectedAuthors
-  watch(selectedAuthors, async (newAuthors) => {
+  watch(selectedAuthors, async (newAuthors: string[]) => {
     if (newAuthors.length) {
       const authorsData = await Promise.all(
         newAuthors.map((id: string) => $fetch<User>(`/api/user/${id}/profile`))
@@ -396,8 +396,8 @@
       })
 
       // Добавляем выбранных авторов в результаты поиска, если их там нет
-      const selectedUsers = authors.value.filter(user => selectedAuthors.value.includes(user.id))
-      const newUsers = response.users.filter(user => !selectedAuthors.value.includes(user.id))
+      const selectedUsers = authors.value.filter((user: User) => selectedAuthors.value.includes(user.id))
+      const newUsers = response.users.filter((user: User) => !selectedAuthors.value.includes(user.id))
       authors.value = [...selectedUsers, ...newUsers]
     } catch (e) {
       errorAuthors.value = e as Error

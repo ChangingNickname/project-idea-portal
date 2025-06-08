@@ -12,7 +12,7 @@ export default {
     settings: 'Настройки',
     signOut: 'Выйти',
     // User search translations
-    searchUsers: 'Поиск пользователей...',
+    searchUsers: 'Поиск пользователей',
     select: 'Выбрать',
     selected: 'Выбрано',
     showBlocked: 'Показать заблокированных',
@@ -182,6 +182,7 @@ export default {
     archived: 'В архиве',
     dateRange: 'Диапазон дат',
     selectDate: 'Выберите дату',
+    reset: 'Сбросить',
   },
   message: {
     title: 'Сообщения',
@@ -226,7 +227,7 @@ export default {
       keywordsPlaceholder: 'Введите ключевые слова через запятую',
       add: 'Добавить',
       domain: 'Домен',
-      domainPlaceholder: 'Пример: web-development',
+      domainPlaceholder: 'Введите домен',
       content: 'Содержание',
       contentPlaceholder: 'Напишите содержание статьи в формате Markdown',
       executionPolicy: 'Политика выполнения',
