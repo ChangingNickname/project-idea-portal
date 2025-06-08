@@ -3,16 +3,52 @@
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-2xl font-bold">{{ $t('navigation.mails') }}</h1>
       
-      <!-- Search -->
-      <UInput
-        v-model="searchQuery"
-        :placeholder="t('common.searchByNameOrEmail')"
-        icon="i-lucide-search"
-        class="w-64"
-        :loading="pending"
-        @input="debouncedSearch"
-      />
+      <!-- New Chat Button -->
+      <UButton
+        color="primary"
+        icon="i-lucide-plus"
+        @click="showUserSearch = true"
+      >
+        {{ t('common.newChat') }}
+      </UButton>
     </div>
+
+    <!-- User Search Modal -->
+    <Transition
+      enter-active-class="transition duration-200 ease-out"
+      enter-from-class="transform scale-95 opacity-0"
+      enter-to-class="transform scale-100 opacity-100"
+      leave-active-class="transition duration-150 ease-in"
+      leave-from-class="transform scale-100 opacity-100"
+      leave-to-class="transform scale-95 opacity-0"
+    >
+      <div v-if="showUserSearch" class="fixed inset-0 z-50 flex items-center justify-center p-16">
+        <div
+          class="fixed inset-0 bg-black/50"
+          @click="showUserSearch = false"
+        />
+
+        <div
+          class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-3xl max-h-[calc(100vh-2rem)] overflow-y-auto"
+        >
+          <button
+            class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            @click="showUserSearch = false"
+          >
+            <UIcon name="i-lucide-x" class="w-6 h-6" />
+          </button>
+
+          <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white pr-8">
+            {{ t('common.newChat') }}
+          </h2>
+
+          <UserSearch
+            :multiple="false"
+            @select="handleStartChat"
+          />
+        </div>
+      </div>
+    </Transition>
 
     <!-- Filters and sorting -->
     <div class="flex items-center gap-4 mb-6">
@@ -52,23 +88,14 @@
       </div>
 
       <div v-else v-for="chat in filteredChats" :key="chat.userId" class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-        <NuxtLink :to="`/user/${chat.userId}/chat`" class="flex items-center justify-between">
-          <div class="flex items-center gap-4">
-            <UserAvatar
-              :src="chat.user.avatar"
-              :email="chat.user.email"
-              :alt="chat.user.displayName"
-              :isActive="chat.user.emailVerified"
-              size="md"
+        <div class="flex items-center justify-between">
+          <div class="flex-1">
+            <UserCard 
+              :user="{
+                ...chat.user,
+                displayName: chat.user.displayName || chat.user.email
+              }" 
             />
-            <div>
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
-                {{ chat.user.displayName || chat.user.email }}
-              </h2>
-              <p class="text-sm text-gray-500 dark:text-gray-400">
-                {{ chat.lastMessage?.message || $t('chat.noMessages') }}
-              </p>
-            </div>
           </div>
           <div class="flex items-center gap-4">
             <div class="text-sm text-gray-500 dark:text-gray-400">
@@ -79,9 +106,14 @@
               :text="unreadCount(chat.userId)"
               size="3xl"
             />
-            <UIcon name="i-lucide-external-link" class="w-4 h-4 text-gray-400" />
+            <NuxtLink :to="`/user/${chat.userId}/chat`" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+              <UIcon name="i-lucide-external-link" class="w-4 h-4" />
+            </NuxtLink>
           </div>
-        </NuxtLink>
+        </div>
+        <div v-if="chat.lastMessage" class="mt-2 text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
+          {{ chat.lastMessage.message }}
+        </div>
       </div>
 
       <!-- Pagination -->
@@ -94,17 +126,19 @@
             :items-per-page="itemsPerPage"
           />
         </template>
-        <template v-else>
-        </template>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from '#imports'
 import { useDebounceFn } from '@vueuse/core'
 import { useUnreadMessagesStore } from '~/stores/unreadMessages'
+import UserCard from '~/components/user/Card.vue'
+import Avatar from '~/components/user/Avatar.vue'
+import UserSearch from '~/components/user/search.vue'
+import { z } from 'zod'
 
 const { t } = useI18n()
 
@@ -130,7 +164,6 @@ interface Chat {
 
 const chats = ref<Chat[]>([])
 const unreadStore = useUnreadMessagesStore()
-const searchQuery = ref('')
 const pending = ref(false)
 const sortBy = ref('lastMessage')
 const sortDirection = ref<'asc' | 'desc'>('desc')
@@ -142,6 +175,7 @@ const pagination = ref({
   limit: 20,
   pages: 1
 })
+const showUserSearch = ref(false)
 
 const sortOptions = [
   { 
@@ -179,14 +213,8 @@ const formatDate = (date: string | undefined) => {
 const filteredChats = computed(() => {
   let result = [...chats.value]
 
-  // Search
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    result = result.filter(chat => 
-      chat.user.displayName?.toLowerCase().includes(query) ||
-      chat.user.email.toLowerCase().includes(query)
-    )
-  }
+  // Исключаем чат с AI ассистентом
+  result = result.filter(chat => chat.userId !== 'assistant')
 
   // Sort
   result.sort((a, b) => {
@@ -226,6 +254,13 @@ const toggleSortDirection = () => {
 const loadChats = async () => {
   pending.value = true
   try {
+    const query: any = {
+      page: currentPage.value,
+      limit: itemsPerPage.value,
+      sortBy: sortBy.value,
+      sortDirection: sortDirection.value
+    }
+
     const response = await $fetch<{
       chats: Chat[]
       pagination: {
@@ -234,15 +269,7 @@ const loadChats = async () => {
         limit: number
         pages: number
       }
-    }>('/api/user/chats', {
-      query: {
-        page: currentPage.value,
-        limit: itemsPerPage.value,
-        search: searchQuery.value,
-        sortBy: sortBy.value,
-        sortDirection: sortDirection.value
-      }
-    })
+    }>('/api/user/chats', { query })
     
     chats.value = response.chats
     pagination.value = response.pagination
@@ -258,12 +285,6 @@ watch([currentPage, sortBy, sortDirection], () => {
   loadChats()
 })
 
-// Debounce search
-const debouncedSearch = useDebounceFn(() => {
-  currentPage.value = 1 // Reset page on search
-  loadChats()
-}, 300)
-
 const handleSortChange = (value: string) => {
   sortBy.value = value
 }
@@ -274,6 +295,58 @@ const getSortIcon = (value: string) => {
 
 const getSortLabel = (value: string) => {
   return sortOptions.find(option => option.value === value)?.label || t('common.sortByMessageDate')
+}
+
+const searchQuery = ref('')
+const users = ref<User[]>([])
+const pendingUsers = ref(false)
+const errorUsers = ref<Error | null>(null)
+
+// Search users
+const searchUsers = async () => {
+  if (!searchQuery.value) {
+    users.value = []
+    return
+  }
+
+  pendingUsers.value = true
+  errorUsers.value = null
+
+  try {
+    const response = await $fetch<{
+      users: User[]
+      pagination: {
+        total: number
+        page: number
+        limit: number
+        pages: number
+      }
+    }>('/api/user/search', {
+      query: {
+        q: searchQuery.value,
+        page: 1,
+        limit: 10
+      }
+    })
+
+    users.value = response.users
+  } catch (e) {
+    errorUsers.value = e as Error
+    console.error('Error searching users:', e)
+  } finally {
+    pendingUsers.value = false
+  }
+}
+
+// Debounce user search
+const debouncedUserSearch = useDebounceFn(() => {
+  searchUsers()
+}, 300)
+
+// Start chat with selected user
+const handleStartChat = async (userId: string) => {
+  navigateTo(`/user/${userId}/chat`)
+  showUserSearch.value = false
 }
 
 onMounted(() => {
