@@ -10,8 +10,6 @@
             <UButton
               :color="store.showCreate ? 'primary' : 'neutral'"
               variant="soft"
-              :disabled="!canEditPost"
-              :class="{ 'opacity-50 cursor-not-allowed': !canEditPost }"
               @click="store.toggleCreate"
             >
               <Icon name="lucide:edit" class="w-5 h-5 mr-2" />
@@ -115,37 +113,59 @@
       </div>
       <div v-else class="grid gap-6" :class="gridClass">
         <!-- Левая панель - Редактирование -->
-        <div v-if="store.showCreate" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-          <div class="p-4 border-b border-gray-200 dark:border-gray-700">
-            <h2 class="text-lg font-medium">
-              {{ t('common.create') }}
-            </h2>
-          </div>
-          <div class="p-4" :class="{ 'opacity-50 pointer-events-none': !canEditPost }">
-            <PostsCreate 
-              :model-value="store.draft"
-              :disabled="!canEditPost"
-              @update="handleFormUpdate"
-            />
-          </div>
+        <div v-if="store.showCreate" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm relative">
+          <UTooltip
+            :text="!canEditPost ? 'Editing published post is not allowed' : ''"
+            :disabled="canEditPost"
+          >
+            <div class="relative">
+              <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+                <h2 class="text-lg font-medium">
+                  {{ t('common.create') }}
+                </h2>
+              </div>
+              <div class="p-4">
+                <PostsCreate 
+                  :model-value="store.draft"
+                  :disabled="!canEditPost"
+                  @update="handleFormUpdate"
+                />
+              </div>
+              <div 
+                v-if="!canEditPost" 
+                class="absolute inset-0 bg-gray-900/50 dark:bg-gray-900/70 cursor-not-allowed"
+              />
+            </div>
+          </UTooltip>
         </div>
 
         <!-- Средняя панель - AI -->
-        <div v-if="store.showAiAgent" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-          <div class="p-4 border-b border-gray-200 dark:border-gray-700">
-            <h2 class="text-lg font-medium">
-              {{ t('common.aiAssistant') }}
-            </h2>
-          </div>
-          <div class="p-4" :class="{ 'opacity-50 pointer-events-none': !canEditPost && store.rightPanel === 'create' }">
-            <PostsCreate 
-              v-if="store.rightPanel === 'create'" 
-              :model-value="store.draft"
-              :disabled="!canEditPost"
-              @update="handleFormUpdate"
-            />
-            <PostsAiagent v-else :post="store.draft" :key="previewKey" />
-          </div>
+        <div v-if="store.showAiAgent" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm relative">
+          <UTooltip
+            :text="!canEditPost ? 'Editing published post is not allowed' : ''"
+            :disabled="canEditPost"
+          >
+            <div class="relative">
+              <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+                <h2 class="text-lg font-medium">
+                  {{ t('common.aiAssistant') }}
+                </h2>
+              </div>
+              <div class="p-4">
+                <PostsCreate 
+                  v-if="store.rightPanel === 'create'" 
+                  :model-value="store.draft"
+                  :disabled="!canEditPost"
+                  @update="handleFormUpdate"
+                />
+                <PostsAiagent v-else :post="store.draft" :disabled="!canEditPost" :key="previewKey" />
+              </div>
+              <div 
+                v-if="!canEditPost" 
+                class="absolute inset-0 bg-gray-900/50 dark:bg-gray-900/70 cursor-not-allowed"
+              />
+            </div>
+          </UTooltip>
         </div>
 
         <!-- Правая панель - Превью -->

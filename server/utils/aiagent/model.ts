@@ -1,57 +1,95 @@
 // import the Genkit and Google AI plugin libraries
 import { googleAI } from '@genkit-ai/googleai';
-import { genkit, z } from 'genkit';
-import { defineGraph } from 'genkitx-graph';
+import { genkit } from 'genkit';
 import { defineFlow, runFlow } from '@genkit-ai/flow';
 import { H3Event } from 'h3';
 import { validateToken, getTokenFromEvent } from './token';
 import jwt from 'jsonwebtoken';
 import type { TokenPayload } from './token';
 import { $fetch } from 'ofetch';
-import type { Post } from '~/types/posts';
 
 // configure a Genkit instance
-export const ai = genkit({
+const ai = genkit({
   plugins: [googleAI()],
   model: googleAI.model('gemini-2.0-flash'), // set default model
 });
 
 interface ArticleDraft {
+  id?: string;
   title: string;
+  cover: string | null;
   annotation: string;
-  content: string;
-  keywords: string[];
-  sections: Array<{
-    title: string;
-    content: string;
-    subsections?: Array<{
-      title: string;
-      content: string;
-    }>;
+  owner: {
+    id: string;
+    email: string;
+    avatar: string;
+    displayName: string;
+  };
+  ownerId: string;
+  author: Array<{
+    id: string;
+    email: string;
+    avatar: string;
+    displayName: string;
   }>;
-  references: string[];
-  lastUpdated: string;
+  authorId: string[];
+  keywords: string[];
+  domain: string;
+  content: string;
+  createdAt?: string;
+  updatedAt?: string;
+  status: 'draft' | 'published' | 'archived';
+  views?: number;
+  likes?: number;
+  deadline?: string;
+  viewedBy?: string[];
 }
 
-interface TaskOrder {
-  analyzeText: boolean;
-  searchWeb: boolean;
-  searchKnowledgeBase: boolean;
-  maxIterations: number;
-  needUserClarification: boolean;
-  needFeatureInfo: boolean;
-  updateArticle: boolean;
+interface FilterResult {
+  hasIssues: boolean;
+  message: string;
+  disclaimer?: string | null;
+}
+
+interface AIResponse {
+  finalResponse: string;
+  schema?: ArticleDraft;
+  taskOrder?: {
+    showIntroduction: boolean;
+    analyzeText: boolean;
+    searchWeb: boolean;
+    searchKnowledgeBase: boolean;
+    maxIterations: number;
+    needUserClarification: boolean;
+    needFeatureInfo: boolean;
+    updateArticle: boolean;
+  };
+  userClarification?: string;
+  featureInfo?: string;
 }
 
 interface TaskAnalysisState {
   message: string;
   context: string;
-  taskOrder: TaskOrder;
-  currentIteration: number;
-  searchResults: string[];
-  userClarification: string | null;
-  featureInfo: string | null;
-  articleDraft: ArticleDraft | null;
+  finalResponse: string;
+  taskOrder: {
+    showIntroduction: boolean;
+    analyzeText: boolean;
+    searchWeb: boolean;
+    searchKnowledgeBase: boolean;
+    maxIterations: number;
+    needUserClarification: boolean;
+    needFeatureInfo: boolean;
+    updateArticle: boolean;
+  };
+  userClarification: string;
+  featureInfo: string;
+  schema: ArticleDraft | null;
+}
+
+interface FlowResult {
+  state: TaskAnalysisState;
+  nextNode: string;
 }
 
 interface ChatMessage {
@@ -86,368 +124,115 @@ interface SearchResult {
 }
 
 // Define the task analysis graph
-const taskAnalysisGraph = defineGraph(
+const taskAnalysisGraph = defineFlow(
   {
-    name: 'TaskOrderAnalysis',
-    inputSchema: z.object({ 
-      message: z.string(),
-      context: z.string().optional(),
-      userClarification: z.string().optional(),
-      featureInfo: z.string().optional()
-    }),
-    outputSchema: z.object({
-      taskOrder: z.object({
-        analyzeText: z.boolean(),
-        searchWeb: z.boolean(),
-        searchKnowledgeBase: z.boolean(),
-        maxIterations: z.number().min(1).max(5),
-        needUserClarification: z.boolean(),
-        needFeatureInfo: z.boolean()
-      }),
-      searchResults: z.array(z.string()),
-      userClarification: z.string().nullable(),
-      featureInfo: z.string().nullable(),
-      finalResponse: z.string()
-    })
+    name: 'taskAnalysisGraph'
   },
-  async (input) => {
-    return {
-      state: { 
-        message: input.message,
-        context: input.context || '',
-        taskOrder: {
-          analyzeText: false,
-          searchWeb: false,
-          searchKnowledgeBase: false,
-          maxIterations: 1,
-          needUserClarification: false,
-          needFeatureInfo: false
-        },
-        currentIteration: 0,
-        searchResults: [],
-        userClarification: input.userClarification || null,
-        featureInfo: input.featureInfo || null
-      } as TaskAnalysisState,
-      nextNode: 'analyzeTask'
-    };
-  }
-);
-
-// Add node for initial task analysis
-taskAnalysisGraph.addNode(
-  defineFlow(
-    {
-      name: 'analyzeTask'
-    },
-    async (state: TaskAnalysisState) => {
-      const prompt = `
-        Analyze the following message and determine which tasks need to be performed.
-        Message: ${state.message}
-        Context: ${state.context}
-        
-        Determine if we need to:
-        1. Analyze the text (for understanding the request)
-        2. Search the web (for external information)
-        3. Search the knowledge base (for internal information)
-        4. Ask user for clarification
-        5. Provide information about available features
-        
-        Also determine how many iterations of search might be needed (max 5).
-        
-        Return the task order as a JSON object with the following structure:
-        {
+  async (state: TaskAnalysisState): Promise<FlowResult> => {
+    console.log('Executing node: analyzeTask');
+    
+    const prompt = `
+      You are an AI assistant. Analyze the following message and generate a response.
+      DO NOT include any explanations or text outside the JSON object.
+      DO NOT use markdown formatting.
+      
+      Message: ${state.message}
+      Context: ${state.context}
+      
+      Return ONLY a JSON object in this exact format:
+      {
+        "response": string,
+        "taskOrder": {
+          "showIntroduction": boolean,
           "analyzeText": boolean,
           "searchWeb": boolean,
           "searchKnowledgeBase": boolean,
-          "maxIterations": number (1-5),
+          "maxIterations": number,
           "needUserClarification": boolean,
-          "needFeatureInfo": boolean
-        }
-      `;
-
-      const { text } = await ai.generate(prompt);
-      
-      try {
-        const taskOrder = JSON.parse(text) as TaskOrder;
-        state.taskOrder = {
-          analyzeText: taskOrder.analyzeText ?? true,
-          searchWeb: taskOrder.searchWeb ?? false,
-          searchKnowledgeBase: taskOrder.searchKnowledgeBase ?? false,
-          maxIterations: Math.min(Math.max(taskOrder.maxIterations ?? 1, 1), 5),
-          needUserClarification: taskOrder.needUserClarification ?? false,
-          needFeatureInfo: taskOrder.needFeatureInfo ?? false
-        };
-      } catch (error) {
-        // Default task order if parsing fails
-        state.taskOrder = {
-          analyzeText: true,
-          searchWeb: false,
-          searchKnowledgeBase: false,
-          maxIterations: 1,
-          needUserClarification: false,
-          needFeatureInfo: false
-        };
-      }
-
-      return {
-        state,
-        nextNode: state.taskOrder.needUserClarification ? 'askUserClarification' : 
-                 state.taskOrder.needFeatureInfo ? 'provideFeatureInfo' : 
-                 'processTasks'
-      };
-    }
-  )
-);
-
-// Add node for asking user clarification
-taskAnalysisGraph.addNode(
-  defineFlow(
-    {
-      name: 'askUserClarification'
-    },
-    async (state: TaskAnalysisState) => {
-      const prompt = `
-        Based on the following message and context, generate a question to clarify the user's request.
-        Message: ${state.message}
-        Context: ${state.context}
-        
-        The question should be specific and help us better understand what the user needs.
-      `;
-
-      const { text } = await ai.generate(prompt);
-      state.userClarification = text;
-
-      return {
-        state,
-        nextNode: 'finalizeOutput'
-      };
-    }
-  )
-);
-
-// Add node for providing feature information
-taskAnalysisGraph.addNode(
-  defineFlow(
-    {
-      name: 'provideFeatureInfo'
-    },
-    async (state: TaskAnalysisState) => {
-      const prompt = `
-        Based on the following message and context, provide information about relevant features.
-        Message: ${state.message}
-        Context: ${state.context}
-        
-        Explain what features are available and how they can help the user.
-      `;
-
-      const { text } = await ai.generate(prompt);
-      state.featureInfo = text;
-
-      return {
-        state,
-        nextNode: 'finalizeOutput'
-      };
-    }
-  )
-);
-
-// Add node for knowledge base search
-taskAnalysisGraph.addNode(
-  defineFlow(
-    {
-      name: 'searchKnowledgeBase'
-    },
-    async (state: TaskAnalysisState) => {
-      try {
-        // Search in knowledge base using posts API
-        const searchResult = await $fetch<SearchResult>('/api/posts/search', {
-          params: {
-            search: state.message,
-            limit: 5 // Limit to 5 most relevant results
-          }
-        });
-
-        // Format search results
-        const formattedResults = searchResult.posts.map(post => ({
-          title: post.title,
-          annotation: post.annotation,
-          content: post.content,
-          keywords: post.keywords,
-          author: post.author.map(a => a.displayName).join(', ')
-        }));
-
-        // Add formatted results to state
-        state.searchResults.push(
-          'Knowledge Base Search Results:',
-          ...formattedResults.map(result => 
-            `Title: ${result.title}\n` +
-            `Annotation: ${result.annotation}\n` +
-            `Content: ${result.content}\n` +
-            `Keywords: ${result.keywords.join(', ')}\n` +
-            `Authors: ${result.author}\n`
-          )
-        );
-
-        return {
-          state,
-          nextNode: state.currentIteration < state.taskOrder.maxIterations ? 'processTasks' : 'finalizeOutput'
-        };
-      } catch (error) {
-        console.error('Error searching knowledge base:', error);
-        state.searchResults.push('Error searching knowledge base. Please try again later.');
-        return {
-          state,
-          nextNode: 'finalizeOutput'
-        };
-      }
-    }
-  )
-);
-
-// Add node for article building
-taskAnalysisGraph.addNode(
-  defineFlow(
-    {
-      name: 'buildArticle'
-    },
-    async (state: TaskAnalysisState) => {
-      const prompt = `
-        Based on the conversation history and search results, update the article draft.
-        
-        Current Article Draft:
-        ${state.articleDraft ? JSON.stringify(state.articleDraft, null, 2) : 'No draft yet'}
-        
-        Conversation Context:
-        ${state.context}
-        
-        Search Results:
-        ${state.searchResults.join('\n')}
-        
-        User's Latest Message:
-        ${state.message}
-        
-        Update the article draft in markdown format. Include:
-        1. Title
-        2. Annotation
-        3. Main content with sections and subsections
-        4. Keywords
-        5. References
-        
-        Return the updated article as a JSON object with the following structure:
-        {
+          "needFeatureInfo": boolean,
+          "updateArticle": boolean
+        },
+        "schema": {
           "title": string,
+          "cover": string | null,
           "annotation": string,
-          "content": string (in markdown),
           "keywords": string[],
-          "sections": [
-            {
-              "title": string,
-              "content": string,
-              "subsections": [
-                {
-                  "title": string,
-                  "content": string
-                }
-              ]
-            }
-          ],
-          "references": string[],
-          "lastUpdated": string (ISO date)
-        }
-      `;
-
-      const { text } = await ai.generate(prompt);
-      
-      try {
-        const updatedDraft = JSON.parse(text) as ArticleDraft;
-        state.articleDraft = {
-          ...updatedDraft,
-          lastUpdated: new Date().toISOString()
-        };
-      } catch (error) {
-        console.error('Error updating article draft:', error);
-        // Keep existing draft if update fails
+          "domain": string,
+          "content": string,
+          "status": "draft" | "published" | "archived"
+        } | null
       }
+      
+      Rules for response:
+      - If message is about creating a new article:
+        1. Generate a complete initial schema
+        2. Ask specific questions about the article
+        3. Set needUserClarification to true
+      - If message is a greeting: Respond with a friendly greeting and offer help
+      - If message asks about capabilities: Explain what you can do
+      - If message is about article updates: Update schema and confirm changes
+      - If message is a question: Provide a direct answer
+      - Keep responses concise and natural
+      - Use the same language as the user's message
+      
+      Rules for taskOrder:
+      - showIntroduction: true if greeting or asking about capabilities
+      - analyzeText: true if message needs analysis
+      - searchWeb: true if external information needed
+      - searchKnowledgeBase: true if looking for existing content
+      - needUserClarification: true if asking for more details
+      - needFeatureInfo: true if asking about features
+      - updateArticle: true if suggesting article changes
+      - maxIterations: always 1
+      
+      Rules for schema:
+      - For new articles:
+        1. Set a clear title
+        2. Add relevant keywords
+        3. Set appropriate domain
+        4. Add initial annotation
+        5. Set status to "draft"
+      - For updates: Return updated schema
+      - If no updates needed: Return null
+      - Keep existing values for fields not mentioned in message
+      
+      Example responses:
+      {"response": "Создаю начальную схему для статьи о умных парковках. Расскажите подробнее:\n1. Какие аспекты умных парковок вас интересуют больше всего?\n2. Есть ли у вас предпочтения по формату статьи (обзор, инструкция, анализ)?\n3. Какие ключевые функции умных парковок вы хотели бы осветить?", "taskOrder": {"showIntroduction": false, "analyzeText": true, "searchWeb": false, "searchKnowledgeBase": false, "maxIterations": 1, "needUserClarification": true, "needFeatureInfo": false, "updateArticle": true}, "schema": {"title": "Умные парковки: технологии будущего", "cover": null, "annotation": "Обзор современных технологий умных парковок, их преимуществ и перспектив развития", "keywords": ["умные парковки", "умный город", "IoT", "автоматизация", "транспортная инфраструктура"], "domain": "smart-city", "content": "", "status": "draft"}}
+    `;
 
+    const { text } = await ai.generate(prompt);
+    
+    try {
+      const cleanText = text.replace(/```json\n?|\n?```/g, '').trim();
+      const result = JSON.parse(cleanText);
+      
+      state.finalResponse = result.response;
+      state.taskOrder = {
+        ...state.taskOrder,
+        ...result.taskOrder
+      };
+      
+      if (result.schema) {
+        state.schema = {
+          ...state.schema,
+          ...result.schema
+        };
+      }
+      
+      return {
+        state,
+        nextNode: 'finalizeOutput'
+      };
+    } catch (error) {
+      console.error('Error in task analysis:', error);
+      console.error('Raw response:', text);
+      state.finalResponse = "Извините, произошла ошибка при обработке вашего сообщения. Пожалуйста, попробуйте еще раз.";
       return {
         state,
         nextNode: 'finalizeOutput'
       };
     }
-  )
-);
-
-// Update processTasks node to include article building
-taskAnalysisGraph.addNode(
-  defineFlow(
-    {
-      name: 'processTasks'
-    },
-    async (state: TaskAnalysisState) => {
-      if (state.currentIteration >= state.taskOrder.maxIterations) {
-        return {
-          state,
-          nextNode: state.taskOrder.updateArticle ? 'buildArticle' : 'finalizeOutput'
-        };
-      }
-
-      // Process current iteration
-      state.currentIteration++;
-      
-      // Execute tasks based on taskOrder
-      if (state.taskOrder.searchKnowledgeBase) {
-        return {
-          state,
-          nextNode: 'searchKnowledgeBase'
-        };
-      }
-
-      // Here we would implement other search logic (web search, etc.)
-      state.searchResults.push(`Search iteration ${state.currentIteration} completed`);
-
-      return {
-        state,
-        nextNode: state.currentIteration < state.taskOrder.maxIterations ? 'processTasks' : 
-                 state.taskOrder.updateArticle ? 'buildArticle' : 'finalizeOutput'
-      };
-    }
-  )
-);
-
-// Update finalizeOutput node to include article draft
-taskAnalysisGraph.addNode(
-  defineFlow(
-    {
-      name: 'finalizeOutput'
-    },
-    async (state: TaskAnalysisState) => {
-      // Generate final response based on all collected information
-      const prompt = `
-        Based on the following information, generate a comprehensive response:
-        
-        Original Message: ${state.message}
-        Context: ${state.context}
-        Search Results: ${state.searchResults.join('\n')}
-        User Clarification: ${state.userClarification || 'Not needed'}
-        Feature Info: ${state.featureInfo || 'Not needed'}
-        Article Draft: ${state.articleDraft ? JSON.stringify(state.articleDraft, null, 2) : 'No draft yet'}
-        
-        Generate a helpful and informative response that addresses the user's needs.
-        If there's an article draft, include information about the updates made.
-      `;
-
-      const { text } = await ai.generate(prompt);
-
-      return {
-        taskOrder: state.taskOrder,
-        searchResults: state.searchResults,
-        userClarification: state.userClarification,
-        featureInfo: state.featureInfo,
-        articleDraft: state.articleDraft,
-        finalResponse: text
-      };
-    }
-  )
+  }
 );
 
 // Store active chat sessions
@@ -495,10 +280,10 @@ export async function createValidatedChat(event: H3Event) {
           ${context}
           
           Task Order:
-          ${JSON.stringify(taskOrderResult.taskOrder, null, 2)}
+          ${JSON.stringify(taskOrderResult.state.taskOrder, null, 2)}
           
           Search Results:
-          ${taskOrderResult.searchResults.join('\n')}
+          ${taskOrderResult.state.searchResults.join('\n')}
           
           User: ${message}
           Assistant:`;
@@ -532,45 +317,66 @@ export async function createValidatedChat(event: H3Event) {
   return chatSession;
 }
 
-export async function ask(message: string, event: H3Event, articleDraft?: ArticleDraft) {
-  const chat = await createValidatedChat(event);
-  const context = chat.messages
-    .map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
-    .join('\n');
+export async function ask(message: string, articleDraft?: ArticleDraft): Promise<AIResponse> {
+  try {
+    console.log('Processing message:', message);
+    
+    // Initialize state
+    const state: TaskAnalysisState = {
+      message,
+      context: articleDraft ? JSON.stringify(articleDraft) : '',
+      finalResponse: '',
+      taskOrder: {
+        showIntroduction: false,
+        analyzeText: false,
+        searchWeb: false,
+        searchKnowledgeBase: false,
+        maxIterations: 1,
+        needUserClarification: false,
+        needFeatureInfo: false,
+        updateArticle: false
+      },
+      userClarification: '',
+      featureInfo: '',
+      schema: articleDraft || null
+    };
 
-  const result = await runFlow(taskAnalysisGraph.executor, {
-    message,
-    context,
-    articleDraft
-  });
+    // Run input filter first
+    const inputFilterResult = await runFlow(
+      defineFlow(
+        {
+          name: 'inputFilter'
+        },
+        inputFilter
+      ),
+      state
+    );
 
-  // Add user message to history
-  chat.messages.push({
-    role: 'user',
-    content: message,
-    timestamp: new Date().toISOString()
-  });
-
-  // Add assistant message to history
-  chat.messages.push({
-    role: 'assistant',
-    content: result.finalResponse,
-    timestamp: new Date().toISOString(),
-    user: {
-      id: 'assistant',
-      email: 'ai@assistant.com',
-      avatar: '/images/ai-avatar.png',
-      displayName: 'AI Assistant'
+    // If input filter found issues, return immediately
+    if (inputFilterResult.nextNode === 'finalizeOutput') {
+      return {
+        finalResponse: inputFilterResult.state.finalResponse,
+        taskOrder: inputFilterResult.state.taskOrder,
+        schema: inputFilterResult.state.schema
+      };
     }
-  });
 
-  return { 
-    text: result.finalResponse,
-    schema: result.articleDraft || articleDraft || null,
-    taskOrder: result.taskOrder,
-    userClarification: result.userClarification,
-    featureInfo: result.featureInfo
-  };
+    // Run main graph only if input filter passed
+    const result = await runFlow(taskAnalysisGraph, inputFilterResult.state);
+    
+    return {
+      finalResponse: result.state.finalResponse,
+      taskOrder: result.state.taskOrder,
+      schema: result.state.schema,
+      userClarification: result.state.userClarification,
+      featureInfo: result.state.featureInfo
+    };
+  } catch (error) {
+    console.error('Error in ask function:', error);
+    return {
+      finalResponse: "Извините, произошла ошибка при обработке вашего сообщения. Пожалуйста, попробуйте еще раз."
+    };
+  }
 }
 
 // Cleanup function to remove expired sessions
@@ -667,3 +473,134 @@ async function main() {
 
 main();
 */
+
+export async function processMessage(message: string, context: string = ''): Promise<AIResponse> {
+  console.log('Starting message processing...');
+  
+  const state: TaskAnalysisState = {
+    message,
+    context,
+    taskOrder: {
+      showIntroduction: false,
+      analyzeText: true,
+      searchWeb: false,
+      searchKnowledgeBase: false,
+      maxIterations: 1,
+      needUserClarification: false,
+      needFeatureInfo: false
+    },
+    searchResults: [],
+    userClarification: '',
+    featureInfo: '',
+    articleDraft: '',
+    finalResponse: ''
+  };
+
+  try {
+    console.log('Executing task analysis graph...');
+    // Always start with inputFilter
+    const result = await taskAnalysisGraph.execute(state);
+    console.log('Graph execution completed. Final node:', result.nextNode);
+    
+    return {
+      response: result.state.finalResponse,
+      schema: result.state.schemaUpdate
+    };
+  } catch (error) {
+    console.error('Error in message processing:', error);
+    throw error;
+  }
+}
+
+// Update the main entry point
+export const main = async () => {
+  const graph = taskAnalysisGraph;
+  graph.setEntryPoint('inputFilter');
+  // ... rest of the main function
+};
+
+async function inputFilter(state: TaskAnalysisState): Promise<FlowResult> {
+  console.log('Executing node: inputFilter');
+  
+  const prompt = `
+    You are a strict content filter. Your task is to analyze the following message and return a JSON response.
+    DO NOT include any explanations or text outside the JSON object.
+    DO NOT use markdown formatting.
+    
+    Message to analyze: ${state.message}
+    
+    Return ONLY a JSON object in this exact format:
+    {
+      "hasIssues": boolean,
+      "message": string
+    }
+    
+    Rules for hasIssues:
+    - Set to true if message contains ANY of these:
+      1. Political content or propaganda
+      2. Religious content or discussions
+      3. Offensive or harmful content
+      4. Dangerous or illegal activities
+      5. Sensitive personal information
+      6. Hate speech or discrimination
+      7. Explicit content
+      8. Medical advice
+      9. Financial advice
+      10. Security vulnerabilities
+      11. Malware or hacking instructions
+      12. Copyright violations
+      13. Spam or advertising
+      14. Personal attacks
+      15. Misinformation
+    
+    Rules for message:
+    - If hasIssues is true: Return a clear rejection message explaining why the content cannot be processed
+    - If hasIssues is false: Return "Message is clean"
+    
+    Example responses:
+    {"hasIssues": false, "message": "Message is clean"}
+    {"hasIssues": true, "message": "Извините, но я не могу обработать этот запрос, так как он содержит политический контент."}
+    {"hasIssues": true, "message": "Извините, но я не могу обработать этот запрос, так как он содержит религиозный контент."}
+    {"hasIssues": true, "message": "Извините, но я не могу обработать этот запрос, так как он содержит недопустимый контент."}
+  `;
+
+  const { text } = await ai.generate(prompt);
+  
+  try {
+    const cleanText = text.replace(/```json\n?|\n?```/g, '').trim();
+    const filterResult = JSON.parse(cleanText) as FilterResult;
+    
+    if (filterResult.hasIssues) {
+      console.log('Input filter found issues:', filterResult.message);
+      state.finalResponse = filterResult.message;
+      state.taskOrder.showIntroduction = false;
+      return {
+        state,
+        nextNode: 'finalizeOutput'
+      };
+    }
+    
+    console.log('Input filter passed message');
+    return {
+      state,
+      nextNode: 'analyzeTask'
+    };
+  } catch (error) {
+    console.error('Error in input filter:', error);
+    console.error('Raw response:', text);
+    state.finalResponse = "Извините, но я не могу обработать этот запрос. Пожалуйста, попробуйте сформулировать его иначе.";
+    state.taskOrder.showIntroduction = false;
+    return {
+      state,
+      nextNode: 'finalizeOutput'
+    };
+  }
+}
+
+async function finalizeOutput(state: TaskAnalysisState): Promise<FlowResult> {
+  console.log('Executing node: finalizeOutput');
+  return {
+    state,
+    nextNode: 'end'
+  };
+}

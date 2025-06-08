@@ -102,6 +102,16 @@ export const useAiAgentStore = defineStore('aiagent', {
         return ''
       }
 
+      const articleBuilderStore = useArticleBuilderStore()
+      const userStore = useUserStore()
+
+      // Check if post is published and user is not the owner
+      if (articleBuilderStore.draft.status === 'published' && 
+          articleBuilderStore.draft.ownerId !== userStore.user?.id) {
+        console.log('Cannot interact with published post')
+        throw new Error('Cannot interact with published post')
+      }
+
       if (!this.sessionToken) {
         console.log('No session token, generating new one')
         await this.generateToken()
@@ -113,9 +123,6 @@ export const useAiAgentStore = defineStore('aiagent', {
         return ''
       }
 
-      const articleBuilderStore = useArticleBuilderStore()
-      const userStore = useUserStore()
-      
       try {
         this.isProcessing = true
         console.log('Store processing message:', message)
@@ -213,27 +220,14 @@ export const useAiAgentStore = defineStore('aiagent', {
           }
         }
 
-        console.log('Adding assistant message to store:', assistantMessage)
+        // Добавляем сообщение ассистента
         this.messages = [...this.messages, assistantMessage]
         saveState({ messages: this.messages })
 
-        // Обновляем схему статьи, если она есть
+        // Обновляем схему статьи, если она есть (без добавления в сообщение)
         if (response.schema) {
           console.log('Received schema update:', response.schema)
-          // Применяем изменения к articleBuilder с флагом внешнего обновления
           articleBuilderStore.updateDraft(response.schema, true)
-          
-          // Обновляем сообщение ассистента, чтобы включить информацию об изменениях
-          const updatedMessage = {
-            ...assistantMessage,
-            content: `${aiResponse}\n\nArticle updated: ${response.schema.title}`
-          }
-          
-          this.messages = [...this.messages.slice(0, -1), updatedMessage]
-          saveState({ messages: this.messages })
-        } else {
-          this.messages = [...this.messages, assistantMessage]
-          saveState({ messages: this.messages })
         }
 
         return aiResponse

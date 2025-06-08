@@ -24,11 +24,20 @@ export default defineEventHandler(async (event) => {
     }
 
     // Process message and get response
-    const result = await ask(message, event, articleDraft)
+    const result = await ask(message, articleDraft)
 
-    // Return response in the correct format
+    // Log service information in development mode
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Service Information:', {
+        taskOrder: result.taskOrder,
+        userClarification: result.userClarification,
+        featureInfo: result.featureInfo
+      })
+    }
+
+    // Return only user-facing response
     return {
-      answer: result.text,
+      answer: result.finalResponse,
       schema: result.schema || articleDraft // Return original schema if no changes
     }
   } catch (error) {
