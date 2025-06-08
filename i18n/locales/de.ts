@@ -263,12 +263,30 @@ export default {
   },
   index: {
     title: 'Startseite',
-    title1: 'Teilen Sie Ihre Ideen',
-    title2: 'Finden Sie Ihr Team',
-    subtitle: 'Verbinden Sie sich mit Gleichgesinnten, teilen Sie Ihre Ideen und verwirklichen Sie Ihre Projekte gemeinsam.',
-    button1: 'Erstellen Sie Ihr',
-    button2: 'Projekt',
-    searchPlaceholder: 'Projekte suchen...'
+    title1: 'Teile deine Ideen',
+    title2: 'und finde Gleichgesinnte',
+    subtitle: 'Tritt der Community von Innovatoren und Unternehmern bei',
+    button1: 'Erstelle deine Idee mit',
+    button2: 'KI-Assistent',
+    searchPlaceholder: 'Projekte suchen...',
+    stepper: {
+      register: {
+        title: 'Registriere dich',
+        description: 'Erstelle ein Konto in wenigen Minuten'
+      },
+      profile: {
+        title: 'Vervollständige dein Profil',
+        description: 'Erzähle uns von dir und deinen Interessen'
+      },
+      explore: {
+        title: 'Entdecke Ideen',
+        description: 'Entdecke Projekte von anderen Mitgliedern'
+      },
+      create: {
+        title: 'Erstelle deine Idee',
+        description: 'Teile dein Projekt mit der Community'
+      }
+    }
   },
   core: {
     title: 'Kern',

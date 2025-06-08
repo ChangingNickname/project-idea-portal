@@ -35,6 +35,15 @@
         </div>
       </div>
 
+      <!-- Stepper Section -->
+      <div class="max-w-3xl mx-auto mb-16">
+        <UStepper 
+          :orientation="isMobile ? 'vertical' : 'horizontal'" 
+          :items="stepperItems" 
+          class="w-full"
+        />
+      </div>
+
       <!-- AI Assistant Section (Call to Action) -->
       <div
         class="max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 cursor-pointer transition hover:shadow-xl hover:bg-primary-50 dark:hover:bg-primary-900/20"
@@ -60,7 +69,48 @@
 </template>
 
 <script setup lang="ts">
+import type { StepperItem } from '@nuxt/ui'
+
+const { t } = useI18n()
 const searchQuery = ref('')
+const isMobile = ref(false)
+
+// Определяем размер экрана при монтировании и при изменении размера окна
+onMounted(() => {
+  checkScreenSize()
+  window.addEventListener('resize', checkScreenSize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkScreenSize)
+})
+
+const checkScreenSize = () => {
+  isMobile.value = window.innerWidth < 768 // md breakpoint в Tailwind
+}
+
+const stepperItems = computed<StepperItem[]>(() => [
+  {
+    title: t('index.stepper.register.title'),
+    description: t('index.stepper.register.description'),
+    icon: 'i-lucide-user-plus'
+  },
+  {
+    title: t('index.stepper.profile.title'),
+    description: t('index.stepper.profile.description'),
+    icon: 'i-lucide-user'
+  },
+  {
+    title: t('index.stepper.explore.title'),
+    description: t('index.stepper.explore.description'),
+    icon: 'i-lucide-search'
+  },
+  {
+    title: t('index.stepper.create.title'),
+    description: t('index.stepper.create.description'),
+    icon: 'i-lucide-lightbulb'
+  }
+])
 
 const handleSearch = () => {
   if (searchQuery.value.trim()) {

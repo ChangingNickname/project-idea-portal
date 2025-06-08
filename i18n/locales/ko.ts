@@ -263,12 +263,30 @@ export default {
   },
   index: {
     title: '홈',
-    title1: '아이디어를 공유하세요',
-    title2: '팀을 찾으세요',
-    subtitle: '같은 생각을 가진 사람들과 연결하고, 아이디어를 공유하며, 함께 프로젝트를 실현하세요.',
-    button1: '당신의',
-    button2: '프로젝트를 만드세요',
-    searchPlaceholder: '프로젝트 검색...'
+    title1: '아이디어를 공유하고',
+    title2: '같은 생각을 가진 사람들을 찾아보세요',
+    subtitle: '혁신가와 기업가의 커뮤니티에 참여하세요',
+    button1: 'AI 어시스턴트로',
+    button2: '아이디어 만들기',
+    searchPlaceholder: '프로젝트 검색...',
+    stepper: {
+      register: {
+        title: '회원가입',
+        description: '몇 분 안에 계정 만들기'
+      },
+      profile: {
+        title: '프로필 완성하기',
+        description: '자신과 관심사에 대해 알려주세요'
+      },
+      explore: {
+        title: '아이디어 탐색',
+        description: '다른 회원들의 프로젝트 발견하기'
+      },
+      create: {
+        title: '아이디어 만들기',
+        description: '커뮤니티와 프로젝트 공유하기'
+      }
+    }
   },
   core: {
     title: '핵심',

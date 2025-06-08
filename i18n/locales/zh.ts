@@ -263,12 +263,29 @@ export default {
   },
   index: {
     title: '首页',
-    title1: '分享您的创意',
-    title2: '找到您的团队',
-    subtitle: '与志同道合的人交流，分享创意，一起实现项目。',
-    button1: '创建您的',
-    button2: '项目',
-    searchPlaceholder: '搜索项目...'
+    title1: '分享您的想法',
+    title2: '寻找志同道合的人',
+    subtitle: '加入创新者和企业家的社区',
+    button1: '使用',
+    button2: 'AI助手创建您的想法',
+    stepper: {
+      register: {
+        title: '注册',
+        description: '几分钟内创建账户'
+      },
+      profile: {
+        title: '完善个人资料',
+        description: '告诉我们关于您和您的兴趣'
+      },
+      explore: {
+        title: '探索想法',
+        description: '发现其他成员的项目'
+      },
+      create: {
+        title: '创建您的想法',
+        description: '与社区分享您的项目'
+      }
+    }
   },
   core: {
     title: '核心',

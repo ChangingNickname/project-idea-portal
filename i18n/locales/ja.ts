@@ -263,12 +263,29 @@ export default {
   },
   index: {
     title: 'ホーム',
-    title1: 'アイデアを共有しましょう',
-    title2: 'チームを見つけましょう',
-    subtitle: '同じ考えを持つ人々とつながり、アイデアを共有し、一緒にプロジェクトを実現しましょう。',
-    button1: 'あなたの',
-    button2: 'プロジェクトを作成',
-    searchPlaceholder: 'プロジェクトを検索...'
+    title1: 'アイデアを共有',
+    title2: '志を同じくする仲間を見つけましょう',
+    subtitle: 'イノベーターと起業家のコミュニティに参加',
+    button1: 'AIアシスタントで',
+    button2: 'アイデアを作成',
+    stepper: {
+      register: {
+        title: '登録',
+        description: '数分でアカウントを作成'
+      },
+      profile: {
+        title: 'プロフィールを完成',
+        description: 'あなた自身と興味について教えてください'
+      },
+      explore: {
+        title: 'アイデアを探索',
+        description: '他のメンバーのプロジェクトを発見'
+      },
+      create: {
+        title: 'アイデアを作成',
+        description: 'コミュニティとプロジェクトを共有'
+      }
+    }
   },
   core: {
     title: 'コア',

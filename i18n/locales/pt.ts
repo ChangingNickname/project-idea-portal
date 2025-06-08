@@ -264,11 +264,28 @@ export default {
   index: {
     title: 'Início',
     title1: 'Compartilhe suas ideias',
-    title2: 'Encontre sua equipe',
-    subtitle: 'Conecte-se com pessoas que pensam como você, compartilhe suas ideias e realize seus projetos juntos.',
-    button1: 'Crie seu',
-    button2: 'Projeto',
-    searchPlaceholder: 'Pesquisar projetos...'
+    title2: 'e encontre pessoas com interesses similares',
+    subtitle: 'Junte-se à comunidade de inovadores e empreendedores',
+    button1: 'Crie sua ideia com',
+    button2: 'assistente IA',
+    stepper: {
+      register: {
+        title: 'Registre-se',
+        description: 'Crie uma conta em minutos'
+      },
+      profile: {
+        title: 'Complete seu perfil',
+        description: 'Conte-nos sobre você e seus interesses'
+      },
+      explore: {
+        title: 'Explore ideias',
+        description: 'Descubra projetos de outros membros'
+      },
+      create: {
+        title: 'Crie sua ideia',
+        description: 'Compartilhe seu projeto com a comunidade'
+      }
+    }
   },
   core: {
     title: 'Núcleo',

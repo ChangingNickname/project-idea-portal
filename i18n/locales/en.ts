@@ -258,12 +258,31 @@ export default {
     removeFromBlacklistError: 'Failed to remove user from blacklist'
   },
   index: {
-    title1: 'Share Your Ideas',
-    title2: 'Find Your Team',
-    subtitle: 'Connect with like-minded people, share your ideas, and bring your projects to life together.',
-    button1: 'Create Your',
-    button2: 'Project',
-    searchPlaceholder: 'Search for projects...'
+    title: 'Home',
+    title1: 'Share your ideas',
+    title2: 'and find like-minded people',
+    subtitle: 'Join the community of innovators and entrepreneurs',
+    button1: 'Create your idea with',
+    button2: 'AI assistant',
+    searchPlaceholder: 'Search for projects...',
+    stepper: {
+      register: {
+        title: 'Register',
+        description: 'Create an account in minutes'
+      },
+      profile: {
+        title: 'Complete your profile',
+        description: 'Tell us about yourself and your interests'
+      },
+      explore: {
+        title: 'Explore ideas',
+        description: 'Discover projects from other members'
+      },
+      create: {
+        title: 'Create your idea',
+        description: 'Share your project with the community'
+      }
+    }
   },
   core: {
     desc: 'Our AI assistant will help you create and structure your project, suggest improvements, and connect you with potential team members.'
