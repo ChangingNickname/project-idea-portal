@@ -26,4 +26,7 @@ post: {
     keywordsPlaceholder: 'أدخل الكلمات المفتاحية مفصولة بفواصل',
   },
   authors: 'المؤلفون',
+},
+feedback: {
+  writeDeveloper: 'هل وجدت خطأ أو لديك اقتراح؟ اكتب للمطور',
 } 

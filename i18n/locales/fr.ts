@@ -301,5 +301,8 @@ export default {
   core: {
     title: 'Noyau',
     desc: 'Notre assistant IA vous aidera à créer et structurer votre projet, suggérer des améliorations et vous connecter avec des membres potentiels de l\'équipe.'
+  },
+  feedback: {
+    writeDeveloper: 'Vous avez trouvé un bug ou une suggestion ? Contactez le développeur',
   }
 } 

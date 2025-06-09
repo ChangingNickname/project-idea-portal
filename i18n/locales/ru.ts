@@ -308,7 +308,7 @@ export default {
   feedback: {
     title: 'Оставьте отзыв',
     fillForm: 'Заполнить форму Google',
-    writeDeveloper: 'Написать разработчику',
+    writeDeveloper: 'Нашли баг или есть предложение по улучшению? Напишите разработчику',
     downloadTemplate: 'Скачать шаблон (DOCX)',
     leaveFeedback: 'Оставить отзыв'
   }

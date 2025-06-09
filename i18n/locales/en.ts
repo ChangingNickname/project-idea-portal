@@ -300,7 +300,7 @@ export default {
   feedback: {
     title: 'Leave Feedback',
     fillForm: 'Fill Google Form',
-    writeDeveloper: 'Write to Developer',
+    writeDeveloper: 'Found a bug or have a suggestion? Contact the developer',
     downloadTemplate: 'Download Template (DOCX)',
     leaveFeedback: 'Leave Feedback'
   }

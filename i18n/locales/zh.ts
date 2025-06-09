@@ -298,5 +298,8 @@ export default {
   core: {
     title: '核心',
     desc: '我们的 AI 助手将帮助您创建和构建项目，提供改进建议，并帮助您与潜在的团队成员建立联系。'
-  }
+  },
+  feedback: {
+    writeDeveloper: '发现错误或有改进建议？请联系开发者',
+  },
 } 
