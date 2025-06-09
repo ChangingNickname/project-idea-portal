@@ -197,7 +197,7 @@ const taskAnalysisGraph = defineFlow(
       - Keep existing values for fields not mentioned in message
       
       Example responses:
-      {"response": "Создаю начальную схему для статьи о умных парковках. Расскажите подробнее:\n1. Какие аспекты умных парковок вас интересуют больше всего?\n2. Есть ли у вас предпочтения по формату статьи (обзор, инструкция, анализ)?\n3. Какие ключевые функции умных парковок вы хотели бы осветить?", "taskOrder": {"showIntroduction": false, "analyzeText": true, "searchWeb": false, "searchKnowledgeBase": false, "maxIterations": 1, "needUserClarification": true, "needFeatureInfo": false, "updateArticle": true}, "schema": {"title": "Умные парковки: технологии будущего", "cover": null, "annotation": "Обзор современных технологий умных парковок, их преимуществ и перспектив развития", "keywords": ["умные парковки", "умный город", "IoT", "автоматизация", "транспортная инфраструктура"], "domain": "smart-city", "content": "", "status": "draft"}}
+      {"response": "Creating initial schema for an article about smart parking. Please tell me more:\n1. Which aspects of smart parking interest you the most?\n2. Do you have any preferences for the article format (review, guide, analysis)?\n3. What key features of smart parking would you like to highlight?", "taskOrder": {"showIntroduction": false, "analyzeText": true, "searchWeb": false, "searchKnowledgeBase": false, "maxIterations": 1, "needUserClarification": true, "needFeatureInfo": false, "updateArticle": true}, "schema": {"title": "Smart Parking: Technologies of the Future", "cover": null, "annotation": "Overview of modern smart parking technologies, their advantages and development prospects", "keywords": ["smart parking", "smart city", "IoT", "automation", "transport infrastructure"], "domain": "smart-city", "content": "", "status": "draft"}}
     `;
 
     const { text } = await ai.generate(prompt);
@@ -268,7 +268,7 @@ export async function createValidatedChat(event: H3Event) {
           .join('\n');
         
         // Analyze task order using the graph
-        const taskOrderResult = await runFlow(taskAnalysisGraph.executor, {
+        const taskOrderResult = await runFlow(taskAnalysisGraph, {
           message,
           context,
           articleDraft
@@ -306,7 +306,7 @@ export async function createValidatedChat(event: H3Event) {
         
         return { 
           text,
-          schema: articleDraft || null
+          schema: articleDraft
         };
       }
     };
@@ -480,6 +480,7 @@ export async function processMessage(message: string, context: string = ''): Pro
   const state: TaskAnalysisState = {
     message,
     context,
+    finalResponse: '',
     taskOrder: {
       showIntroduction: false,
       analyzeText: true,
@@ -487,24 +488,25 @@ export async function processMessage(message: string, context: string = ''): Pro
       searchKnowledgeBase: false,
       maxIterations: 1,
       needUserClarification: false,
-      needFeatureInfo: false
+      needFeatureInfo: false,
+      updateArticle: false
     },
-    searchResults: [],
     userClarification: '',
     featureInfo: '',
-    articleDraft: '',
-    finalResponse: ''
+    schema: null
   };
 
   try {
     console.log('Executing task analysis graph...');
-    // Always start with inputFilter
-    const result = await taskAnalysisGraph.execute(state);
+    const result = await runFlow(taskAnalysisGraph, state);
     console.log('Graph execution completed. Final node:', result.nextNode);
     
     return {
-      response: result.state.finalResponse,
-      schema: result.state.schemaUpdate
+      finalResponse: result.state.finalResponse,
+      schema: result.state.schema,
+      taskOrder: result.state.taskOrder,
+      userClarification: result.state.userClarification,
+      featureInfo: result.state.featureInfo
     };
   } catch (error) {
     console.error('Error in message processing:', error);
@@ -515,7 +517,6 @@ export async function processMessage(message: string, context: string = ''): Pro
 // Update the main entry point
 export const main = async () => {
   const graph = taskAnalysisGraph;
-  graph.setEntryPoint('inputFilter');
   // ... rest of the main function
 };
 
