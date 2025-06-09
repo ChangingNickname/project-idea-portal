@@ -294,5 +294,8 @@ export default {
   core: {
     title: 'Kern',
     desc: 'Unser KI-Assistent hilft Ihnen bei der Erstellung und Strukturierung Ihres Projekts, schlägt Verbesserungen vor und verbindet Sie mit potenziellen Teammitgliedern.'
+  },
+  feedback: {
+    writeDeveloper: 'Fehler gefunden oder einen Verbesserungsvorschlag? Schreiben Sie dem Entwickler',
   }
 } 

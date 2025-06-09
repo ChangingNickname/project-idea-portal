@@ -295,5 +295,8 @@ export default {
   core: {
     title: 'Núcleo',
     desc: 'Nuestro asistente IA te ayudará a crear y estructurar tu proyecto, sugerir mejoras y conectarte con posibles miembros del equipo.'
+  },
+  feedback: {
+    writeDeveloper: '¿Encontraste un error o tienes una sugerencia? Escribe al desarrollador',
   }
 } 

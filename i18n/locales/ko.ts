@@ -301,5 +301,8 @@ export default {
   core: {
     title: '핵심',
     desc: '우리의 AI 어시스턴트가 프로젝트 생성과 구조화, 개선 사항 제안, 잠재적 팀원과의 연결을 도와드립니다.'
+  },
+  feedback: {
+    writeDeveloper: '버그를 발견했거나 개선 제안이 있으신가요? 개발자에게 연락하세요'
   }
 } 

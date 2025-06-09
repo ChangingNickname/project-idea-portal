@@ -26,4 +26,7 @@ post: {
     keywordsPlaceholder: 'Virgülle ayrılmış anahtar kelimeleri girin',
   },
   authors: 'Yazarlar',
+},
+feedback: {
+  writeDeveloper: 'Bir hata mı buldunuz veya bir öneriniz mi var? Geliştiriciye yazın',
 } 
