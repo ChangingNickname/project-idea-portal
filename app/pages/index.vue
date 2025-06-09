@@ -38,10 +38,44 @@
       <!-- Stepper Section -->
       <div class="max-w-3xl mx-auto mb-16">
         <UStepper 
+        disabled 
           :orientation="isMobile ? 'vertical' : 'horizontal'" 
           :items="stepperItems" 
           class="w-full"
-        />
+          @next="handleNext"
+          @prev="handlePrev"
+          @update:modelValue="handleStepChange"
+        >
+          <template #indicator="{ item }">
+            <div 
+              class="flex items-center justify-center w-8 h-8 rounded-full bg-primary-50 dark:bg-primary-900/20 cursor-pointer hover:bg-primary-100 dark:hover:bg-primary-900/30"
+              @click="handleStepClick(item)"
+            >
+              <Icon 
+                :name="item.icon || ''" 
+                class="w-5 h-5 text-primary"
+              />
+            </div>
+          </template>
+
+          <template #title="{ item }">
+            <div 
+              class="font-medium text-gray-900 dark:text-white cursor-pointer hover:text-primary"
+              @click="handleStepClick(item)"
+            >
+              {{ item.title }}
+            </div>
+          </template>
+
+          <template #description="{ item }">
+            <div 
+              class="text-sm text-gray-500 dark:text-gray-400 cursor-pointer hover:text-primary-500"
+              @click="handleStepClick(item)"
+            >
+              {{ item.description }}
+            </div>
+          </template>
+        </UStepper>
       </div>
 
       <!-- AI Assistant Section (Call to Action) -->
@@ -70,10 +104,48 @@
 
 <script setup lang="ts">
 import type { StepperItem } from '@nuxt/ui'
+import { useI18n } from 'vue-i18n'
+import { useAuthStore } from '~/stores/auth'
+import { useUserStore } from '~/stores/user'
+import { useRouter, useRoute } from 'vue-router'
 
 const { t } = useI18n()
+const router = useRouter()
 const searchQuery = ref('')
 const isMobile = ref(false)
+const authStore = useAuthStore()
+const userStore = useUserStore()
+const currentStep = ref(3) // Сразу устанавливаем последний шаг
+
+// Отслеживаем состояние авторизации через computed
+const isAuthenticated = computed(() => userStore.isAuthenticated)
+
+const stepperItems = computed<StepperItem[]>(() => [
+  {
+    title: t('index.stepper.register.title'),
+    description: t('index.stepper.register.description'),
+    icon: 'i-lucide-user-plus',
+    status: userStore.isAuthenticated ? 'complete' : 'current'
+  },
+  {
+    title: t('index.stepper.profile.title'),
+    description: t('index.stepper.profile.description'),
+    icon: 'i-lucide-user',
+    status: userStore.isAuthenticated ? 'complete' : 'upcoming'
+  },
+  {
+    title: t('index.stepper.explore.title'),
+    description: t('index.stepper.explore.description'),
+    icon: 'i-lucide-search',
+    status: userStore.isAuthenticated ? 'complete' : 'upcoming'
+  },
+  {
+    title: t('index.stepper.create.title'),
+    description: t('index.stepper.create.description'),
+    icon: 'i-lucide-lightbulb',
+    status: userStore.isAuthenticated ? 'current' : 'upcoming'
+  }
+])
 
 // Определяем размер экрана при монтировании и при изменении размера окна
 onMounted(() => {
@@ -89,28 +161,59 @@ const checkScreenSize = () => {
   isMobile.value = window.innerWidth < 768 // md breakpoint в Tailwind
 }
 
-const stepperItems = computed<StepperItem[]>(() => [
-  {
-    title: t('index.stepper.register.title'),
-    description: t('index.stepper.register.description'),
-    icon: 'i-lucide-user-plus'
-  },
-  {
-    title: t('index.stepper.profile.title'),
-    description: t('index.stepper.profile.description'),
-    icon: 'i-lucide-user'
-  },
-  {
-    title: t('index.stepper.explore.title'),
-    description: t('index.stepper.explore.description'),
-    icon: 'i-lucide-search'
-  },
-  {
-    title: t('index.stepper.create.title'),
-    description: t('index.stepper.create.description'),
-    icon: 'i-lucide-lightbulb'
+const handleNext = (item: StepperItem) => {
+  console.log('Next step:', item)
+  if (item.title === t('index.stepper.register.title')) {
+    authStore.openRegister()
   }
-])
+}
+
+const handlePrev = (item: StepperItem) => {
+  console.log('Previous step:', item)
+}
+
+const handleStepChange = (value: string | number | undefined) => {
+  console.log('Step changed to:', value)
+  currentStep.value = typeof value === 'number' ? value : 0
+}
+
+const handleStepClick = (item: StepperItem) => {
+  const stepIndex = stepperItems.value.findIndex(step => step.title === item.title)
+  
+  if (stepIndex === 0) {
+    // Если это первый шаг (регистрация)
+    if (!userStore.isAuthenticated) {
+      authStore.openRegister()
+    }
+  } else if (stepIndex === 1) {
+    // Если это второй шаг (профиль)
+    if (userStore.isAuthenticated) {
+      router.push(`/user/${userStore.user?.id}/profile`)
+    } else {
+      authStore.openLogin()
+    }
+  } else if (stepIndex === 2) {
+    // Если это третий шаг (explore)
+    router.push('/ideas')
+  } else if (stepIndex === 3) {
+    // Если это четвертый шаг (create)
+    router.push('/article-builder')
+  } else if (stepIndex === currentStep.value) {
+    // Если кликаем на текущий шаг
+    if (stepIndex === 0 && !userStore.isAuthenticated) {
+      authStore.openRegister()
+    } else if (stepIndex === 1 && userStore.isAuthenticated) {
+      router.push(`/user/${userStore.user?.id}/profile`)
+    } else if (stepIndex === 2) {
+      router.push('/ideas')
+    } else if (stepIndex === 3) {
+      router.push('/article-builder')
+    }
+  } else {
+    // Если кликаем на другой шаг
+    currentStep.value = stepIndex
+  }
+}
 
 const handleSearch = () => {
   if (searchQuery.value.trim()) {
