@@ -172,14 +172,7 @@ export default {
     dateRange: 'Date Range',
     selectDate: 'Select date',
     advancedSearch: 'Advanced Search',
-    searchUsers: 'Search users',
-    reset: 'Reset',
-    createProject: 'Create Project',
-    noArticlesFound: 'No articles found',
-    createFirstArticle: 'Create First Article',
-    sortByCreationDate: 'Sort by Creation Date',
-    sortByViews: 'Sort by Views',
-    sortByLikes: 'Sort by Likes',
+    reset: 'Reset'
   },
   message: {
     status: {
@@ -303,5 +296,12 @@ export default {
     clearHistory: 'Clear chat history',
     chatReset: 'Chat has been reset successfully',
     resetError: 'Failed to reset chat'
+  },
+  feedback: {
+    title: 'Leave Feedback',
+    fillForm: 'Fill Google Form',
+    writeDeveloper: 'Write to Developer',
+    downloadTemplate: 'Download Template (DOCX)',
+    leaveFeedback: 'Leave Feedback'
   }
 } 
