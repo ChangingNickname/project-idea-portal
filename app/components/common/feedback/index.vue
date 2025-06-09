@@ -1,7 +1,6 @@
 <template>
   <div class="fixed bottom-8 right-8 z-50">
     <UModal>
-      <!-- Кнопка открытия модалки -->
       <UButton
         :color="buttonColor"
         :variant="buttonVariant"
