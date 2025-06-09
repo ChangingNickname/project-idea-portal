@@ -379,23 +379,13 @@ const fetchBlockedUsers = async () => {
 // Handle profile save
 const handleSave = async (updatedUser: User) => {
   try {
-    toast.add({
-      title: t('common.saving'),
-      description: t('common.savingProfile'),
-      color: 'primary',
-      icon: 'i-lucide-loader-2'
-    })
-
     const response = await ofetch<{ success: boolean; profile: User }>(`/api/user/${uid.value}/profile`, {
       method: 'PUT',
       body: updatedUser
     })
 
     userData.value = response.profile
-
-    if (isOwnProfile.value) {
-      userStore.updateUser(response.profile)
-    }
+    isEditMode.value = false
 
     toast.add({
       title: t('common.success'),
@@ -403,8 +393,6 @@ const handleSave = async (updatedUser: User) => {
       color: 'success',
       icon: 'i-lucide-check-circle'
     })
-
-    isEditMode.value = false
   } catch (error: any) {
     console.error('Error saving profile:', error)
     

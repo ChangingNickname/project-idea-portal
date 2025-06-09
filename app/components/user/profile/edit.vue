@@ -443,27 +443,29 @@ const handleSubmit = async () => {
       website: formState.contacts.website || null
     }
 
-    const updatedUser: User = {
-      ...formState,
-      id: props.user.id,
-      email: props.user.email,
-      emailVerified: props.user.emailVerified,
-      disabled: props.user.disabled,
-      isAnonymous: props.user.isAnonymous,
-      providerData: props.user.providerData,
-      customClaims: props.user.customClaims,
-      metadata: props.user.metadata,
-      tenantId: props.user.tenantId,
-      multiFactor: props.user.multiFactor,
+    const updatedUser = {
+      displayName: formState.displayName,
+      position: formState.position,
+      avatar: formState.avatar,
       contacts: cleanedContacts
     }
 
-    emit('save', updatedUser)
+    const response = await profileStore.updateProfile(updatedUser, props.user.id)
+    
+    if (response?.profile) {
+      toast.add({
+        title: t('common.success'),
+        description: t('common.saveSuccess'),
+        color: 'success'
+      })
+
+      emit('save', response.profile)
+    }
   } catch (error) {
     console.error('Form submission error:', error)
     toast.add({
       title: t('common.error'),
-      description: t('common.profileUpdateError'),
+      description: error instanceof Error ? error.message : t('common.saveError'),
       color: 'error'
     })
   }

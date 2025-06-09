@@ -30,23 +30,24 @@ export const useUserStore = defineStore('user', {
       this.user = user
     },
 
-    updateUser(user: User) {
-      if (!user?.id) {
-        console.error('Invalid user data in updateUser')
-        return
-      }
-
+    updateUser(userData: Partial<User>) {
       if (!this.user) {
-        this.user = user
+        console.error('No user to update')
         return
       }
 
-      if (this.user.id === user.id) {
-        this.user = {
-          ...this.user,
-          ...user
+      // Создаем новый объект пользователя с безопасным обновлением контактов
+      const updatedUser = {
+        ...this.user,
+        ...userData,
+        contacts: {
+          ...this.user.contacts,
+          ...userData.contacts,
+          email: this.user.email // Всегда используем email из текущего пользователя
         }
       }
+
+      this.user = updatedUser
     },
 
     clearUser() {
