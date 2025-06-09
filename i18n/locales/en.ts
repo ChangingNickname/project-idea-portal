@@ -301,10 +301,13 @@ export default {
     resetError: 'Failed to reset chat'
   },
   feedback: {
-    title: 'Leave Feedback',
+    title: 'Feedback',
+    description: 'Share your thoughts, suggestions, or report an issue',
+    template: 'Template for filling',
+    templateDescription: 'Download the template for filling out feedback',
+    downloadTemplate: 'Download template',
     fillForm: 'Fill Google Form',
     writeDeveloper: 'Found a bug or have a suggestion? Contact the developer',
-    downloadTemplate: 'Download Template (DOCX)',
     leaveFeedback: 'Leave Feedback'
   }
 } 

@@ -453,12 +453,6 @@ const handleSubmit = async () => {
     const response = await profileStore.updateProfile(updatedUser, props.user.id)
     
     if (response?.profile) {
-      toast.add({
-        title: t('common.success'),
-        description: t('common.saveSuccess'),
-        color: 'success'
-      })
-
       emit('save', response.profile)
     }
   } catch (error) {

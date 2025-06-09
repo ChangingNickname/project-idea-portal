@@ -21,7 +21,7 @@
             to="https://forms.gle/B7bYHcuSakqbzpyf7"
             target="_blank"
             block
-            variant="soft"
+            variant="ghost"
             class="justify-start"
           >
             <template #leading>
@@ -33,7 +33,7 @@
           <UButton
             to="mailto:developer@example.com"
             block
-            variant="soft"
+            variant="ghost"
             class="justify-start"
           >
             <template #leading>
@@ -42,18 +42,14 @@
             {{ $t('feedback.writeDeveloper') }}
           </UButton>
 
-          <UButton
-            :to="templateUrl"
+          <a
+            :href="templateUrl"
             download
-            block
-            variant="soft"
-            class="justify-start"
+            class="flex items-center justify-start w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
           >
-            <template #leading>
-              <UIcon name="i-lucide-download" />
-            </template>
+            <UIcon name="i-lucide-download" class="mr-2" />
             {{ $t('feedback.downloadTemplate') }}
-          </UButton>
+          </a>
         </div>
       </template>
     </UModal>
@@ -64,7 +60,7 @@
 const isModalOpen = ref(false)
 const buttonVariant = ref<'outline' | 'solid'>('outline')
 const buttonColor = ref<'primary'>('primary')
-const templateUrl = '/assets/templates/feedback-template.docx'
+const templateUrl = '/template.pdf'
 
 const animateButton = () => {
   buttonVariant.value = buttonVariant.value === 'outline' ? 'solid' : 'outline'
