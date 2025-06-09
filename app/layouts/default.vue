@@ -7,7 +7,7 @@
         </main>
         <div class="w-full h-1 bg-primary-500 dark:bg-primary-600"/>
         <!-- <CommonFooter /> -->
-        <CommonFeedback />
+        <!-- <CommonFeedback /> -->
     </div>
 </template>
 
