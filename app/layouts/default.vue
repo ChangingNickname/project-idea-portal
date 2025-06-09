@@ -5,7 +5,7 @@
         <main class="flex-1">   
             <slot />
         </main>
-        <div class="w-full h-1 bg-primary-500 dark:bg-primary-600"/>
+        <!-- <div class="w-full h-1 bg-primary-500 dark:bg-primary-600"/> -->
         <!-- <CommonFooter /> -->
         <CommonFeedback />
     </div>
