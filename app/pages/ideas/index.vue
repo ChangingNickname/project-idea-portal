@@ -481,10 +481,6 @@
       searchFilterStore.setKeywords(searchState.value.keywords || '')
       searchFilterStore.setSelectedAuthors(searchState.value.authors || [])
 
-      if (userStore.user) {
-        query.ownerId = userStore.user.id
-      }
-
       const response = await $fetch<{ posts: Post[], pagination: any }>('/api/posts/search', { query })
       console.log('Posts response:', response.posts)
       

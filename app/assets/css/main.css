@@ -32,4 +32,45 @@
   --color-green-950: #052e16;
 }
 
+/* Interactive elements hover styles */
+button,
+a,
+[role="button"],
+input[type="submit"],
+input[type="button"],
+input[type="reset"],
+select,
+textarea,
+[tabindex]:not([tabindex="-1"]) {
+  cursor: pointer;
+  transition: transform 0.2s ease-in-out;
+}
+
+button:hover,
+a:hover,
+[role="button"]:hover,
+input[type="submit"]:hover,
+input[type="button"]:hover,
+input[type="reset"]:hover,
+select:hover,
+textarea:hover,
+[tabindex]:not([tabindex="-1"]):hover {
+  transform: scale(1.15);
+}
+
+/* Disable hover effect for disabled elements */
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled,
+[role="button"][aria-disabled="true"] {
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Add smooth transition for all interactive elements */
+* {
+  transition: all 0.2s ease-in-out;
+}
+
 
