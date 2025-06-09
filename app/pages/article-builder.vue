@@ -140,18 +140,18 @@
         </div>
 
         <!-- Средняя панель - AI -->
-        <div v-if="store.showAiAgent" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm relative h-screen">
+        <div v-if="store.showAiAgent" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm relative h-full">
           <UTooltip
             :text="!canEditPost ? 'Editing published post is not allowed' : ''"
             :disabled="canEditPost"
           >
-            <div class="relative h-full">
-              <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="relative h-full flex flex-col">
+              <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
                 <h2 class="text-lg font-medium">
                   {{ t('common.aiAssistant') }}
                 </h2>
               </div>
-              <div class="p-4 h-[calc(100%-4rem)]">
+              <div class="flex-1 overflow-hidden">
                 <PostsCreate 
                   v-if="store.rightPanel === 'create'" 
                   :model-value="store.draft"
