@@ -5,8 +5,8 @@
         v-model="message"
         :placeholder="t('common.typeMessage')"
         class="flex-1"
-        :rows="1"
-        :auto-rows="true"
+        :rows="6"
+        :auto-rows="false"
         @keydown="handleKeyDown"
       >
         <template #trailing>
@@ -39,11 +39,12 @@ const { t } = useI18n()
 const message = ref('')
 
 const handleKeyDown = (event: KeyboardEvent) => {
-  // Если нажат Ctrl+Enter, отправляем сообщение
-  if (event.key === 'Enter' && event.ctrlKey) {
+  // Если нажат Enter без Shift, отправляем сообщение
+  if (event.key === 'Enter' && !event.shiftKey) {
     event.preventDefault()
     sendMessage()
   }
+  // Если нажат Shift+Enter, добавляем новую строку (стандартное поведение)
 }
 
 const sendMessage = async () => {
@@ -91,8 +92,8 @@ const sendMessage = async () => {
 
 <style scoped>
 :deep(.u-textarea) {
-  min-height: 40px;
-  max-height: 200px;
+  min-height: 120px; /* Примерно 6 строк */
+  max-height: 120px;
   resize: none;
 }
 </style>

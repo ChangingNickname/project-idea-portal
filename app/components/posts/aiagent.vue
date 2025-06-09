@@ -24,8 +24,8 @@
     </div>
 
     <!-- Messages -->
-    <div class="flex-1 overflow-y-auto">
-      <div class="space-y-4">
+    <div class="flex-1 overflow-y-auto min-h-0">
+      <div class="space-y-4 p-4">
         <ChatMessage
           v-for="(message, index) in messages"
           :key="index"
@@ -57,7 +57,8 @@
               linkedin: null,
               github: null,
               website: null
-            }
+            },
+            position: ''
           }"
           :is-current-user="message.role === 'user'"
           :status="message.role === 'user' ? 'sent' : 'delivered'"
@@ -76,11 +77,14 @@
     </div>
 
     <!-- Input -->
-    <ChatCreate
-      :user-id="'assistant'"
-      :disabled="isSending || aiAgentStore.isProcessing"
-      @message-sent="handleMessageSent"
-    />
+    <div class="border-t">
+      <ChatCreate
+        :user-id="'assistant'"
+        :disabled="isSending || aiAgentStore.isProcessing"
+        @message-sent="handleMessageSent"
+        class="h-[200px] resize-none"
+      />
+    </div>
   </div>
 </template>
 
