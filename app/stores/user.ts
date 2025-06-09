@@ -8,8 +8,7 @@ export const useUserStore = defineStore('user', {
   }),
 
   getters: {
-    isAuthenticated: (state) => !!state.user,
-    isAnonymous: (state) => state.user?.isAnonymous || false
+    isAuthenticated: (state) => !!state.user
   },
 
   actions: {

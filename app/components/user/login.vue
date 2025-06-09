@@ -125,7 +125,6 @@ import { ref, reactive, toRefs } from 'vue'
 import { 
   signInWithEmail, 
   signInWithGoogle, 
-  signInAnonymouslyUser, 
   storeUserAndRedirect 
 } from '~/utils/firebase/auth'
 
@@ -195,48 +194,29 @@ const handleEmailLogin = async () => {
   }
 }
 
-const handleProviderLogin = async (provider: 'google' | 'anonymous') => {
+const handleProviderLogin = async (provider: 'google') => {
   error.value = ''
   loading.value = true
   
   try {
-    let user = null
-    
-    if (provider === 'google') {
-      user = await signInWithGoogle()
-      if (!user) {
-        error.value = t('common.googleLoginError')
-        toast.add({
-          title: t('common.error'),
-          description: t('common.googleLoginError'),
-          color: 'error'
-        })
-        return
-      }
-    } else if (provider === 'anonymous') {
-      user = await signInAnonymouslyUser()
-      if (!user) {
-        error.value = t('common.anonymousLoginError')
-        toast.add({
-          title: t('common.error'),
-          description: t('common.anonymousLoginError'),
-          color: 'error'
-        })
-        return
-      }
-    }
-    
-    if (user) {
-      await storeUserAndRedirect(user)
+    const user = await signInWithGoogle()
+    if (!user) {
+      error.value = t('common.googleLoginError')
       toast.add({
-        title: t('common.success'),
-        description: provider === 'google' 
-          ? t('common.googleLoginSuccess')
-          : t('common.anonymousLoginSuccess'),
-        color: 'success'
+        title: t('common.error'),
+        description: t('common.googleLoginError'),
+        color: 'error'
       })
-      closeModal()
+      return
     }
+    
+    await storeUserAndRedirect(user)
+    toast.add({
+      title: t('common.success'),
+      description: t('common.googleLoginSuccess'),
+      color: 'success'
+    })
+    closeModal()
   } catch (err) {
     error.value = t('common.unexpectedError')
     toast.add({

@@ -2,11 +2,13 @@
 import { googleAI } from '@genkit-ai/googleai';
 import { genkit } from 'genkit';
 import { defineFlow, runFlow } from '@genkit-ai/flow';
+import { defineGraph } from 'genkitx-graph';
 import { H3Event } from 'h3';
 import { validateToken, getTokenFromEvent } from './token';
 import jwt from 'jsonwebtoken';
 import type { TokenPayload } from './token';
 import { $fetch } from 'ofetch';
+import { z } from 'zod';
 // TODO: ADD RAG FOR KNOWLEDGE BASE
 // configure a Genkit instance
 const ai = genkit({
@@ -71,6 +73,7 @@ interface AIResponse {
 interface TaskAnalysisState {
   message: string;
   context: string;
+  messageHistory: ChatMessage[];
   finalResponse: string;
   taskOrder: {
     showIntroduction: boolean;
@@ -138,6 +141,8 @@ const taskAnalysisGraph = defineFlow(
       
       Message: ${state.message}
       Context: ${state.context}
+      Message History:
+      ${state.messageHistory.map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`).join('\n')}
       
       Return ONLY a JSON object in this exact format:
       {
@@ -164,6 +169,7 @@ const taskAnalysisGraph = defineFlow(
       }
       
       Rules for response:
+      - Consider the entire message history when generating responses
       - If message is about creating a new article:
         1. Generate a complete initial schema
         2. Ask specific questions about the article
@@ -195,9 +201,6 @@ const taskAnalysisGraph = defineFlow(
       - For updates: Return updated schema
       - If no updates needed: Return null
       - Keep existing values for fields not mentioned in message
-      
-      Example responses:
-      {"response": "Creating initial schema for an article about smart parking. Please tell me more:\n1. Which aspects of smart parking interest you the most?\n2. Do you have any preferences for the article format (review, guide, analysis)?\n3. What key features of smart parking would you like to highlight?", "taskOrder": {"showIntroduction": false, "analyzeText": true, "searchWeb": false, "searchKnowledgeBase": false, "maxIterations": 1, "needUserClarification": true, "needFeatureInfo": false, "updateArticle": true}, "schema": {"title": "Smart Parking: Technologies of the Future", "cover": null, "annotation": "Overview of modern smart parking technologies, their advantages and development prospects", "keywords": ["smart parking", "smart city", "IoT", "automation", "transport infrastructure"], "domain": "smart-city", "content": "", "status": "draft"}}
     `;
 
     const { text } = await ai.generate(prompt);
@@ -218,6 +221,34 @@ const taskAnalysisGraph = defineFlow(
           ...result.schema
         };
       }
+
+      // Determine next node based on taskOrder
+      if (state.taskOrder.searchWeb) {
+        return {
+          state,
+          nextNode: 'searchWeb'
+        };
+      } else if (state.taskOrder.searchKnowledgeBase) {
+        return {
+          state,
+          nextNode: 'searchKnowledgeBase'
+        };
+      } else if (state.taskOrder.needUserClarification) {
+        return {
+          state,
+          nextNode: 'userClarification'
+        };
+      } else if (state.taskOrder.needFeatureInfo) {
+        return {
+          state,
+          nextNode: 'featureInfo'
+        };
+      } else if (state.taskOrder.updateArticle) {
+        return {
+          state,
+          nextNode: 'updateArticle'
+        };
+      }
       
       return {
         state,
@@ -232,6 +263,288 @@ const taskAnalysisGraph = defineFlow(
         nextNode: 'finalizeOutput'
       };
     }
+  }
+);
+
+// Define the search web flow
+const searchWebFlow = defineFlow(
+  {
+    name: 'searchWeb'
+  },
+  async (state: TaskAnalysisState): Promise<FlowResult> => {
+    console.log('Executing node: searchWeb');
+    const prompt = `
+      You are an AI assistant searching the web for information.
+      Consider the following context and message history when searching:
+      
+      Current Message: ${state.message}
+      Context: ${state.context}
+      Message History:
+      ${state.messageHistory.map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`).join('\n')}
+      
+      Return ONLY a JSON object in this exact format:
+      {
+        "response": string,
+        "schema": {
+          "title": string,
+          "cover": string | null,
+          "annotation": string,
+          "keywords": string[],
+          "domain": string,
+          "content": string,
+          "status": "draft" | "published" | "archived"
+        } | null
+      }
+    `;
+    
+    const { text } = await ai.generate(prompt);
+    try {
+      const cleanText = text.replace(/```json\n?|\n?```/g, '').trim();
+      const result = JSON.parse(cleanText);
+      
+      state.finalResponse = result.response;
+      if (result.schema) {
+        state.schema = {
+          ...state.schema,
+          ...result.schema
+        };
+      }
+      
+      return {
+        state,
+        nextNode: 'finalizeOutput'
+      };
+    } catch (error) {
+      console.error('Error in search web:', error);
+      state.finalResponse = "Извините, произошла ошибка при поиске информации. Пожалуйста, попробуйте еще раз.";
+      return {
+        state,
+        nextNode: 'finalizeOutput'
+      };
+    }
+  }
+);
+
+// Define the search knowledge base flow
+const searchKnowledgeBaseFlow = defineFlow(
+  {
+    name: 'searchKnowledgeBase'
+  },
+  async (state: TaskAnalysisState): Promise<FlowResult> => {
+    console.log('Executing node: searchKnowledgeBase');
+    const prompt = `
+      You are an AI assistant searching the knowledge base for information.
+      Consider the following context and message history when searching:
+      
+      Current Message: ${state.message}
+      Context: ${state.context}
+      Message History:
+      ${state.messageHistory.map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`).join('\n')}
+      
+      Return ONLY a JSON object in this exact format:
+      {
+        "response": string,
+        "schema": {
+          "title": string,
+          "cover": string | null,
+          "annotation": string,
+          "keywords": string[],
+          "domain": string,
+          "content": string,
+          "status": "draft" | "published" | "archived"
+        } | null
+      }
+    `;
+    
+    const { text } = await ai.generate(prompt);
+    try {
+      const cleanText = text.replace(/```json\n?|\n?```/g, '').trim();
+      const result = JSON.parse(cleanText);
+      
+      state.finalResponse = result.response;
+      if (result.schema) {
+        state.schema = {
+          ...state.schema,
+          ...result.schema
+        };
+      }
+      
+      return {
+        state,
+        nextNode: 'finalizeOutput'
+      };
+    } catch (error) {
+      console.error('Error in search knowledge base:', error);
+      state.finalResponse = "Извините, произошла ошибка при поиске в базе знаний. Пожалуйста, попробуйте еще раз.";
+      return {
+        state,
+        nextNode: 'finalizeOutput'
+      };
+    }
+  }
+);
+
+// Define the user clarification flow
+const userClarificationFlow = defineFlow(
+  {
+    name: 'userClarification'
+  },
+  async (state: TaskAnalysisState): Promise<FlowResult> => {
+    console.log('Executing node: userClarification');
+    const prompt = `
+      You are an AI assistant asking for clarification.
+      Consider the following context and message history when formulating questions:
+      
+      Current Message: ${state.message}
+      Context: ${state.context}
+      Message History:
+      ${state.messageHistory.map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`).join('\n')}
+      
+      Return ONLY a JSON object in this exact format:
+      {
+        "response": string,
+        "clarification": string
+      }
+    `;
+    
+    const { text } = await ai.generate(prompt);
+    try {
+      const cleanText = text.replace(/```json\n?|\n?```/g, '').trim();
+      const result = JSON.parse(cleanText);
+      
+      state.finalResponse = result.response;
+      state.userClarification = result.clarification;
+      
+      return {
+        state,
+        nextNode: 'finalizeOutput'
+      };
+    } catch (error) {
+      console.error('Error in user clarification:', error);
+      state.finalResponse = "Извините, произошла ошибка при запросе уточнений. Пожалуйста, попробуйте еще раз.";
+      return {
+        state,
+        nextNode: 'finalizeOutput'
+      };
+    }
+  }
+);
+
+// Define the feature info flow
+const featureInfoFlow = defineFlow(
+  {
+    name: 'featureInfo'
+  },
+  async (state: TaskAnalysisState): Promise<FlowResult> => {
+    console.log('Executing node: featureInfo');
+    const prompt = `
+      You are an AI assistant providing feature information.
+      Consider the following context and message history when explaining features:
+      
+      Current Message: ${state.message}
+      Context: ${state.context}
+      Message History:
+      ${state.messageHistory.map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`).join('\n')}
+      
+      Return ONLY a JSON object in this exact format:
+      {
+        "response": string,
+        "featureInfo": string
+      }
+    `;
+    
+    const { text } = await ai.generate(prompt);
+    try {
+      const cleanText = text.replace(/```json\n?|\n?```/g, '').trim();
+      const result = JSON.parse(cleanText);
+      
+      state.finalResponse = result.response;
+      state.featureInfo = result.featureInfo;
+      
+      return {
+        state,
+        nextNode: 'finalizeOutput'
+      };
+    } catch (error) {
+      console.error('Error in feature info:', error);
+      state.finalResponse = "Извините, произошла ошибка при предоставлении информации о функциях. Пожалуйста, попробуйте еще раз.";
+      return {
+        state,
+        nextNode: 'finalizeOutput'
+      };
+    }
+  }
+);
+
+// Define the update article flow
+const updateArticleFlow = defineFlow(
+  {
+    name: 'updateArticle'
+  },
+  async (state: TaskAnalysisState): Promise<FlowResult> => {
+    console.log('Executing node: updateArticle');
+    const prompt = `
+      You are an AI assistant updating an article.
+      Consider the following context and message history when making updates:
+      
+      Current Message: ${state.message}
+      Context: ${state.context}
+      Message History:
+      ${state.messageHistory.map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`).join('\n')}
+      Current Schema: ${JSON.stringify(state.schema, null, 2)}
+      
+      Return ONLY a JSON object in this exact format:
+      {
+        "response": string,
+        "schema": {
+          "title": string,
+          "cover": string | null,
+          "annotation": string,
+          "keywords": string[],
+          "domain": string,
+          "content": string,
+          "status": "draft" | "published" | "archived"
+        }
+      }
+    `;
+    
+    const { text } = await ai.generate(prompt);
+    try {
+      const cleanText = text.replace(/```json\n?|\n?```/g, '').trim();
+      const result = JSON.parse(cleanText);
+      
+      state.finalResponse = result.response;
+      state.schema = {
+        ...state.schema,
+        ...result.schema
+      };
+      
+      return {
+        state,
+        nextNode: 'finalizeOutput'
+      };
+    } catch (error) {
+      console.error('Error in update article:', error);
+      state.finalResponse = "Извините, произошла ошибка при обновлении статьи. Пожалуйста, попробуйте еще раз.";
+      return {
+        state,
+        nextNode: 'finalizeOutput'
+      };
+    }
+  }
+);
+
+// Define the finalize output flow
+const finalizeOutputFlow = defineFlow(
+  {
+    name: 'finalizeOutput'
+  },
+  async (state: TaskAnalysisState): Promise<FlowResult> => {
+    console.log('Executing node: finalizeOutput');
+    return {
+      state,
+      nextNode: 'end'
+    };
   }
 );
 
@@ -267,33 +580,62 @@ export async function createValidatedChat(event: H3Event) {
           .map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
           .join('\n');
         
-        // Analyze task order using the graph
-        const taskOrderResult = await runFlow(taskAnalysisGraph, {
+        // Initialize state
+        const state: TaskAnalysisState = {
           message,
           context,
-          articleDraft
-        });
+          messageHistory: [],
+          finalResponse: '',
+          taskOrder: {
+            showIntroduction: false,
+            analyzeText: true,
+            searchWeb: false,
+            searchKnowledgeBase: false,
+            maxIterations: 1,
+            needUserClarification: false,
+            needFeatureInfo: false,
+            updateArticle: false
+          },
+          userClarification: '',
+          featureInfo: '',
+          schema: articleDraft || null
+        };
+
+        // Run task analysis
+        const taskAnalysisResult = await runFlow(taskAnalysisGraph, state);
         
-        // Generate response with context and task order
-        const prompt = `
-          Previous conversation:
-          ${context}
-          
-          Task Order:
-          ${JSON.stringify(taskOrderResult.state.taskOrder, null, 2)}
-          
-          Search Results:
-          ${taskOrderResult.state.searchResults.join('\n')}
-          
-          User: ${message}
-          Assistant:`;
-          
-        const { text } = await ai.generate(prompt);
+        // Run the next flow based on the task analysis result
+        let result = taskAnalysisResult;
+        while (result.nextNode !== 'end') {
+          switch (result.nextNode) {
+            case 'searchWeb':
+              result = await runFlow(searchWebFlow, result.state);
+              break;
+            case 'searchKnowledgeBase':
+              result = await runFlow(searchKnowledgeBaseFlow, result.state);
+              break;
+            case 'userClarification':
+              result = await runFlow(userClarificationFlow, result.state);
+              break;
+            case 'featureInfo':
+              result = await runFlow(featureInfoFlow, result.state);
+              break;
+            case 'updateArticle':
+              result = await runFlow(updateArticleFlow, result.state);
+              break;
+            case 'finalizeOutput':
+              result = await runFlow(finalizeOutputFlow, result.state);
+              break;
+            default:
+              console.error('Unknown next node:', result.nextNode);
+              throw new Error('Unknown next node: ' + result.nextNode);
+          }
+        }
         
         // Add assistant message to history
         const assistantMessage: ChatMessage = {
           role: 'assistant',
-          content: text,
+          content: result.state.finalResponse,
           timestamp: new Date().toISOString(),
           user: {
             id: 'assistant',
@@ -305,8 +647,8 @@ export async function createValidatedChat(event: H3Event) {
         newSession.messages.push(assistantMessage);
         
         return { 
-          text,
-          schema: articleDraft
+          text: result.state.finalResponse,
+          schema: result.state.schema
         };
       }
     };
@@ -317,14 +659,27 @@ export async function createValidatedChat(event: H3Event) {
   return chatSession;
 }
 
-export async function ask(message: string, articleDraft?: ArticleDraft): Promise<AIResponse> {
+export async function ask(message: string, articleDraft?: ArticleDraft, messageHistory?: Array<{ role: string; content: string; timestamp: string }>): Promise<AIResponse> {
   try {
     console.log('Processing message:', message);
+    
+    // Convert message history to ChatMessage format
+    const chatMessages: ChatMessage[] = messageHistory ? messageHistory.map(msg => ({
+      role: msg.role as 'user' | 'assistant',
+      content: msg.content,
+      timestamp: msg.timestamp
+    })) : [];
+    
+    // Prepare context from message history
+    const context = chatMessages
+      .map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
+      .join('\n');
     
     // Initialize state
     const state: TaskAnalysisState = {
       message,
-      context: articleDraft ? JSON.stringify(articleDraft) : '',
+      context,
+      messageHistory: chatMessages,
       finalResponse: '',
       taskOrder: {
         showIntroduction: false,
@@ -361,8 +716,38 @@ export async function ask(message: string, articleDraft?: ArticleDraft): Promise
       };
     }
 
-    // Run main graph only if input filter passed
-    const result = await runFlow(taskAnalysisGraph, inputFilterResult.state);
+    // Run task analysis
+    const taskAnalysisResult = await runFlow(taskAnalysisGraph, inputFilterResult.state);
+    
+    // Run the next flow based on the task analysis result
+    let result = taskAnalysisResult;
+    while (result.nextNode !== 'end') {
+      switch (result.nextNode) {
+        case 'searchWeb':
+          result = await runFlow(searchWebFlow, result.state);
+          break;
+        case 'searchKnowledgeBase':
+          result = await runFlow(searchKnowledgeBaseFlow, result.state);
+          break;
+        case 'userClarification':
+          result = await runFlow(userClarificationFlow, result.state);
+          break;
+        case 'featureInfo':
+          result = await runFlow(featureInfoFlow, result.state);
+          break;
+        case 'updateArticle':
+          result = await runFlow(updateArticleFlow, result.state);
+          break;
+        case 'finalizeOutput':
+          result = await runFlow(finalizeOutputFlow, result.state);
+          break;
+        default:
+          console.error('Unknown next node:', result.nextNode);
+          return {
+            finalResponse: "Извините, произошла ошибка при обработке вашего сообщения. Пожалуйста, попробуйте еще раз."
+          };
+      }
+    }
     
     return {
       finalResponse: result.state.finalResponse,
@@ -480,6 +865,7 @@ export async function processMessage(message: string, context: string = ''): Pro
   const state: TaskAnalysisState = {
     message,
     context,
+    messageHistory: [],
     finalResponse: '',
     taskOrder: {
       showIntroduction: false,
@@ -497,9 +883,37 @@ export async function processMessage(message: string, context: string = ''): Pro
   };
 
   try {
-    console.log('Executing task analysis graph...');
-    const result = await runFlow(taskAnalysisGraph, state);
-    console.log('Graph execution completed. Final node:', result.nextNode);
+    console.log('Executing task analysis...');
+    const taskAnalysisResult = await runFlow(taskAnalysisGraph, state);
+    console.log('Task analysis completed. Next node:', taskAnalysisResult.nextNode);
+    
+    // Run the next flow based on the task analysis result
+    let result = taskAnalysisResult;
+    while (result.nextNode !== 'end') {
+      switch (result.nextNode) {
+        case 'searchWeb':
+          result = await runFlow(searchWebFlow, result.state);
+          break;
+        case 'searchKnowledgeBase':
+          result = await runFlow(searchKnowledgeBaseFlow, result.state);
+          break;
+        case 'userClarification':
+          result = await runFlow(userClarificationFlow, result.state);
+          break;
+        case 'featureInfo':
+          result = await runFlow(featureInfoFlow, result.state);
+          break;
+        case 'updateArticle':
+          result = await runFlow(updateArticleFlow, result.state);
+          break;
+        case 'finalizeOutput':
+          result = await runFlow(finalizeOutputFlow, result.state);
+          break;
+        default:
+          console.error('Unknown next node:', result.nextNode);
+          throw new Error('Unknown next node: ' + result.nextNode);
+      }
+    }
     
     return {
       finalResponse: result.state.finalResponse,
@@ -516,7 +930,17 @@ export async function processMessage(message: string, context: string = ''): Pro
 
 // Update the main entry point
 export const main = async () => {
-  const graph = taskAnalysisGraph;
+  // Initialize the flows
+  const flows = {
+    taskAnalysis: taskAnalysisGraph,
+    searchWeb: searchWebFlow,
+    searchKnowledgeBase: searchKnowledgeBaseFlow,
+    userClarification: userClarificationFlow,
+    featureInfo: featureInfoFlow,
+    updateArticle: updateArticleFlow,
+    finalizeOutput: finalizeOutputFlow
+  };
+  
   // ... rest of the main function
 };
 

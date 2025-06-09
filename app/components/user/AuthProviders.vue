@@ -1,5 +1,5 @@
 <template>
-  <div class="grid grid-cols-2 gap-3">
+  <div class="grid grid-cols-1 gap-3">
     <UButton
       color="neutral"
       variant="soft"
@@ -12,19 +12,6 @@
       </template>
       {{ $t('common.google') }}
     </UButton>
-    
-    <UButton
-      color="neutral"
-      variant="soft"
-      @click="handleProviderClick('anonymous')"
-      :loading="loading"
-      class="w-full"
-    >
-      <template #leading>
-        <i class="i-heroicons-user text-lg" />
-      </template>
-      {{ $t('common.continueAsGuest') }}
-    </UButton>
   </div>
 </template>
 
@@ -34,10 +21,10 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'provider', provider: 'google' | 'anonymous'): void
+  (e: 'provider', provider: 'google'): void
 }>()
 
-const handleProviderClick = (provider: 'google' | 'anonymous') => {
+const handleProviderClick = (provider: 'google') => {
   emit('provider', provider)
 }
 </script> 

@@ -54,6 +54,14 @@
           <UButton 
             size="lg" 
             variant="solid" 
+            color="primary"
+            :label="$t('common.register')" 
+            @click="openRegister"
+          />
+          <UButton 
+            size="lg" 
+            variant="solid" 
+            color="primary"
             :label="$t('common.signIn')" 
             @click="openLogin"
           />

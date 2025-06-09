@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
 
     // Get request body
     const body = await readBody(event)
-    const { message, articleDraft } = body
+    const { message, articleDraft, messageHistory } = body
 
     if (!message) {
       throw createError({
@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Process message and get response
-    const result = await ask(message, articleDraft)
+    const result = await ask(message, articleDraft, messageHistory)
 
     // Log service information in development mode
     if (process.env.NODE_ENV === 'development') {

@@ -196,7 +196,12 @@ export const useAiAgentStore = defineStore('aiagent', {
             message: processedMessage,
             sessionToken: this.sessionToken,
             articleDraft: processedDraft,
-            images
+            images,
+            messageHistory: this.messages.map(msg => ({
+              role: msg.role,
+              content: msg.content,
+              timestamp: msg.timestamp
+            }))
           }
         })
 
