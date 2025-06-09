@@ -23,6 +23,9 @@
               />
             </div>
             <p class="text-sm text-gray-500 dark:text-gray-400">
+              {{ user.position || t('common.noPositionProvided') }}
+            </p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">
               {{ user.email || t('common.noEmailProvided') }}
             </p>
           </div>

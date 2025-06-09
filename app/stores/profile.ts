@@ -1,4 +1,6 @@
 import { defineStore } from 'pinia'
+import { useUserStore } from '~/stores/user'
+import { useRoute } from 'vue-router'
 
 export const useProfileStore = defineStore('profile', {
   state: () => ({
@@ -8,17 +10,30 @@ export const useProfileStore = defineStore('profile', {
 
   actions: {
     async updateProfile(user: User) {
+      const route = useRoute()
+      const userId = route.params.uid
+
+      if (!userId) {
+        this.error = 'Invalid user ID'
+        throw new Error('Invalid user ID')
+      }
+
       this.loading = true
       this.error = null
       
       try {
-        // TODO: Implement actual API call
-        console.log('Updating profile:', user)
+        const response = await $fetch(`/api/user/${userId}/profile`, {
+          method: 'POST',
+          body: user
+        })
+
+        // Обновляем данные в userStore
+        const userStore = useUserStore()
+        if (response?.profile) {
+          userStore.updateUser(response.profile)
+        }
         
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        
-        return user
+        return response
       } catch (error) {
         this.error = error instanceof Error ? error.message : 'Failed to update profile'
         throw error

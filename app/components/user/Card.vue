@@ -24,6 +24,9 @@
             class="w-4 h-4 text-primary"
           />
         </div>
+        <p v-if="user?.position" class="text-xs text-gray-500 dark:text-gray-400 truncate">
+          {{ user.position }}
+        </p>
         <p v-if="user?.displayName && user?.email" class="text-xs text-gray-500 dark:text-gray-400 truncate">
           {{ user?.email }}
         </p>

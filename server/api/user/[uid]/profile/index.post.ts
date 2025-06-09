@@ -65,7 +65,8 @@ export default defineEventHandler(async (event) => {
       email: userRecord.email || null,
       avatar: profileData.avatar || userRecord.photoURL || null,
       emailVerified: userRecord.emailVerified,
-      displayName: profileData.displayName,
+      displayName: profileData.displayName || userRecord.displayName || null,
+      position: profileData.position || null,
       disabled: false,
       isAnonymous: userRecord.providerData.length === 0,
       providerData: userRecord.providerData.map(provider => ({
@@ -110,7 +111,7 @@ export default defineEventHandler(async (event) => {
 
     // Обновляем данные пользователя в Firebase Auth
     await getAuth().updateUser(uid, {
-      displayName: profileData.displayName,
+      displayName: profileData.displayName || userRecord.displayName,
       photoURL: profileData.avatar || userRecord.photoURL
     })
 

@@ -103,6 +103,9 @@ export default {
     notProvided: 'Не указано',
     memberSince: 'Участник с',
     noContactsProvided: 'Контакты не указаны',
+    position: 'Должность',
+    positionInput: 'Введите вашу должность',
+    noPositionProvided: 'Должность не указана',
     // Mail page translations
     searchByNameOrEmail: 'Поиск по имени или email...',
     sortByMessageDate: 'По дате сообщения',

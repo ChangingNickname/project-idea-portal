@@ -19,6 +19,7 @@ export const mapFirebaseUser = (firebaseUser: FirebaseUser): User => ({
   email: firebaseUser.email || null,
   displayName: firebaseUser.displayName || null,
   avatar: firebaseUser.photoURL || null,
+  position: null,
   emailVerified: firebaseUser.emailVerified,
   isAnonymous: firebaseUser.isAnonymous,
   disabled: false,
@@ -183,7 +184,7 @@ export const signInAnonymouslyUser = async (): Promise<User | null> => {
 /**
  * Store user data and redirect
  */
-export const storeUserAndRedirect = async (user: User): Promise<User> => {
+export const storeUserAndRedirect = async (user: User, additionalData?: Partial<User>): Promise<User> => {
   const { $auth } = useNuxtApp()
   const router = useRouter()
   
@@ -193,7 +194,13 @@ export const storeUserAndRedirect = async (user: User): Promise<User> => {
       throw new Error('Пользователь не авторизован')
     }
     
-    localStorage.setItem('user', JSON.stringify(user))
+    // Объединяем данные пользователя с дополнительными данными
+    const updatedUser = {
+      ...user,
+      ...additionalData
+    }
+    
+    localStorage.setItem('user', JSON.stringify(updatedUser))
     localStorage.setItem('auth_token', token)
     startTokenRefresh()
     await router.push('/')

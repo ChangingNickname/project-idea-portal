@@ -96,6 +96,20 @@
                   </template>
                 </UInput>
               </UFormField>
+
+              <UFormField
+                :label="t('common.position')"
+                name="position"
+              >
+                <UInput
+                  v-model="formState.position"
+                  :placeholder="t('common.positionInput')"
+                >
+                  <template #leading>
+                    <Icon name="heroicons:briefcase" class="w-5 h-5 text-gray-400" />
+                  </template>
+                </UInput>
+              </UFormField>
             </div>
           </div>
 
@@ -429,8 +443,18 @@ const handleSubmit = async () => {
       website: formState.contacts.website || null
     }
 
-    const updatedUser = {
+    const updatedUser: User = {
       ...formState,
+      id: props.user.id,
+      email: props.user.email,
+      emailVerified: props.user.emailVerified,
+      disabled: props.user.disabled,
+      isAnonymous: props.user.isAnonymous,
+      providerData: props.user.providerData,
+      customClaims: props.user.customClaims,
+      metadata: props.user.metadata,
+      tenantId: props.user.tenantId,
+      multiFactor: props.user.multiFactor,
       contacts: cleanedContacts
     }
 

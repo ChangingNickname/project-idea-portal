@@ -60,6 +60,7 @@ export default defineEventHandler(async (event): Promise<User> => {
           avatar: profileData?.avatar || userRecord.photoURL || null,
           emailVerified: userRecord.emailVerified,
           displayName: profileData?.displayName || userRecord.displayName || null,
+          position: profileData?.position || null,
           disabled: userRecord.disabled,
           isAnonymous: userRecord.providerData.length === 0,
           providerData: userRecord.providerData.map(provider => ({
@@ -106,6 +107,7 @@ export default defineEventHandler(async (event): Promise<User> => {
         avatar: profileData?.avatar || userRecord.photoURL || null,
         emailVerified: false,
         displayName: profileData?.displayName || userRecord.displayName || userRecord.email || null,
+        position: profileData?.position || null,
         disabled: false,
         isAnonymous: false,
         providerData: [],

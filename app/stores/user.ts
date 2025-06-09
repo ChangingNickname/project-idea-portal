@@ -31,7 +31,17 @@ export const useUserStore = defineStore('user', {
     },
 
     updateUser(user: User) {
-      if (this.user && this.user.id === user.id) {
+      if (!user?.id) {
+        console.error('Invalid user data in updateUser')
+        return
+      }
+
+      if (!this.user) {
+        this.user = user
+        return
+      }
+
+      if (this.user.id === user.id) {
         this.user = {
           ...this.user,
           ...user

@@ -172,7 +172,10 @@ export default {
     dateRange: 'Date Range',
     selectDate: 'Select date',
     advancedSearch: 'Advanced Search',
-    reset: 'Reset'
+    reset: 'Reset',
+    position: 'Position',
+    positionInput: 'Enter your position',
+    noPositionProvided: 'No position provided',
   },
   message: {
     status: {
