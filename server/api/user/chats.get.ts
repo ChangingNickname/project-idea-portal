@@ -1,5 +1,6 @@
 import { getFirestore } from 'firebase-admin/firestore'
 import { checkAuth } from '~~/server/utils/auth'
+import { getAuth } from 'firebase-admin/auth'
 
 export default defineEventHandler(async (event) => {
   const db = getFirestore()
@@ -76,19 +77,140 @@ export default defineEventHandler(async (event) => {
     // Получаем информацию о пользователях
     const chats = await Promise.all(
       Array.from(chatMap.entries()).map(async ([userId, chatData]) => {
-        const userDoc = await db.collection('users').doc(userId).get()
-        const userData = userDoc.data()
+        try {
+          const userRecord = await getAuth().getUser(userId)
+          const profileDoc = await db.collection('profiles').doc(userId).get()
+          const profileData = profileDoc.exists ? profileDoc.data() : null
 
-        return {
-          userId,
-          user: {
-            id: userId,
-            email: userData?.email || '',
-            displayName: userData?.displayName || null,
-            avatar: userData?.avatar || null,
-            emailVerified: userData?.emailVerified || false
-          },
-          lastMessage: chatData.lastMessage
+          // Проверяем, добавил ли пользователь меня в друзья
+          let isAddedToFriends = false
+          if (authResult.currentUserId) {
+            const relationshipDoc = await db.collection('relationships')
+              .where('uid', '==', userId)
+              .where('targetUid', '==', authResult.currentUserId)
+              .where('status', '==', 'friend')
+              .get()
+            isAddedToFriends = !relationshipDoc.empty
+          }
+
+          // Если пользователь запрашивает свои данные или добавил меня в друзья, возвращаем полные данные
+          const user = authResult.currentUserId === userId || isAddedToFriends ? {
+            id: userRecord.uid,
+            email: userRecord.email || null,
+            avatar: profileData?.avatar || userRecord.photoURL || null,
+            emailVerified: userRecord.emailVerified,
+            displayName: profileData?.displayName || userRecord.displayName || null,
+            position: profileData?.position || null,
+            disabled: userRecord.disabled,
+            isAnonymous: userRecord.providerData.length === 0,
+            providerData: userRecord.providerData.map(provider => ({
+              providerId: provider.providerId,
+              uid: provider.uid,
+              displayName: provider.displayName || null,
+              email: provider.email || null,
+              phoneNumber: provider.phoneNumber || null,
+              photoURL: provider.photoURL || null
+            })),
+            customClaims: userRecord.customClaims || null,
+            metadata: {
+              creationTime: userRecord.metadata.creationTime || null,
+              lastSignInTime: userRecord.metadata.lastSignInTime || null,
+              lastRefreshTime: userRecord.metadata.lastRefreshTime || null
+            },
+            tenantId: userRecord.tenantId || null,
+            multiFactor: userRecord.multiFactor ? {
+              enrolledFactors: userRecord.multiFactor.enrolledFactors.map(factor => ({
+                uid: factor.uid,
+                factorId: factor.factorId,
+                displayName: factor.displayName || null,
+                enrollmentTime: factor.enrollmentTime || null
+              }))
+            } : null,
+            contacts: profileData?.contacts || {
+              email: userRecord.email || null,
+              phone: userRecord.phoneNumber || null,
+              telegram: null,
+              whatsapp: null,
+              viber: null,
+              discord: null,
+              linkedin: null,
+              github: null,
+              website: null
+            }
+          } : {
+            // Для других пользователей возвращаем только публичные данные
+            id: userRecord.uid,
+            email: null,
+            avatar: profileData?.avatar || userRecord.photoURL || null,
+            emailVerified: false,
+            displayName: profileData?.displayName || userRecord.displayName || userRecord.email || null,
+            position: profileData?.position || null,
+            disabled: false,
+            isAnonymous: false,
+            providerData: [],
+            customClaims: null,
+            metadata: {
+              creationTime: null,
+              lastSignInTime: null,
+              lastRefreshTime: null
+            },
+            tenantId: null,
+            multiFactor: null,
+            contacts: {
+              email: null,
+              phone: null,
+              telegram: null,
+              whatsapp: null,
+              viber: null,
+              discord: null,
+              linkedin: null,
+              github: null,
+              website: null
+            }
+          }
+
+          return {
+            userId,
+            user,
+            lastMessage: chatData.lastMessage
+          }
+        } catch (error) {
+          console.error(`Error fetching user data for ${userId}:`, error)
+          // В случае ошибки возвращаем минимальные данные
+          return {
+            userId,
+            user: {
+              id: userId,
+              email: null,
+              avatar: null,
+              emailVerified: false,
+              displayName: null,
+              position: null,
+              disabled: false,
+              isAnonymous: false,
+              providerData: [],
+              customClaims: null,
+              metadata: {
+                creationTime: null,
+                lastSignInTime: null,
+                lastRefreshTime: null
+              },
+              tenantId: null,
+              multiFactor: null,
+              contacts: {
+                email: null,
+                phone: null,
+                telegram: null,
+                whatsapp: null,
+                viber: null,
+                discord: null,
+                linkedin: null,
+                github: null,
+                website: null
+              }
+            },
+            lastMessage: chatData.lastMessage
+          }
         }
       })
     )
@@ -109,11 +231,14 @@ export default defineEventHandler(async (event) => {
 
       switch (sortBy) {
         case 'name':
-          comparison = (a.user.displayName || a.user.email)
-            .localeCompare(b.user.displayName || b.user.email)
+          const nameA = a.user.displayName || a.user.email || ''
+          const nameB = b.user.displayName || b.user.email || ''
+          comparison = nameA.localeCompare(nameB)
           break
         case 'email':
-          comparison = a.user.email.localeCompare(b.user.email)
+          const emailA = a.user.email || ''
+          const emailB = b.user.email || ''
+          comparison = emailA.localeCompare(emailB)
           break
         case 'lastMessage':
         default:

@@ -92,8 +92,34 @@
           <div class="flex-1">
             <UserCard 
               :user="{
-                ...chat.user,
-                displayName: chat.user.displayName || chat.user.email
+                id: chat.user.id,
+                email: chat.user.email,
+                displayName: chat.user.displayName || chat.user.email,
+                avatar: chat.user.avatar || null,
+                emailVerified: chat.user.emailVerified,
+                position: null,
+                disabled: false,
+                isAnonymous: false,
+                providerData: [],
+                contacts: {
+                  email: chat.user.email,
+                  phone: null,
+                  telegram: null,
+                  whatsapp: null,
+                  viber: null,
+                  discord: null,
+                  linkedin: null,
+                  github: null,
+                  website: null
+                },
+                customClaims: null,
+                metadata: {
+                  creationTime: null,
+                  lastSignInTime: null,
+                  lastRefreshTime: null
+                },
+                tenantId: null,
+                multiFactor: null
               }" 
             />
           </div>
@@ -344,9 +370,11 @@ const debouncedUserSearch = useDebounceFn(() => {
 }, 300)
 
 // Start chat with selected user
-const handleStartChat = async (userId: string) => {
-  navigateTo(`/user/${userId}/chat`)
-  showUserSearch.value = false
+const handleStartChat = async (users: string[]) => {
+  if (users.length > 0) {
+    navigateTo(`/user/${users[0]}/chat`)
+    showUserSearch.value = false
+  }
 }
 
 onMounted(() => {
