@@ -4,7 +4,7 @@
       :to="props.isFull ? undefined : `/ideas/${post.id}`"
       :class="[
         'block bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow duration-200 overflow-hidden relative',
-        props.isFull ? 'cursor-default' : 'cursor-pointer w-128 h-128',
+        props.isFull ? 'cursor-default' : 'cursor-pointer',
         {
           'border-2 border-primary-500': post.status === 'published',
           'border-2 border-yellow-500': post.status === 'draft',
@@ -206,7 +206,7 @@
       </div>
     </NuxtLink>
   </div>
-  <div v-else class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden w-128 h-128">
+  <div v-else class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
     <div class="h-64 bg-gray-200 dark:bg-gray-700 animate-pulse" />
     <div class="p-4 space-y-3">
       <div class="h-6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />

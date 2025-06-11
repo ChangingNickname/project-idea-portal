@@ -120,7 +120,7 @@
                             class="w-full"
                           />
                           <UButton
-                            color="red"
+                            color="error"
                             variant="soft"
                             size="xs"
                             class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -243,26 +243,24 @@
           </UButton>
         </div>
       </div>
-      <div v-else class="flex flex-col gap-6">
-        <div class="flex flex-wrap gap-8">
-          <div v-for="post in posts" :key="post.id" class="flex flex-col w-full md:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1.33rem)]">
-            <PostsCard :post="post" />
-            <div class="m-2 flex justify-end">
-              <UButton
-                v-if="post.status === 'draft' && post.ownerId === userStore.user?.id"
-                :to="`/article-builder?id=${post.id}`"
-                color="primary"
-                variant="soft"
-                class="inline-flex items-center"
-              >
-                <Icon name="lucide:edit" class="w-5 h-5 mr-2" />
-                {{ $t('common.edit') }}
-              </UButton>
-            </div>
+      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 px-2 md:px-4 lg:px-6">
+        <div v-for="post in posts" :key="post.id" class="flex flex-col h-full">
+          <PostsCard :post="post" />
+          <div class="mt-2 flex justify-end">
+            <UButton
+              v-if="post.status === 'draft' && post.ownerId === userStore.user?.id"
+              :to="`/article-builder?id=${post.id}`"
+              color="primary"
+              variant="soft"
+              class="inline-flex items-center"
+            >
+              <Icon name="lucide:edit" class="w-5 h-5 mr-2" />
+              {{ $t('common.edit') }}
+            </UButton>
           </div>
         </div>
         <!-- Пагинация -->
-        <div class="flex justify-center ">
+        <div class="col-span-full flex justify-center mt-6">
           <template v-if="pagination.pages > 1">
             <UPagination
               v-model="currentPage"
