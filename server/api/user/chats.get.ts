@@ -23,22 +23,46 @@ export default defineEventHandler(async (event) => {
     const sortDirection = (query.sortDirection as 'asc' | 'desc') || 'desc'
 
     // Получаем все сообщения, где текущий пользователь является отправителем или получателем
-    const messagesRef = db.collection('messages')
-      .where('from_user_id', 'in', [authResult.currentUserId])
+    const sentMessagesRef = db.collection('messages')
+      .where('from_user_id', '==', authResult.currentUserId)
       .orderBy('created_at', 'desc')
 
-    const messages = await messagesRef.get()
+    const receivedMessagesRef = db.collection('messages')
+      .where('to_user_id', '==', authResult.currentUserId)
+      .orderBy('created_at', 'desc')
+
+    const [sentMessages, receivedMessages] = await Promise.all([
+      sentMessagesRef.get(),
+      receivedMessagesRef.get()
+    ])
     
     // Собираем уникальных пользователей и их последние сообщения
     const chatMap = new Map()
     
-    messages.forEach(doc => {
+    // Process sent messages
+    sentMessages.forEach(doc => {
       const data = doc.data()
-      const otherUserId = data.from_user_id === authResult.currentUserId 
-        ? data.to_user_id 
-        : data.from_user_id
+      const otherUserId = data.to_user_id
 
-      if (!chatMap.has(otherUserId)) {
+      if (!chatMap.has(otherUserId) || 
+          new Date(data.created_at.toDate()) > new Date(chatMap.get(otherUserId).lastMessage.created_at)) {
+        chatMap.set(otherUserId, {
+          lastMessage: {
+            id: doc.id,
+            message: data.message,
+            created_at: data.created_at.toDate().toISOString()
+          }
+        })
+      }
+    })
+
+    // Process received messages
+    receivedMessages.forEach(doc => {
+      const data = doc.data()
+      const otherUserId = data.from_user_id
+
+      if (!chatMap.has(otherUserId) || 
+          new Date(data.created_at.toDate()) > new Date(chatMap.get(otherUserId).lastMessage.created_at)) {
         chatMap.set(otherUserId, {
           lastMessage: {
             id: doc.id,
