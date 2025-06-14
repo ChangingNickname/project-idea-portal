@@ -200,6 +200,23 @@ const { t } = useI18n()
 const previewKey = ref(0)
 const isLoading = ref(false)
 
+// Определение мобильного режима
+const isMobile = ref(false)
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 768 // md breakpoint
+  store.setMobileMode(isMobile.value)
+}
+
+// Слушаем изменение размера окна
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
+})
+
 // Функция проверки прав на редактирование
 const canEditPost = computed(() => {
   if (!userStore.user || !store.draft.id) return true // Новый пост можно редактировать
@@ -274,8 +291,12 @@ onMounted(async () => {
   }
 })
 
-// Вычисляем классы для сетки в зависимости от количества панелей
+// Обновляем вычисляемое свойство для сетки
 const gridClass = computed(() => {
+  if (isMobile.value) {
+    return 'grid-cols-1'
+  }
+
   const panels = [
     store.showCreate,
     store.showAiAgent,
@@ -286,7 +307,7 @@ const gridClass = computed(() => {
     case 1:
       return 'grid-cols-1'
     case 2:
-    return 'grid-cols-2'
+      return 'grid-cols-2'
     case 3:
       return 'grid-cols-3'
     default:

@@ -10,6 +10,7 @@ interface ArticleBuilderState {
   draft: Partial<Post>
   isEditing: boolean
   lastExternalUpdate: number
+  isMobile: boolean
 }
 
 const STORAGE_KEY = 'article_builder_panels'
@@ -58,6 +59,7 @@ export const useArticleBuilderStore = defineStore('articleBuilder', {
       rightPanel: savedState.rightPanel ?? null,
       isEditing: false,
       lastExternalUpdate: 0,
+      isMobile: false,
       draft: {
         title: '',
         cover: null,
@@ -78,40 +80,74 @@ export const useArticleBuilderStore = defineStore('articleBuilder', {
   },
 
   actions: {
+    setMobileMode(isMobile: boolean) {
+      this.isMobile = isMobile
+      this.updatePanels()
+    },
+
     toggleCreate() {
+      if (this.isMobile) {
+        // В мобильном режиме закрываем все остальные панели
+        this.showPreview = false
+        this.showAiAgent = false
+      }
       this.showCreate = !this.showCreate
       this.updatePanels()
       savePanelState(this)
     },
 
     togglePreview() {
+      if (this.isMobile) {
+        // В мобильном режиме закрываем все остальные панели
+        this.showCreate = false
+        this.showAiAgent = false
+      }
       this.showPreview = !this.showPreview
       this.updatePanels()
       savePanelState(this)
     },
 
     toggleAiAgent() {
+      if (this.isMobile) {
+        // В мобильном режиме закрываем все остальные панели
+        this.showCreate = false
+        this.showPreview = false
+      }
       this.showAiAgent = !this.showAiAgent
       savePanelState(this)
     },
 
     updatePanels() {
-      if (this.showCreate && this.showPreview) {
-        // Если оба окна активны, распределяем их
-        this.leftPanel = 'create'
-        this.rightPanel = 'preview'
-      } else if (this.showCreate) {
-        // Если только создание активно
-        this.leftPanel = 'create'
-        this.rightPanel = null
-      } else if (this.showPreview) {
-        // Если только превью активно
-        this.leftPanel = 'preview'
-        this.rightPanel = null
+      if (this.isMobile) {
+        // В мобильном режиме показываем только одну панель
+        if (this.showCreate) {
+          this.leftPanel = 'create'
+          this.rightPanel = null
+        } else if (this.showPreview) {
+          this.leftPanel = 'preview'
+          this.rightPanel = null
+        } else if (this.showAiAgent) {
+          this.leftPanel = null
+          this.rightPanel = null
+        } else {
+          this.leftPanel = null
+          this.rightPanel = null
+        }
       } else {
-        // Если оба окна неактивны
-        this.leftPanel = null
-        this.rightPanel = null
+        // Десктопный режим - старая логика
+        if (this.showCreate && this.showPreview) {
+          this.leftPanel = 'create'
+          this.rightPanel = 'preview'
+        } else if (this.showCreate) {
+          this.leftPanel = 'create'
+          this.rightPanel = null
+        } else if (this.showPreview) {
+          this.leftPanel = 'preview'
+          this.rightPanel = null
+        } else {
+          this.leftPanel = null
+          this.rightPanel = null
+        }
       }
       savePanelState(this)
     },
