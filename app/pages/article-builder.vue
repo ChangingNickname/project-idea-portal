@@ -140,12 +140,13 @@
         </div>
 
         <!-- Средняя панель - AI -->
-        <div v-if="store.showAiAgent" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm relative h-full">
+        <div v-if="store.showAiAgent" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm relative h-full"
+          style="min-height: calc(100vh - 150px); max-height: calc(100vh - 150px); display: flex; flex-direction: column;">
           <UTooltip
             :text="!canEditPost ? 'Editing published post is not allowed' : ''"
             :disabled="canEditPost"
           >
-            <div class="relative h-full flex flex-col">
+            <div class="relative h-full flex flex-col flex-1">
               <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
                 <h2 class="text-lg font-medium">
                   {{ t('common.aiAssistant') }}
@@ -158,7 +159,7 @@
                   :disabled="!canEditPost"
                   @update="handleFormUpdate"
                 />
-                <PostsAiagent v-else :post="store.draft" :disabled="!canEditPost" :key="previewKey" />
+                <PostsAiagent v-else :post="store.draft" :disabled="!canEditPost" :key="previewKey" style="height: 100%;" />
               </div>
               <div 
                 v-if="!canEditPost" 
