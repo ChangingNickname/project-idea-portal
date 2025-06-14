@@ -193,10 +193,10 @@ const handleRegister = () => {
 }
 
 const handleProfile = () => {
-  if (userStore.isAuthenticated) {
-    router.push(`/user/${userStore.user?.id}/profile`)
+    if (userStore.isAuthenticated) {
+      router.push(`/user/${userStore.user?.id}/profile`)
   }
-}
+    }
 
 const handleExplore = () => {
   if (isProfileComplete.value) {
