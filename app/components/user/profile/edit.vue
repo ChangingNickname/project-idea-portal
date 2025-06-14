@@ -373,6 +373,16 @@ const handleImageUpload = async (event: Event) => {
     return
   }
 
+  // Check file size (max 5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    toast.add({
+      title: t('common.error'),
+      description: t('common.imageTooLarge'),
+      color: 'error'
+    })
+    return
+  }
+
   try {
     // Create image element to get dimensions
     const img = new Image()
@@ -380,7 +390,7 @@ const handleImageUpload = async (event: Event) => {
     
     await new Promise((resolve, reject) => {
       img.onload = resolve
-      img.onerror = reject
+      img.onerror = () => reject(new Error('Failed to load image'))
       img.src = imgUrl
     })
 
@@ -405,8 +415,15 @@ const handleImageUpload = async (event: Event) => {
       0, 0, 128, 128              // Destination rectangle
     )
 
-    // Convert to base64
-    const base64 = canvas.toDataURL('image/jpeg', 0.8)
+    // Convert to base64 with lower quality for smaller size
+    const base64 = canvas.toDataURL('image/jpeg', 0.7)
+    
+    // Check if base64 string is too large (max 1MB)
+    const base64Size = Math.ceil((base64.length * 3) / 4)
+    if (base64Size > 1024 * 1024) {
+      throw new Error('Processed image is too large')
+    }
+
     formState.avatar = base64
 
     // Cleanup
@@ -422,7 +439,7 @@ const handleImageUpload = async (event: Event) => {
     console.error('Image processing error:', error)
     toast.add({
       title: t('common.error'),
-      description: t('common.imageUploadError'),
+      description: error instanceof Error ? error.message : t('common.imageUploadError'),
       color: 'error'
     })
   }
@@ -453,6 +470,15 @@ const handleSubmit = async () => {
     const response = await profileStore.updateProfile(updatedUser, props.user.id)
     
     if (response?.profile) {
+      // Update user store with new profile data
+      const updatedProfile: Partial<User> = {
+        displayName: formState.displayName,
+        position: formState.position,
+        avatar: formState.avatar,
+        contacts: cleanedContacts
+      }
+      
+      userStore.updateUser(updatedProfile)
       emit('save', response.profile)
     }
   } catch (error) {

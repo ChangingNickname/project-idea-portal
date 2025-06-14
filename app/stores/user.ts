@@ -42,10 +42,15 @@ export const useUserStore = defineStore('user', {
         ...userData,
         contacts: {
           ...this.user.contacts,
-          ...userData.contacts,
+          ...(userData.contacts || {}),
           email: this.user.email // Всегда используем email из текущего пользователя
         }
       }
+
+      // Ensure required fields are present
+      if (userData.displayName !== undefined) updatedUser.displayName = userData.displayName
+      if (userData.position !== undefined) updatedUser.position = userData.position
+      if (userData.avatar !== undefined) updatedUser.avatar = userData.avatar
 
       this.user = updatedUser
     },

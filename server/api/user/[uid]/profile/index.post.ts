@@ -112,7 +112,10 @@ export default defineEventHandler(async (event) => {
     // Обновляем данные пользователя в Firebase Auth
     await getAuth().updateUser(uid, {
       displayName: profileData.displayName || userRecord.displayName,
-      photoURL: profileData.avatar || userRecord.photoURL
+      // Only update photoURL if it's a valid URL (not a base64 string)
+      ...(profileData.avatar && !profileData.avatar.startsWith('data:') ? {
+        photoURL: profileData.avatar
+      } : {})
     })
 
     return {
