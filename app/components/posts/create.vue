@@ -156,16 +156,8 @@
             class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
             :placeholder="t('post.create.keywordsPlaceholder')"
             @keydown.enter.prevent="addKeywords"
+            @blur="addKeywords"
           />
-          <UButton
-            type="button"
-            color="primary"
-            variant="soft"
-            :disabled="isDisabled"
-            @click="addKeywords"
-          >
-            {{ t('post.create.add') }}
-          </UButton>
         </div>
       </div>
     </div>
@@ -313,37 +305,20 @@ const props = defineProps<{
   disabled: boolean
 }>()
 
-// Инициализация формы при монтировании
-onMounted(() => {
-  // Безопасно обновляем форму из props
-  if (props.modelValue) {
+// Обновлять форму из props только если id изменился
+watch(() => props.modelValue, (newValue) => {
+  if (newValue && newValue.id !== form.value.id) {
     form.value = {
-      id: props.modelValue.id || '',
-      title: props.modelValue.title || '',
-      cover: props.modelValue.cover || null,
-      annotation: props.modelValue.annotation || '',
-      owner: props.modelValue.owner || userStore.user!,
-      ownerId: props.modelValue.ownerId || userStore.user!.id,
-      author: props.modelValue.author || [],
-      authorId: props.modelValue.authorId || [],
-      keywords: props.modelValue.keywords || [],
-      domain: props.modelValue.domain || '',
-      content: props.modelValue.content || '',
-      createdAt: props.modelValue.createdAt || new Date().toISOString(),
-      updatedAt: props.modelValue.updatedAt || new Date().toISOString(),
-      status: props.modelValue.status || 'draft',
-      views: props.modelValue.views || 0,
-      likes: props.modelValue.likes || 0,
-      viewedBy: props.modelValue.viewedBy || [],
-      deadline: props.modelValue.deadline
+      ...form.value,
+      ...newValue
     }
   }
-})
-
-// Синхронизация в родительский компонент
-watch(form, (newForm) => {
-  emit('update', newForm)
 }, { deep: true })
+
+// Эмитить update только при реальных изменениях формы (например, по id, title, keywords, content и т.д.)
+watch(() => [form.value.id, form.value.title, form.value.cover, form.value.annotation, form.value.keywords, form.value.domain, form.value.content, form.value.status], () => {
+  emit('update', { ...form.value })
+})
 
 // Новое ключевое слово
 const newKeyword = ref('')
