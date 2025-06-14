@@ -560,8 +560,13 @@ const showSubjectAreas = ref(false)
 
 // Обновление предметных областей
 const updateSubjectAreas = (areas: SubjectArea[]) => {
+  console.log('updateSubjectAreas', areas)
   if (!areas) return
-  form.value.subjectAreas = areas
+  form.value.subjectAreas = areas.map(area => ({
+    key: area.key,
+    label: area.label,
+    icon: area.icon || undefined
+  }))
   emit('update', form.value)
 }
 

@@ -84,7 +84,7 @@
                           variant="soft"
                           class="flex items-center gap-1"
                         >
-                          <UIcon :name="area.icon" class="w-4 h-4" />
+                          <UIcon v-if="area.icon" :name="area.icon" class="w-4 h-4" />
                           {{ area.label }}
                           <UIcon
                             name="i-lucide-x"
@@ -99,7 +99,7 @@
                   <SubjectArea
                     v-model="isSubjectAreaModalOpen"
                     :selected-areas="selectedSubjectAreas"
-                    @update:selected-areas="selectedSubjectAreas = $event"
+                    @update:selected-areas="updateSelectedAreas"
                   />
                   
                   <!-- Date Range -->
@@ -248,6 +248,7 @@
   import { useRoute, useRouter } from 'vue-router'
   import { z } from 'zod'
   import { CalendarDate, type DateValue, DateFormatter, getLocalTimeZone } from '@internationalized/date'
+  import type { DateRange } from '@internationalized/date'
   import Avatar from '~/components/user/Avatar.vue'
   import UserCard from '~/components/user/Card.vue'
   import { useSearchFilterStore } from '~/stores/searchFilter'
@@ -316,7 +317,7 @@
         searchFilterStore.dateRange.end.getMonth() + 1,
         searchFilterStore.dateRange.end.getDate()
       ) : undefined
-    },
+    } as DateRange,
     authors: searchFilterStore.selectedAuthors,
     subjectAreas: []
   })
@@ -333,7 +334,7 @@
   interface SubjectArea {
     key: string
     label: string
-    icon?: string
+    icon?: string | null
   }
 
   // Initialize state from URL parameters
@@ -701,8 +702,13 @@
 
   // Update selected areas
   const updateSelectedAreas = (areas: SubjectArea[]) => {
+    console.log('updateSelectedAreas', areas)
     if (!areas) return
-    selectedSubjectAreas.value = areas
+    selectedSubjectAreas.value = areas.map(area => ({
+      key: area.key,
+      label: area.label,
+      icon: area.icon || undefined
+    }))
     searchState.value.subjectAreas = areas.map(area => area.key)
   }
   </script>

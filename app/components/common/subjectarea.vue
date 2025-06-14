@@ -12,14 +12,14 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['update:modelValue', 'update:selectedAreas'])
+const emit = defineEmits(['update:modelValue', 'update:selected-areas'])
 
 const modalRef = ref(null)
 const selectedAreas = ref([])
 
 // Initialize selected areas when props change
 watch(() => props.selectedAreas, (newAreas) => {
-  selectedAreas.value = [...newAreas]
+  selectedAreas.value = [...(newAreas || [])]
 }, { immediate: true })
 
 // Group subject areas by category
@@ -34,24 +34,6 @@ const groupedAreas = computed(() => {
   }, {})
 })
 
-// Close modal when clicking outside
-const closeOnClickOutside = (event) => {
-  if (modalRef.value && 
-      !modalRef.value.contains(event.target) && 
-      !event.target.closest('[data-subject-area-button]')) {
-    emit('update:selected-areas', selectedAreas.value || [])
-    emit('update:modelValue', false)
-  }
-}
-
-// Close modal on Escape key
-const closeOnEsc = (event) => {
-  if (event.key === 'Escape') {
-    emit('update:selected-areas', selectedAreas.value || [])
-    emit('update:modelValue', false)
-  }
-}
-
 // Toggle selection of a subject area
 const toggleArea = (area) => {
   if (!area || !area.key) return
@@ -62,7 +44,7 @@ const toggleArea = (area) => {
       key: area.key,
       label: area.label,
       i18nKey: area.i18nKey,
-      icon: area.icon
+      icon: area.icon || null
     })
   } else {
     selectedAreas.value.splice(index, 1)
@@ -100,15 +82,41 @@ const toggleCategory = (category) => {
           key: child.key,
           label: child.label,
           i18nKey: child.i18nKey,
-          icon: child.icon
+          icon: child.icon || null
         })
       }
     })
   }
 }
 
+// Close modal when clicking outside
+const closeOnClickOutside = (event) => {
+  if (modalRef.value && 
+      !modalRef.value.contains(event.target) && 
+      !event.target.closest('[data-subject-area-button]')) {
+    console.log('closeOnClickOutside', selectedAreas.value)
+    emit('update:selected-areas', selectedAreas.value || [])
+    emit('update:modelValue', false)
+  }
+}
+
+// Close modal on Escape key
+const closeOnEsc = (event) => {
+  if (event.key === 'Escape') {
+    console.log('closeOnEsc', selectedAreas.value)
+    emit('update:selected-areas', selectedAreas.value || [])
+    emit('update:modelValue', false)
+  }
+}
+
 // Close modal without saving
 const closeModal = () => {
+  emit('update:selected-areas', selectedAreas.value || [])
+  emit('update:modelValue', false)
+}
+
+// Confirm selection
+const confirmSelection = () => {
   emit('update:selected-areas', selectedAreas.value || [])
   emit('update:modelValue', false)
 }
@@ -196,21 +204,7 @@ onUnmounted(() => {
               </div>
             </div>
 
-            <div class="mt-6 flex justify-end gap-4">
-              <UButton
-                color="gray"
-                variant="ghost"
-                @click="closeModal"
-              >
-                {{ $t('common.cancel') }}
-              </UButton>
-              <UButton
-                color="primary"
-                @click="confirmSelection"
-              >
-                {{ $t('common.confirm') }}
-              </UButton>
-            </div>
+            
           </div>
         </div>
       </Transition>
