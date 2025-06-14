@@ -10,9 +10,9 @@ export default defineNuxtConfig({
   ssr: false,
   app: {
     head: {
-      title: 'PIP',
+      title: 'Project Ideas Portal',
       meta: [
-        { name: 'description', content: 'PIP' }
+        { name: 'description', content: 'Project Ideas Portal' }
       ]
     }
   },
