@@ -280,7 +280,7 @@
   import { useDebounceFn } from '@vueuse/core'
   import { useUserStore } from '~/stores/user'
   import { useI18n } from 'vue-i18n'
-  import { useRoute } from 'vue-router'
+  import { useRoute, useRouter } from 'vue-router'
   import { z } from 'zod'
   import { CalendarDate, type DateValue, DateFormatter, getLocalTimeZone } from '@internationalized/date'
   import Avatar from '~/components/user/Avatar.vue'
@@ -355,7 +355,115 @@
   const pendingAuthors = ref(false)
   const errorAuthors = ref<Error | null>(null)
 
-  // Загружаем профили выбранных авторов при монтировании и при изменении selectedAuthors
+  const route = useRoute()
+  const router = useRouter()
+
+  // Initialize state from URL parameters
+  const initStateFromQuery = () => {
+    const query = route.query
+    
+    // If no URL parameters, reset all filters
+    if (Object.keys(query).length === 0) {
+      searchQuery.value = ''
+      sortBy.value = 'createdAt'
+      sortDirection.value = 'desc'
+      currentPage.value = 1
+      searchState.value = {
+        title: '',
+        domain: '',
+        keywords: '',
+        dateRange: undefined,
+        authors: []
+      }
+      selectedAuthors.value = []
+      searchFilterStore.reset()
+      return
+    }
+    
+    // Initialize search query
+    searchQuery.value = (query.search as string) || ''
+    
+    // Initialize sorting
+    sortBy.value = (query.sortBy as string) || 'createdAt'
+    sortDirection.value = (query.sortDirection as 'asc' | 'desc') || 'desc'
+    
+    // Initialize page
+    currentPage.value = parseInt(query.page as string) || 1
+    
+    // Initialize advanced search
+    const dateFrom = query.dateFrom ? new Date(query.dateFrom as string) : undefined
+    const dateTo = query.dateTo ? new Date(query.dateTo as string) : undefined
+    
+    searchState.value = {
+      title: (query.title as string) || '',
+      domain: (query.domain as string) || '',
+      keywords: (query.keywords as string) || '',
+      dateRange: dateFrom ? {
+        start: new CalendarDate(
+          dateFrom.getFullYear(),
+          dateFrom.getMonth() + 1,
+          dateFrom.getDate()
+        ),
+        end: dateTo ? new CalendarDate(
+          dateTo.getFullYear(),
+          dateTo.getMonth() + 1,
+          dateTo.getDate()
+        ) : undefined
+      } : undefined,
+      authors: (query.authors as string)?.split(',') || []
+    }
+    
+    // Initialize selected authors
+    selectedAuthors.value = searchState.value.authors || []
+  }
+
+  // Update URL with current parameters
+  const updateQueryParams = () => {
+    const query: Record<string, string> = {}
+    
+    // Add parameters only if they differ from default values
+    if (searchQuery.value) query.search = searchQuery.value
+    if (sortBy.value !== 'createdAt') query.sortBy = sortBy.value
+    if (sortDirection.value !== 'desc') query.sortDirection = sortDirection.value
+    if (currentPage.value > 1) query.page = currentPage.value.toString()
+    
+    // Add advanced search parameters only if they exist
+    if (searchState.value.title) query.title = searchState.value.title
+    if (searchState.value.domain) query.domain = searchState.value.domain
+    if (searchState.value.keywords) query.keywords = searchState.value.keywords
+    
+    // Handle dates
+    if (searchState.value.dateRange?.start) {
+      const date = searchState.value.dateRange.start as CalendarDate
+      const dateObj = new Date(date.year, date.month - 1, date.day)
+      query.dateFrom = dateObj.toISOString()
+    }
+    if (searchState.value.dateRange?.end) {
+      const date = searchState.value.dateRange.end as CalendarDate
+      const dateObj = new Date(date.year, date.month - 1, date.day)
+      query.dateTo = dateObj.toISOString()
+    }
+    
+    if (searchState.value.authors?.length) {
+      query.authors = searchState.value.authors.join(',')
+    }
+    
+    // Update URL without page reload
+    router.replace({ query: Object.keys(query).length ? query : undefined })
+  }
+
+  // Watch for URL parameter changes
+  watch(() => route.query, () => {
+    initStateFromQuery()
+    loadPosts()
+  }, { immediate: true })
+
+  // Update URL when filters change
+  watch([searchQuery, sortBy, sortDirection, currentPage, searchState], () => {
+    updateQueryParams()
+  }, { deep: true })
+
+  // Load selected authors' profiles on mount and when selectedAuthors changes
   watch(selectedAuthors, async (newAuthors: string[]) => {
     if (newAuthors.length) {
       const authorsData = await Promise.all(
@@ -367,7 +475,7 @@
     }
   }, { immediate: true })
 
-  // Поиск авторов
+  // Search authors
   const searchAuthors = async () => {
     if (!searchQuery.value) {
       authors.value = selectedAuthors.value.length ? authors.value : []
@@ -394,23 +502,24 @@
         }
       })
 
-      // Добавляем выбранных авторов в результаты поиска, если их там нет
+      // Add selected authors to search results if they're not there
       const selectedUsers = authors.value.filter((user: User) => selectedAuthors.value.includes(user.id))
       const newUsers = response.users.filter((user: User) => !selectedAuthors.value.includes(user.id))
       authors.value = [...selectedUsers, ...newUsers]
     } catch (e) {
       errorAuthors.value = e as Error
-      console.error('Ошибка поиска авторов:', e)
+      console.error('Error searching authors:', e)
     } finally {
       pendingAuthors.value = false
     }
   }
 
-  // Дебаунс поиска авторов
+  // Debounce author search
   const debouncedAuthorSearch = useDebounceFn(() => {
     searchAuthors()
   }, 300)
   
+  // Reset advanced search
   const resetAdvancedSearch = () => {
     searchState.value = {
       title: '',
@@ -428,12 +537,13 @@
     searchFilterStore.reset()
   }
   
+  // Handle advanced search
   const handleAdvancedSearch = () => {
     currentPage.value = 1
     loadPosts()
   }
   
-  // Загрузка статей
+  // Load posts
   const loadPosts = async () => {
     try {
       loading.value = true
@@ -449,7 +559,7 @@
         authors: searchState.value.authors
       }
       
-      // Добавляем даты из dateRange если они есть
+      // Add dates from dateRange if they exist
       if (searchState.value.dateRange?.start) {
         const date = searchState.value.dateRange.start as CalendarDate
         query.dateFrom = new Date(date.year, date.month - 1, date.day).toISOString()
@@ -467,14 +577,14 @@
         query.dateTo = new Date(date.year, date.month - 1, date.day).toISOString()
       }
       
-      // Удаляем пустые значения
+      // Remove empty values
       Object.keys(query).forEach(key => {
         if (query[key] === '' || query[key] === null || query[key] === undefined || (Array.isArray(query[key]) && !query[key].length)) {
           delete query[key]
         }
       })
 
-      // Сохраняем значения в store
+      // Save values to store
       searchFilterStore.setTitle(searchState.value.title || '')
       searchFilterStore.setDomain(searchState.value.domain || '')
       searchFilterStore.setKeywords(searchState.value.keywords || '')
@@ -484,23 +594,23 @@
       const response = await $fetch<{ posts: Post[], pagination: any }>('/api/posts/search', { query })
       console.log('Search response:', response)
       
-      // Загружаем профили авторов для каждого поста
+      // Load author profiles for each post
       const postsWithAuthors = await Promise.all(response.posts.map(async (post) => {
-        // Загружаем профиль владельца
+        // Load owner profile
         const owner = post.ownerId ? await $fetch<User>(`/api/user/${post.ownerId}/profile`) : null
         
-        // Загружаем профили авторов
+        // Load author profiles
         const authors = await Promise.all(
           (post.authorId || [])
-            .filter(id => id !== post.ownerId) // Исключаем владельца из списка авторов
+            .filter(id => id !== post.ownerId) // Exclude owner from authors list
             .map(id => $fetch<User>(`/api/user/${id}/profile`))
         )
 
-        // Создаем новый объект поста с правильными типами
+        // Create new post object with correct types
         const processedPost: Post = {
           ...post,
-          owner: owner as User, // Приводим к типу User, так как мы знаем, что owner не может быть null
-          author: [owner, ...authors].filter(Boolean) as User[] // Фильтруем null и приводим к типу User[]
+          owner: owner as User, // Cast to User type as we know owner cannot be null
+          author: [owner, ...authors].filter(Boolean) as User[] // Filter null and cast to User[]
         }
 
         return processedPost
@@ -524,40 +634,18 @@
       loading.value = false
     }
   }
-  
-  // Следим за изменениями параметров
+
+  // Watch for parameter changes
   watch([sortBy, sortDirection], () => {
     currentPage.value = 1 // Reset to first page when sort changes
     loadPosts()
   })
-  
-  // Дебаунс поиска
+
+  // Debounce search
   const debouncedSearch = useDebounceFn(() => {
-    currentPage.value = 1 // Сброс страницы при поиске
+    currentPage.value = 1 // Reset page on search
     loadPosts()
   }, 300)
-  
-  const toggleSortDirection = () => {
-    sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
-  }
-  
-  const handleSortChange = (value: string) => {
-    sortBy.value = value
-  }
-  
-  const getSortIcon = (value: string) => {
-    return sortOptions.find(option => option.value === value)?.icon || 'i-lucide-clock'
-  }
-  
-  const getSortLabel = (value: string) => {
-    return sortOptions.find(option => option.value === value)?.label || t('common.sortByCreationDate')
-  }
-  
-  // Добавляем функцию handleSearch
-  const handleSearch = () => {
-    currentPage.value = 1 // Сброс страницы при поиске
-    loadPosts()
-  }
   
   // Add responsive items per page
   const updateItemsPerPage = () => {
@@ -586,5 +674,27 @@
   const handlePageChange = async (page: number) => {
     currentPage.value = page
     await loadPosts()
+  }
+
+  const toggleSortDirection = () => {
+    sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
+  }
+  
+  const handleSortChange = (value: string) => {
+    sortBy.value = value
+  }
+  
+  const getSortIcon = (value: string) => {
+    return sortOptions.find(option => option.value === value)?.icon || 'i-lucide-clock'
+  }
+  
+  const getSortLabel = (value: string) => {
+    return sortOptions.find(option => option.value === value)?.label || t('common.sortByCreationDate')
+  }
+  
+  // Добавляем функцию handleSearch
+  const handleSearch = () => {
+    currentPage.value = 1 // Сброс страницы при поиске
+    loadPosts()
   }
   </script>
