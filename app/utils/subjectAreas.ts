@@ -4,7 +4,7 @@ export const subjectAreas = [
     key: 'programming',
     label: 'Programming',
     icon: 'i-lucide-code',
-    i18nKey: 'subjectAreas.programming',
+    i18nKey: 'subjectAreas.programming._',
     children: [
       { key: 'web', label: 'Web Development', i18nKey: 'subjectAreas.programming.web' },
       { key: 'mobile', label: 'Mobile Development', i18nKey: 'subjectAreas.programming.mobile' },
@@ -24,7 +24,7 @@ export const subjectAreas = [
     key: 'engineering',
     label: 'Engineering',
     icon: 'i-lucide-settings',
-    i18nKey: 'subjectAreas.engineering',
+    i18nKey: 'subjectAreas.engineering._',
     children: [
       { key: 'mechanical', label: 'Mechanical Engineering', i18nKey: 'subjectAreas.engineering.mechanical' },
       { key: 'electrical', label: 'Electrical Engineering', i18nKey: 'subjectAreas.engineering.electrical' },
@@ -42,7 +42,7 @@ export const subjectAreas = [
     key: 'medicine',
     label: 'Medicine',
     icon: 'i-lucide-stethoscope',
-    i18nKey: 'subjectAreas.medicine',
+    i18nKey: 'subjectAreas.medicine._',
     children: [
       { key: 'general', label: 'General Medicine', i18nKey: 'subjectAreas.medicine.general' },
       { key: 'surgery', label: 'Surgery', i18nKey: 'subjectAreas.medicine.surgery' },
@@ -61,7 +61,7 @@ export const subjectAreas = [
     key: 'architecture',
     label: 'Architecture & Construction',
     icon: 'i-lucide-building',
-    i18nKey: 'subjectAreas.architecture',
+    i18nKey: 'subjectAreas.architecture._',
     children: [
       { key: 'architecture', label: 'Architecture', i18nKey: 'subjectAreas.architecture.architecture' },
       { key: 'urban_planning', label: 'Urban Planning', i18nKey: 'subjectAreas.architecture.urban_planning' },
@@ -77,7 +77,7 @@ export const subjectAreas = [
     key: 'design',
     label: 'Design & Arts',
     icon: 'i-lucide-palette',
-    i18nKey: 'subjectAreas.design',
+    i18nKey: 'subjectAreas.design._',
     children: [
       { key: 'graphic', label: 'Graphic Design', i18nKey: 'subjectAreas.design.graphic' },
       { key: 'industrial', label: 'Industrial Design', i18nKey: 'subjectAreas.design.industrial' },
@@ -94,7 +94,7 @@ export const subjectAreas = [
     key: 'economics',
     label: 'Economics & Management',
     icon: 'i-lucide-bar-chart-2',
-    i18nKey: 'subjectAreas.economics',
+    i18nKey: 'subjectAreas.economics._',
     children: [
       { key: 'economics', label: 'Economics', i18nKey: 'subjectAreas.economics.economics' },
       { key: 'finance', label: 'Finance', i18nKey: 'subjectAreas.economics.finance' },

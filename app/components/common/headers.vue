@@ -91,7 +91,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import { useColorMode } from '@vueuse/core'
 import { useUserStore } from '~/stores/user'
 import { useRoute } from 'vue-router'
@@ -111,6 +111,7 @@ const isLanguageModalOpen = ref(false)
 const colorMode = useColorMode()
 const showLoginModal = ref(false)
 const showRegisterModal = ref(false)
+const screenWidth = ref(window.innerWidth)
 
 // Watch for authentication state changes
 const isAuthenticated = computed(() => {
@@ -125,13 +126,13 @@ watch(isAuthenticated, (newValue) => {
   }
 })
 
-const items = ref([
+const items = computed(() => [
   ...subjectAreas.map(area => ({
-    label: t(area.i18nKey),
+    label: screenWidth.value < 640 ? '' : t(area.i18nKey),
     icon: area.icon,
     to: `/ideas?domain=${area.key}`,
     children: area.children?.map(child => ({
-      label: t(child.i18nKey),
+      label: screenWidth.value < 640 ? '' : t(child.i18nKey),
       icon: area.icon,
       to: `/ideas?domain=${area.key}.${child.key}`
     }))
@@ -162,4 +163,15 @@ const openRegister = () => {
     showRegisterModal.value = true
   }, 150)
 }
+
+// Add window resize listener
+onMounted(() => {
+  window.addEventListener('resize', () => {
+    screenWidth.value = window.innerWidth
+  })
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', () => {})
+})
 </script>
