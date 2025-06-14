@@ -2,85 +2,90 @@
   <header 
     class="w-full 
     flex 
-    flex-row 
+    flex-col 
     items-center
     p-4">
-    <NuxtLink to="/">
-      <CommonLogo />
-    </NuxtLink>
-
-    <div class="flex-1 flex justify-center gap-4">
-      <NuxtLink
-        v-for="item in navItems"
-        :key="item.to"
-        :to="item.to"
-        class="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors"
-        :class="[
-          isActiveRoute(item.to) 
-            ? 'text-primary-500 bg-primary-50 dark:bg-primary-950' 
-            : 'text-gray-600 dark:text-gray-400 hover:text-primary-500 dark:hover:text-primary-400'
-        ]"
-      >
-        <UIcon :name="item.icon" />
-        {{ t(item.label) }}
+    <div class="w-full flex flex-row items-center justify-between">
+      <NuxtLink to="/">
+        <CommonLogo />
       </NuxtLink>
+
+      <div class="flex-1 flex justify-center gap-4">
+        <NuxtLink
+          v-for="item in navItems"
+          :key="item.to"
+          :to="item.to"
+          class="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors"
+          :class="[
+            isActiveRoute(item.to) 
+              ? 'text-primary-500 bg-primary-50 dark:bg-primary-950' 
+              : 'text-gray-600 dark:text-gray-400 hover:text-primary-500 dark:hover:text-primary-400'
+          ]"
+        >
+          <UIcon :name="item.icon" />
+          {{ t(item.label) }}
+        </NuxtLink>
+      </div>
+
+      <div class="flex flex-row gap-2">
+        <ClientOnly>
+          <template v-if="!isAuthenticated && !userStore.loading">
+            <UButton 
+              data-language-button 
+              @click="isLanguageModalOpen = true" 
+              size="lg" 
+              variant="ghost"
+            >
+              <UIcon name="i-lucide-globe" />
+            </UButton>
+            <UButton 
+              @click="toggleTheme" 
+              size="lg" 
+              variant="ghost"
+            >
+              <ClientOnly>
+                <template #default>
+                  <UIcon :name="colorMode === 'dark' ? 'i-lucide-sun' : 'i-lucide-moon'" />
+                </template>
+                <template #fallback>
+                  <UIcon name="i-lucide-moon" />
+                </template>
+              </ClientOnly>
+            </UButton>
+            <UButton 
+              size="lg" 
+              variant="solid" 
+              color="primary"
+              :label="$t('common.register')" 
+              @click="openRegister"
+            />
+            <UButton 
+              size="lg" 
+              variant="solid" 
+              color="primary"
+              :label="$t('common.signIn')" 
+              @click="openLogin"
+            />
+
+            <UserLogin
+              v-model="showLoginModal"
+              @open-register="openRegister"
+            />
+            <UserRegister
+              v-model="showRegisterModal"
+              @open-login="openLogin"
+            />
+            <SettingsLanguageSelect v-model="isLanguageModalOpen" />
+          </template>
+          <template v-else-if="userStore.loading">
+            <USkeleton class="h-10 w-24" />
+          </template>
+          <UserNav v-else />
+        </ClientOnly>
+      </div>
     </div>
-
-    <div class="flex flex-row gap-2">
-      <ClientOnly>
-        <template v-if="!isAuthenticated && !userStore.loading">
-          <UButton 
-            data-language-button 
-            @click="isLanguageModalOpen = true" 
-            size="lg" 
-            variant="ghost"
-          >
-            <UIcon name="i-lucide-globe" />
-          </UButton>
-          <UButton 
-            @click="toggleTheme" 
-            size="lg" 
-            variant="ghost"
-          >
-            <ClientOnly>
-              <template #default>
-                <UIcon :name="colorMode === 'dark' ? 'i-lucide-sun' : 'i-lucide-moon'" />
-              </template>
-              <template #fallback>
-                <UIcon name="i-lucide-moon" />
-              </template>
-            </ClientOnly>
-          </UButton>
-          <UButton 
-            size="lg" 
-            variant="solid" 
-            color="primary"
-            :label="$t('common.register')" 
-            @click="openRegister"
-          />
-          <UButton 
-            size="lg" 
-            variant="solid" 
-            color="primary"
-            :label="$t('common.signIn')" 
-            @click="openLogin"
-          />
-
-          <UserLogin
-            v-model="showLoginModal"
-            @open-register="openRegister"
-          />
-          <UserRegister
-            v-model="showRegisterModal"
-            @open-login="openLogin"
-          />
-          <SettingsLanguageSelect v-model="isLanguageModalOpen" />
-        </template>
-        <template v-else-if="userStore.loading">
-          <USkeleton class="h-10 w-24" />
-        </template>
-        <UserNav v-else />
-    </ClientOnly>
+    <div class="w-full mt-2">
+      <UNavigationMenu :items="items" class="w-full justify-center" />
     </div>
   </header>
 </template>
@@ -90,6 +95,8 @@ import { computed, ref, watch } from 'vue'
 import { useColorMode } from '@vueuse/core'
 import { useUserStore } from '~/stores/user'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+import { subjectAreas } from '~/utils/subjectAreas'
 
 interface NavItem {
   to: string
@@ -117,6 +124,19 @@ watch(isAuthenticated, (newValue) => {
     showRegisterModal.value = false
   }
 })
+
+const items = ref([
+  ...subjectAreas.map(area => ({
+    label: t(area.i18nKey),
+    icon: area.icon,
+    to: `/ideas?domain=${area.key}`,
+    children: area.children?.map(child => ({
+      label: t(child.i18nKey),
+      icon: area.icon,
+      to: `/ideas?domain=${area.key}.${child.key}`
+    }))
+  }))
+])
 
 const navItems = computed<NavItem[]>(() => [
 ])
