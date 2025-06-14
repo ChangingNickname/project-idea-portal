@@ -37,51 +37,77 @@
 
       <!-- Stepper Section -->
       <div class="max-w-3xl mx-auto mb-16">
-        <UStepper 
-        disabled 
-          :orientation="isMobile ? 'vertical' : 'horizontal'" 
-          :items="stepperItems" 
-          class="w-full"
-          @next="handleNext"
-          @prev="handlePrev"
-          @update:modelValue="handleStepChange"
-        >
-          <template #indicator="{ item }">
-            <div 
-              class="flex items-center justify-center w-8 h-8 rounded-full bg-primary-50 dark:bg-primary-900/20 cursor-pointer hover:bg-primary-100 dark:hover:bg-primary-900/30"
-              @click="handleStepClick(item)"
-            >
-              <Icon 
-                :name="item.icon || ''" 
-                class="w-5 h-5 text-primary"
+        <div class="relative">
+          <div class="absolute left-0 right-0 top-[40%] h-0.5 bg-gray-200 dark:bg-gray-700 z-0"/>
+          <div class="grid grid-cols-4 gap-4 relative z-10">
+            <div class="flex flex-col items-center">
+              <UButton
+                icon="i-lucide-user-plus"
+                size="xl"
+                :color="userStore.isAuthenticated ? 'neutral' : 'primary'"
+                :disabled="userStore.isAuthenticated"
+                variant="solid"
+                class="rounded-full shadow-none w-24 h-24 flex items-center justify-center"
+                :class="userStore.isAuthenticated ? 'opacity-50' : ''"
+                @click="handleRegister"
               />
+              <div class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+                {{ $t('index.stepper.register.title') }}
+              </div>
             </div>
-          </template>
-
-          <template #title="{ item }">
-            <div 
-              class="font-medium text-gray-900 dark:text-white cursor-pointer hover:text-primary"
-              @click="handleStepClick(item)"
-            >
-              {{ item.title }}
+            <div class="flex flex-col items-center">
+              <UButton
+                icon="i-lucide-user"
+                size="xl"
+                :color="getProfileButtonColor"
+                :disabled="!userStore.isAuthenticated"
+                variant="solid"
+                class="rounded-full shadow-none w-24 h-24 flex items-center justify-center"
+                :class="!userStore.isAuthenticated ? 'opacity-50' : ''"
+                @click="handleProfile"
+              />
+              <div class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+                {{ $t('index.stepper.profile.title') }}
+              </div>
             </div>
-          </template>
-
-          <template #description="{ item }">
-            <div 
-              class="text-sm text-gray-500 dark:text-gray-400 cursor-pointer hover:text-primary-500"
-              @click="handleStepClick(item)"
-            >
-              {{ item.description }}
+            <div class="flex flex-col items-center">
+              <UButton
+                icon="i-lucide-search"
+                size="xl"
+                :color="getExploreButtonColor"
+                :disabled="!isProfileComplete"
+                variant="solid"
+                class="rounded-full shadow-none w-24 h-24 flex items-center justify-center"
+                :class="!isProfileComplete ? 'opacity-50' : ''"
+                @click="handleExplore"
+              />
+              <div class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+                {{ $t('index.stepper.explore.title') }}
+              </div>
             </div>
-          </template>
-        </UStepper>
+            <div class="flex flex-col items-center">
+              <UButton
+                icon="i-lucide-lightbulb"
+                size="xl"
+                :color="getCreateButtonColor"
+                :disabled="!isProfileComplete"
+                variant="solid"
+                class="rounded-full shadow-none w-24 h-24 flex items-center justify-center"
+                :class="!isProfileComplete ? 'opacity-50' : ''"
+                @click="handleArticleBuilderClick"
+              />
+              <div class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+                {{ $t('index.stepper.create.title') }}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- AI Assistant Section (Call to Action) -->
       <div
         class="max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 cursor-pointer transition hover:shadow-xl hover:bg-primary-50 dark:hover:bg-primary-900/20"
-        @click="navigateTo('/article-builder')"
+        @click="handleArticleBuilderClick"
         tabindex="0"
         role="button"
         aria-label="{{ $t('index.button2') }}"
@@ -120,32 +146,30 @@ const currentStep = ref(3) // Сразу устанавливаем послед
 // Отслеживаем состояние авторизации через computed
 const isAuthenticated = computed(() => userStore.isAuthenticated)
 
-const stepperItems = computed<StepperItem[]>(() => [
-  {
-    title: t('index.stepper.register.title'),
-    description: t('index.stepper.register.description'),
-    icon: 'i-lucide-user-plus',
-    status: userStore.isAuthenticated ? 'complete' : 'current'
-  },
-  {
-    title: t('index.stepper.profile.title'),
-    description: t('index.stepper.profile.description'),
-    icon: 'i-lucide-user',
-    status: userStore.isAuthenticated ? 'complete' : 'upcoming'
-  },
-  {
-    title: t('index.stepper.explore.title'),
-    description: t('index.stepper.explore.description'),
-    icon: 'i-lucide-search',
-    status: userStore.isAuthenticated ? 'complete' : 'upcoming'
-  },
-  {
-    title: t('index.stepper.create.title'),
-    description: t('index.stepper.create.description'),
-    icon: 'i-lucide-lightbulb',
-    status: userStore.isAuthenticated ? 'current' : 'upcoming'
-  }
-])
+// Computed properties for button states
+const isProfileComplete = computed(() => {
+  if (!userStore.user) return false
+  return !!(
+    userStore.user.displayName &&
+    userStore.user.position &&
+    userStore.user.avatar
+  )
+})
+
+const getProfileButtonColor = computed(() => {
+  if (!userStore.isAuthenticated) return 'neutral'
+  return isProfileComplete.value ? 'success' : 'primary'
+})
+
+const getExploreButtonColor = computed(() => {
+  if (!isProfileComplete.value) return 'neutral'
+  return 'primary'
+})
+
+const getCreateButtonColor = computed(() => {
+  if (!isProfileComplete.value) return 'neutral'
+  return 'primary'
+})
 
 // Определяем размер экрана при монтировании и при изменении размера окна
 onMounted(() => {
@@ -161,57 +185,22 @@ const checkScreenSize = () => {
   isMobile.value = window.innerWidth < 768 // md breakpoint в Tailwind
 }
 
-const handleNext = (item: StepperItem) => {
-  console.log('Next step:', item)
-  if (item.title === t('index.stepper.register.title')) {
+// Button handlers
+const handleRegister = () => {
+  if (!userStore.isAuthenticated) {
     authStore.openRegister()
   }
 }
 
-const handlePrev = (item: StepperItem) => {
-  console.log('Previous step:', item)
+const handleProfile = () => {
+  if (userStore.isAuthenticated) {
+    router.push(`/user/${userStore.user?.id}/profile`)
+  }
 }
 
-const handleStepChange = (value: string | number | undefined) => {
-  console.log('Step changed to:', value)
-  currentStep.value = typeof value === 'number' ? value : 0
-}
-
-const handleStepClick = (item: StepperItem) => {
-  const stepIndex = stepperItems.value.findIndex(step => step.title === item.title)
-  
-  if (stepIndex === 0) {
-    // Если это первый шаг (регистрация)
-    if (!userStore.isAuthenticated) {
-      authStore.openRegister()
-    }
-  } else if (stepIndex === 1) {
-    // Если это второй шаг (профиль)
-    if (userStore.isAuthenticated) {
-      router.push(`/user/${userStore.user?.id}/profile`)
-    } else {
-      authStore.openLogin()
-    }
-  } else if (stepIndex === 2) {
-    // Если это третий шаг (explore)
+const handleExplore = () => {
+  if (isProfileComplete.value) {
     router.push('/ideas')
-  } else if (stepIndex === 3) {
-    // Если это четвертый шаг (create)
-    router.push('/article-builder')
-  } else if (stepIndex === currentStep.value) {
-    // Если кликаем на текущий шаг
-    if (stepIndex === 0 && !userStore.isAuthenticated) {
-      authStore.openRegister()
-    } else if (stepIndex === 1 && userStore.isAuthenticated) {
-      router.push(`/user/${userStore.user?.id}/profile`)
-    } else if (stepIndex === 2) {
-      router.push('/ideas')
-    } else if (stepIndex === 3) {
-      router.push('/article-builder')
-    }
-  } else {
-    // Если кликаем на другой шаг
-    currentStep.value = stepIndex
   }
 }
 
@@ -223,6 +212,14 @@ const handleSearch = () => {
     })
   } else {
     navigateTo('/ideas')
+  }
+}
+
+const handleArticleBuilderClick = () => {
+  if (userStore.isAuthenticated) {
+    navigateTo('/article-builder')
+  } else {
+    authStore.openLogin()
   }
 }
 </script>

@@ -21,13 +21,10 @@ const PUBLIC_GET_ROUTES = [
 
 // Функция для проверки пути с учетом локали
 const isPublicPath = (path: string, route: string): boolean => {
-  // Убираем локаль из пути для проверки
-  const pathWithoutLocale = path.replace(/^\/[a-z]{2}(?=\/|$)/, '')
-  
-  if (route === '/' && pathWithoutLocale === '/') {
+  if (route === '/' && path === '/') {
     return true
   }
-  return route !== '/' && pathWithoutLocale.startsWith(route)
+  return route !== '/' && path.startsWith(route)
 }
 
 export default defineEventHandler(async (event) => {

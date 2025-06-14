@@ -132,6 +132,9 @@ const stopTokenRefresh = (): void => {
 export const signInWithEmail = async (email: string, password: string): Promise<User | null> => {
   const { $auth } = useNuxtApp()
   try {
+    // Очищаем все хранилища перед логином
+    localStorage.clear()
+    sessionStorage.clear()
     const result = await signInWithEmailAndPassword($auth, email, password)
     const user = mapFirebaseUser(result.user)
     const token = await result.user.getIdToken()
@@ -150,6 +153,9 @@ export const signInWithEmail = async (email: string, password: string): Promise<
 export const signInWithGoogle = async (): Promise<User | null> => {
   const { $auth } = useNuxtApp()
   try {
+    // Очищаем все хранилища перед логином
+    localStorage.clear()
+    sessionStorage.clear()
     const provider = new GoogleAuthProvider()
     const result = await signInWithPopup($auth, provider)
     const user = mapFirebaseUser(result.user)
@@ -169,6 +175,9 @@ export const signInWithGoogle = async (): Promise<User | null> => {
 export const signInAnonymouslyUser = async (): Promise<User | null> => {
   const { $auth } = useNuxtApp()
   try {
+    // Очищаем все хранилища перед логином
+    localStorage.clear()
+    sessionStorage.clear()
     const result = await firebaseSignInAnonymously($auth)
     const user = mapFirebaseUser(result.user)
     const token = await result.user.getIdToken()
@@ -234,7 +243,9 @@ export const signOut = async (): Promise<void> => {
   try {
     await $auth.signOut()
     stopTokenRefresh()
-    localStorage.removeItem('user')
+    // Очищаем все хранилища при логауте
+    localStorage.clear()
+    sessionStorage.clear()
     // Удаляем куки
     document.cookie = 'auth_token=; path=/; max-age=0'
   } catch (error) {
