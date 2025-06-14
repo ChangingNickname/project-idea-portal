@@ -172,6 +172,14 @@ export const useArticleBuilderStore = defineStore('articleBuilder', {
           updatedAuthorIds = [currentUser.id, ...updatedAuthorIds]
         }
 
+        // Если текущий пользователь является автором, используем его данные из user store
+        updatedAuthors = updatedAuthors.map(author => {
+          if (author?.id === currentUser.id) {
+            return currentUser
+          }
+          return author
+        })
+
         updates.author = updatedAuthors
         updates.authorId = updatedAuthorIds
       }

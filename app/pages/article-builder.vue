@@ -252,7 +252,13 @@ const loadPost = async (id: string) => {
         likes: response.likes || 0,
         owner: response.owner,
         ownerId: response.ownerId,
-        author: response.author || [],
+        author: response.author?.map(author => {
+          // Если автор - текущий пользователь, используем данные из user store
+          if (author?.id === userStore.user?.id) {
+            return userStore.user
+          }
+          return author
+        }) || [],
         authorId: response.authorId || [],
         createdAt: response.createdAt,
         updatedAt: response.updatedAt

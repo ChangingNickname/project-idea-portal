@@ -32,18 +32,43 @@
         </p>
         <div v-if="user?.contacts" class="flex items-center gap-2 mt-1">
           <Icon 
-            v-if="user?.contacts?.telegram" 
-            name="logos:telegram" 
+            v-if="user?.contacts?.phone" 
+            name="heroicons:phone" 
             class="w-4 h-4"
+          />
+          <Icon 
+            v-if="user?.contacts?.telegram" 
+            name="simple-icons:telegram" 
+            class="w-4 h-4 text-[#26A5E4]"
+          />
+          <Icon 
+            v-if="user?.contacts?.whatsapp" 
+            name="simple-icons:whatsapp" 
+            class="w-4 h-4 text-[#25D366]"
+          />
+          <Icon 
+            v-if="user?.contacts?.viber" 
+            name="simple-icons:viber" 
+            class="w-4 h-4 text-[#7360F2]"
           />
           <Icon 
             v-if="user?.contacts?.discord" 
-            name="logos:discord-icon" 
-            class="w-4 h-4"
+            name="simple-icons:discord" 
+            class="w-4 h-4 text-[#5865F2]"
+          />
+          <Icon 
+            v-if="user?.contacts?.linkedin" 
+            name="simple-icons:linkedin" 
+            class="w-4 h-4 text-[#0A66C2]"
           />
           <Icon 
             v-if="user?.contacts?.github" 
-            name="logos:github-icon" 
+            name="simple-icons:github" 
+            class="w-4 h-4 text-[#181717] dark:text-white"
+          />
+          <Icon 
+            v-if="user?.contacts?.website" 
+            name="heroicons:globe-alt" 
             class="w-4 h-4"
           />
         </div>
