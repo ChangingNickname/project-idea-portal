@@ -39,6 +39,7 @@ const closeOnClickOutside = (event) => {
   if (modalRef.value && 
       !modalRef.value.contains(event.target) && 
       !event.target.closest('[data-subject-area-button]')) {
+    emit('update:selected-areas', selectedAreas.value || [])
     emit('update:modelValue', false)
   }
 }
@@ -46,6 +47,7 @@ const closeOnClickOutside = (event) => {
 // Close modal on Escape key
 const closeOnEsc = (event) => {
   if (event.key === 'Escape') {
+    emit('update:selected-areas', selectedAreas.value || [])
     emit('update:modelValue', false)
   }
 }
@@ -59,7 +61,8 @@ const toggleArea = (area) => {
     selectedAreas.value.push({
       key: area.key,
       label: area.label,
-      i18nKey: area.i18nKey
+      i18nKey: area.i18nKey,
+      icon: area.icon
     })
   } else {
     selectedAreas.value.splice(index, 1)
@@ -96,22 +99,17 @@ const toggleCategory = (category) => {
         selectedAreas.value.push({
           key: child.key,
           label: child.label,
-          i18nKey: child.i18nKey
+          i18nKey: child.i18nKey,
+          icon: child.icon
         })
       }
     })
   }
 }
 
-// Confirm selection and close modal
-const confirmSelection = () => {
-  emit('update:selectedAreas', selectedAreas.value)
-  emit('update:modelValue', false)
-}
-
 // Close modal without saving
 const closeModal = () => {
-  selectedAreas.value = [...props.selectedAreas]
+  emit('update:selected-areas', selectedAreas.value || [])
   emit('update:modelValue', false)
 }
 

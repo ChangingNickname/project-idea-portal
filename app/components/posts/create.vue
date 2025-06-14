@@ -178,6 +178,51 @@
       />
     </div>
 
+    <!-- Предметные области -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        {{ t('common.subjectAreas') }}
+      </label>
+      <div class="mt-1">
+        <div class="space-y-4">
+          <UButton
+            color="neutral"
+            variant="soft"
+            class="w-full flex items-center justify-between"
+            data-subject-area-button
+            @click="showSubjectAreas = true"
+          >
+            <span>
+              {{ form.subjectAreas.length 
+                ? t('common.selectedAreas', { count: form.subjectAreas.length })
+                : t('common.selectSubjectAreas') 
+              }}
+            </span>
+            <UIcon name="i-lucide-chevron-right" class="w-5 h-5" />
+          </UButton>
+
+          <!-- Selected Areas Display -->
+          <div v-if="form.subjectAreas.length" class="flex flex-wrap gap-2">
+            <UBadge
+              v-for="area in form.subjectAreas"
+              :key="area.key"
+              color="primary"
+              variant="soft"
+              class="flex items-center gap-1"
+            >
+              <UIcon v-if="area.icon" :name="area.icon" class="w-4 h-4" />
+              {{ area.label }}
+              <UIcon
+                name="i-lucide-x"
+                class="w-4 h-4 cursor-pointer"
+                @click="removeSubjectArea(area.key)"
+              />
+            </UBadge>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Контент -->
     <div>
       <label for="content" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -245,6 +290,25 @@
         </div>
       </Transition>
     </Teleport>
+
+    <!-- Модальное окно выбора предметных областей -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition duration-200 ease-out"
+        enter-from-class="transform scale-95 opacity-0"
+        enter-to-class="transform scale-100 opacity-100"
+        leave-active-class="transition duration-150 ease-in"
+        leave-from-class="transform scale-100 opacity-100"
+        leave-to-class="transform scale-95 opacity-0"
+      >
+        <SubjectArea
+          v-if="showSubjectAreas"
+          v-model="showSubjectAreas"
+          :selected-areas="form.subjectAreas"
+          @update:selected-areas="updateSubjectAreas"
+        />
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -254,6 +318,7 @@ import UserSearch from '~/components/user/search.vue'
 import { useUserStore } from '~/stores/user'
 import { useArticleBuilderStore } from '~/stores/articleBuilder'
 import Avatar from '~/components/user/Avatar.vue'
+import SubjectArea from '~/components/common/subjectarea.vue'
 
 const emit = defineEmits(['update'])
 const userStore = useUserStore()
@@ -262,6 +327,35 @@ const { t } = useI18n()
 
 type ExecutionPolicy = 'public' | 'contest'
 type PostStatus = 'draft' | 'published' | 'archived'
+
+interface SubjectArea {
+  key: string
+  label: string
+  i18nKey: string
+  icon?: string
+}
+
+interface Post {
+  id: string
+  title: string
+  cover: string | null
+  annotation: string
+  owner: User
+  ownerId: string
+  author: User[]
+  authorId: string[]
+  keywords: string[]
+  domain: string
+  content: string
+  createdAt: string
+  updatedAt: string
+  status: PostStatus
+  views: number
+  likes: number
+  viewedBy: string[]
+  deadline?: string
+  subjectAreas: SubjectArea[]
+}
 
 // Форма
 const form = ref<Post>({
@@ -282,7 +376,8 @@ const form = ref<Post>({
   views: 0,
   likes: 0,
   viewedBy: [],
-  deadline: undefined
+  deadline: undefined,
+  subjectAreas: []
 })
 
 // Вычисляемое свойство для дополнительных авторов
@@ -376,7 +471,8 @@ const resetForm = () => {
     views: 0,
     likes: 0,
     viewedBy: [],
-    deadline: undefined
+    deadline: undefined,
+    subjectAreas: []
   }
   emit('update', form.value)
 }
@@ -458,4 +554,20 @@ watch(() => articleBuilderStore.lastExternalUpdate, (newTimestamp) => {
     }
   }
 })
+
+// Состояние для модального окна выбора предметных областей
+const showSubjectAreas = ref(false)
+
+// Обновление предметных областей
+const updateSubjectAreas = (areas: SubjectArea[]) => {
+  if (!areas) return
+  form.value.subjectAreas = areas
+  emit('update', form.value)
+}
+
+// Удаление предметной области
+const removeSubjectArea = (key: string) => {
+  form.value.subjectAreas = form.value.subjectAreas.filter(area => area.key !== key)
+  emit('update', form.value)
+}
 </script>

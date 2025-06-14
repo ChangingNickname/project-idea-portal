@@ -531,17 +531,23 @@
   }
 
   // Watchers
-  watch(() => route.query, (query) => {
-    initStateFromQuery(query)
+  watch(() => route.query, () => {
+    initStateFromQuery()
     loadPosts()
   }, { immediate: true })
 
+  // Remove automatic URL updates for advanced search fields
   watch([searchQuery, sortBy, sortDirection, currentPage], () => {
-    loadPosts()
+    if (!isAdvancedSearchOpen.value) {
+      updateQueryParams()
+    }
   })
 
+  // Remove automatic URL updates for searchState
   watch(() => searchState.value, () => {
-    loadPosts()
+    if (!isAdvancedSearchOpen.value) {
+      updateQueryParams()
+    }
   }, { deep: true })
 
   // Load selected authors' profiles on mount and when selectedAuthors changes
@@ -623,21 +629,18 @@
   // Handle advanced search
   const handleAdvancedSearch = () => {
     currentPage.value = 1
+    updateQueryParams()
     loadPosts()
   }
   
   // Watch for parameter changes
   watch([sortBy, sortDirection], () => {
     currentPage.value = 1 // Reset to first page when sort changes
-    loadPosts()
+    if (!isAdvancedSearchOpen.value) {
+      updateQueryParams()
+    }
   })
 
-  // Debounce search
-  const debouncedSearch = useDebounceFn(() => {
-    currentPage.value = 1 // Reset page on search
-    loadPosts()
-  }, 300)
-  
   // Add responsive items per page
   const updateItemsPerPage = () => {
     itemsPerPage.value = window.innerWidth >= 768 ? 10 : 9
@@ -683,9 +686,10 @@
     return sortOptions.find(option => option.value === value)?.label || t('common.sortByCreationDate')
   }
   
-  // Добавляем функцию handleSearch
+  // Update handleSearch to only update URL params and trigger search
   const handleSearch = () => {
-    currentPage.value = 1 // Сброс страницы при поиске
+    currentPage.value = 1 // Reset page on search
+    updateQueryParams()
     loadPosts()
   }
 
@@ -693,5 +697,12 @@
   const removeSubjectArea = (area: SubjectArea) => {
     selectedSubjectAreas.value = selectedSubjectAreas.value.filter(a => a.key !== area.key)
     searchState.value.subjectAreas = selectedSubjectAreas.value.map(a => a.key)
+  }
+
+  // Update selected areas
+  const updateSelectedAreas = (areas: SubjectArea[]) => {
+    if (!areas) return
+    selectedSubjectAreas.value = areas
+    searchState.value.subjectAreas = areas.map(area => area.key)
   }
   </script>
