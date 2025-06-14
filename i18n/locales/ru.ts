@@ -186,6 +186,9 @@ export default {
     dateRange: 'Диапазон дат',
     selectDate: 'Выберите дату',
     reset: 'Сбросить',
+    avatarHelp: 'Нажмите, чтобы изменить аватар',
+    subjectAreas: 'Предметные области',
+    selectSubjectAreas: 'Выберите предметные области',
   },
   message: {
     title: 'Сообщения',

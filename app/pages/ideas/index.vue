@@ -56,86 +56,51 @@
                     <UInput v-model="searchState.keywords" :placeholder="$t('post.create.keywordsPlaceholder')" class="w-full" />
                   </UFormField>
                   
-                  <!-- Authors -->
-                  <UFormField :label="$t('post.authors')" name="authors">
+                  <!-- Subject Areas -->
+                  <UFormField :label="$t('common.subjectAreas')" name="subjectAreas">
                     <div class="space-y-4">
-                      <UInput
-                        v-model="searchQuery"
-                        :placeholder="$t('common.searchUsers')"
-                        icon="i-lucide-search"
-                        class="w-full"
-                        :loading="pendingAuthors"
-                        @input="debouncedAuthorSearch"
-                      />
-                      
-                      <div v-if="pendingAuthors" class="flex justify-center py-4">
-                        <UIcon name="i-heroicons-arrow-path" class="w-6 h-6 text-primary animate-spin" />
-                      </div>
+                      <UButton
+                        color="neutral"
+                        variant="soft"
+                        class="w-full flex items-center justify-between"
+                        data-subject-area-button
+                        @click="isSubjectAreaModalOpen = true"
+                      >
+                        <span>
+                          {{ selectedSubjectAreas.length 
+                            ? $t('common.selectedAreas', { count: selectedSubjectAreas.length })
+                            : $t('common.selectSubjectAreas') 
+                          }}
+                        </span>
+                        <UIcon name="i-lucide-chevron-right" class="w-5 h-5" />
+                      </UButton>
 
-                      <div v-else-if="errorAuthors" class="text-center text-red-500 py-2">
-                        {{ $t('common.error') }}
-                      </div>
-
-                      <div v-else-if="authors.length" class="space-y-2">
-                        <div
-                          v-for="user in authors"
-                          :key="user.id"
-                          class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                      <!-- Selected Areas Display -->
+                      <div v-if="selectedSubjectAreas.length" class="flex flex-wrap gap-2">
+                        <UBadge
+                          v-for="area in selectedSubjectAreas"
+                          :key="area.key"
+                          color="primary"
+                          variant="soft"
+                          class="flex items-center gap-1"
                         >
-                          <UCheckbox
-                            :model-value="selectedAuthors.includes(user.id)"
-                            @update:model-value="(value: boolean) => {
-                              if (value) {
-                                selectedAuthors.push(user.id)
-                                searchState.authors = [...selectedAuthors]
-                                searchFilterStore.addAuthor(user.id)
-                              } else {
-                                selectedAuthors = selectedAuthors.filter((id: string) => id !== user.id)
-                                searchState.authors = [...selectedAuthors]
-                                searchFilterStore.removeAuthor(user.id)
-                              }
-                            }"
-                            :label="user.displayName || user.email || $t('common.anonymousUser')"
-                            class="flex-1"
+                          <UIcon :name="area.icon" class="w-4 h-4" />
+                          {{ area.label }}
+                          <UIcon
+                            name="i-lucide-x"
+                            class="w-4 h-4 cursor-pointer"
+                            @click="removeSubjectArea(area)"
                           />
-                          <Avatar
-                            :src="user.avatar || undefined"
-                            :email="user.email || undefined"
-                            :alt="user.displayName || $t('common.userAvatar')"
-                            :isActive="user.emailVerified"
-                            size="sm"
-                          />
-                        </div>
-                      </div>
-
-                      <!-- Выбранные авторы -->
-                      <div v-if="selectedAuthors.length" class="space-y-2">
-                        <div
-                          v-for="userId in selectedAuthors"
-                          :key="userId"
-                          class="relative group"
-                        >
-                          <UserCard
-                            :user="authors.find((u: User) => u.id === userId) || null"
-                            class="w-full"
-                          />
-                          <UButton
-                            color="error"
-                            variant="soft"
-                            size="xs"
-                            class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                            @click="() => {
-                              selectedAuthors = selectedAuthors.filter((id: string) => id !== userId)
-                              searchState.authors = [...selectedAuthors]
-                              searchFilterStore.removeAuthor(userId)
-                            }"
-                          >
-                            <UIcon name="i-lucide-x" class="w-4 h-4" />
-                          </UButton>
-                        </div>
+                        </UBadge>
                       </div>
                     </div>
                   </UFormField>
+
+                  <SubjectArea
+                    v-model="isSubjectAreaModalOpen"
+                    :selected-areas="selectedSubjectAreas"
+                    @update:selected-areas="selectedSubjectAreas = $event"
+                  />
                   
                   <!-- Date Range -->
                   <UFormField :label="$t('common.dateRange')" name="dateRange">
@@ -286,6 +251,7 @@
   import Avatar from '~/components/user/Avatar.vue'
   import UserCard from '~/components/user/Card.vue'
   import { useSearchFilterStore } from '~/stores/searchFilter'
+  import SubjectArea from '~/components/common/subjectarea.vue'
   
   const { t } = useI18n()
   const loading = ref(true)
@@ -311,6 +277,9 @@
   const userStore = useUserStore()
   
   const isAdvancedSearchOpen = ref(false)
+  const isSubjectAreaModalOpen = ref(false)
+  const showSubjectAreaModal = ref(false)
+  const selectedSubjectAreas = ref<SubjectArea[]>([])
 
   const df = new DateFormatter('ru-RU', {
     dateStyle: 'medium'
@@ -326,7 +295,8 @@
       start: z.custom<DateValue>().optional(),
       end: z.custom<DateValue>().optional()
     }).optional(),
-    authors: z.array(z.string()).optional()
+    authors: z.array(z.string()).optional(),
+    subjectAreas: z.array(z.string()).optional()
   })
 
   type SearchState = z.infer<typeof searchSchema>
@@ -347,7 +317,8 @@
         searchFilterStore.dateRange.end.getDate()
       ) : undefined
     },
-    authors: searchFilterStore.selectedAuthors
+    authors: searchFilterStore.selectedAuthors,
+    subjectAreas: []
   })
   
   const selectedAuthors = ref<string[]>(searchFilterStore.selectedAuthors)
@@ -357,6 +328,13 @@
 
   const route = useRoute()
   const router = useRouter()
+
+  // Add type definition for subject areas
+  interface SubjectArea {
+    key: string
+    label: string
+    icon?: string
+  }
 
   // Initialize state from URL parameters
   const initStateFromQuery = () => {
@@ -373,9 +351,11 @@
         domain: '',
         keywords: '',
         dateRange: undefined,
-        authors: []
+        authors: [],
+        subjectAreas: []
       }
       selectedAuthors.value = []
+      selectedSubjectAreas.value = []
       searchFilterStore.reset()
       return
     }
@@ -410,11 +390,13 @@
           dateTo.getDate()
         ) : undefined
       } : undefined,
-      authors: (query.authors as string)?.split(',') || []
+      authors: (query.authors as string)?.split(',') || [],
+      subjectAreas: (query.subjectAreas as string)?.split(',') || []
     }
     
     // Initialize selected authors
     selectedAuthors.value = searchState.value.authors || []
+    selectedSubjectAreas.value = []
   }
 
   // Update URL with current parameters
@@ -447,103 +429,15 @@
     if (searchState.value.authors?.length) {
       query.authors = searchState.value.authors.join(',')
     }
+    if (searchState.value.subjectAreas?.length) {
+      query.subjectAreas = searchState.value.subjectAreas.join(',')
+    }
     
     // Update URL without page reload
     router.replace({ query: Object.keys(query).length ? query : undefined })
   }
 
-  // Watch for URL parameter changes
-  watch(() => route.query, () => {
-    initStateFromQuery()
-    loadPosts()
-  }, { immediate: true })
-
-  // Update URL when filters change
-  watch([searchQuery, sortBy, sortDirection, currentPage, searchState], () => {
-    updateQueryParams()
-  }, { deep: true })
-
-  // Load selected authors' profiles on mount and when selectedAuthors changes
-  watch(selectedAuthors, async (newAuthors: string[]) => {
-    if (newAuthors.length) {
-      const authorsData = await Promise.all(
-        newAuthors.map((id: string) => $fetch<User>(`/api/user/${id}/profile`))
-      )
-      authors.value = authorsData
-    } else {
-      authors.value = []
-    }
-  }, { immediate: true })
-
-  // Search authors
-  const searchAuthors = async () => {
-    if (!searchQuery.value) {
-      authors.value = selectedAuthors.value.length ? authors.value : []
-      return
-    }
-
-    pendingAuthors.value = true
-    errorAuthors.value = null
-
-    try {
-      const response = await $fetch<{
-        users: User[]
-        pagination: {
-          total: number
-          page: number
-          limit: number
-          pages: number
-        }
-      }>('/api/user/search', {
-        query: {
-          q: searchQuery.value,
-          page: 1,
-          limit: 10
-        }
-      })
-
-      // Add selected authors to search results if they're not there
-      const selectedUsers = authors.value.filter((user: User) => selectedAuthors.value.includes(user.id))
-      const newUsers = response.users.filter((user: User) => !selectedAuthors.value.includes(user.id))
-      authors.value = [...selectedUsers, ...newUsers]
-    } catch (e) {
-      errorAuthors.value = e as Error
-      console.error('Error searching authors:', e)
-    } finally {
-      pendingAuthors.value = false
-    }
-  }
-
-  // Debounce author search
-  const debouncedAuthorSearch = useDebounceFn(() => {
-    searchAuthors()
-  }, 300)
-  
-  // Reset advanced search
-  const resetAdvancedSearch = () => {
-    searchState.value = {
-      title: '',
-      domain: '',
-      keywords: '',
-      dateRange: {
-        start: undefined,
-        end: undefined
-      },
-      authors: []
-    }
-    selectedAuthors.value = []
-    authors.value = []
-    searchQuery.value = ''
-    searchFilterStore.reset()
-  }
-  
-  // Handle advanced search
-  const handleAdvancedSearch = () => {
-    currentPage.value = 1
-    loadPosts()
-  }
-  
-  // Load posts
+  // Load posts function
   const loadPosts = async () => {
     try {
       loading.value = true
@@ -556,7 +450,8 @@
         title: searchState.value.title,
         domain: searchState.value.domain,
         keywords: searchState.value.keywords,
-        authors: searchState.value.authors
+        authors: searchState.value.authors,
+        subjectAreas: selectedSubjectAreas.value.map(area => area.key)
       }
       
       // Add dates from dateRange if they exist
@@ -635,6 +530,102 @@
     }
   }
 
+  // Watchers
+  watch(() => route.query, (query) => {
+    initStateFromQuery(query)
+    loadPosts()
+  }, { immediate: true })
+
+  watch([searchQuery, sortBy, sortDirection, currentPage], () => {
+    loadPosts()
+  })
+
+  watch(() => searchState.value, () => {
+    loadPosts()
+  }, { deep: true })
+
+  // Load selected authors' profiles on mount and when selectedAuthors changes
+  watch(selectedAuthors, async (newAuthors: string[]) => {
+    if (newAuthors.length) {
+      const authorsData = await Promise.all(
+        newAuthors.map((id: string) => $fetch<User>(`/api/user/${id}/profile`))
+      )
+      authors.value = authorsData
+    } else {
+      authors.value = []
+    }
+  }, { immediate: true })
+
+  // Search authors
+  const searchAuthors = async () => {
+    if (!searchQuery.value) {
+      authors.value = selectedAuthors.value.length ? authors.value : []
+      return
+    }
+
+    pendingAuthors.value = true
+    errorAuthors.value = null
+
+    try {
+      const response = await $fetch<{
+        users: User[]
+        pagination: {
+          total: number
+          page: number
+          limit: number
+          pages: number
+        }
+      }>('/api/user/search', {
+        query: {
+          q: searchQuery.value,
+          page: 1,
+          limit: 10
+        }
+      })
+
+      // Add selected authors to search results if they're not there
+      const selectedUsers = authors.value.filter((user: User) => selectedAuthors.value.includes(user.id))
+      const newUsers = response.users.filter((user: User) => !selectedAuthors.value.includes(user.id))
+      authors.value = [...selectedUsers, ...newUsers]
+    } catch (e) {
+      errorAuthors.value = e as Error
+      console.error('Error searching authors:', e)
+    } finally {
+      pendingAuthors.value = false
+    }
+  }
+
+  // Debounce author search
+  const debouncedAuthorSearch = useDebounceFn(() => {
+    searchAuthors()
+  }, 300)
+  
+  // Reset advanced search
+  const resetAdvancedSearch = () => {
+    searchState.value = {
+      title: '',
+      domain: '',
+      keywords: '',
+      dateRange: {
+        start: undefined,
+        end: undefined
+      },
+      authors: [],
+      subjectAreas: []
+    }
+    selectedAuthors.value = []
+    authors.value = []
+    selectedSubjectAreas.value = []
+    searchQuery.value = ''
+    searchFilterStore.reset()
+  }
+  
+  // Handle advanced search
+  const handleAdvancedSearch = () => {
+    currentPage.value = 1
+    loadPosts()
+  }
+  
   // Watch for parameter changes
   watch([sortBy, sortDirection], () => {
     currentPage.value = 1 // Reset to first page when sort changes
@@ -696,5 +687,11 @@
   const handleSearch = () => {
     currentPage.value = 1 // Сброс страницы при поиске
     loadPosts()
+  }
+
+  // Update removeSubjectArea function with proper type
+  const removeSubjectArea = (area: SubjectArea) => {
+    selectedSubjectAreas.value = selectedSubjectAreas.value.filter(a => a.key !== area.key)
+    searchState.value.subjectAreas = selectedSubjectAreas.value.map(a => a.key)
   }
   </script>
