@@ -12,14 +12,6 @@
           @click="handleReset"
           :title="$t('aiAgent.resetChat')"
         />
-        <UButton
-          v-if="messages.length > 0"
-          color="neutral"
-          variant="ghost"
-          icon="i-heroicons-trash"
-          @click="handleClearSession"
-          :title="$t('aiAgent.clearHistory')"
-        />
       </div>
     </div>
 
@@ -106,6 +98,25 @@ const messages = computed(() => aiAgentStore.messages)
 const userEmail = computed(() => userStore.user?.email || '')
 const userAvatar = computed(() => userStore.user?.avatar || '')
 
+const getWelcomeMessage = () => ({
+  role: 'assistant' as const,
+  content: t('aiAgent.welcomeMessage'),
+  timestamp: new Date().toISOString(),
+  user: {
+    id: 'assistant',
+    email: 'ai@assistant.com',
+    avatar: '/images/ai-avatar.png',
+    displayName: 'AI Assistant'
+  }
+})
+
+// Инициализация приветственного сообщения при монтировании
+onMounted(() => {
+  if (messages.value.length === 0) {
+    aiAgentStore.setWelcomeMessage(getWelcomeMessage())
+  }
+})
+
 const handleMessageSent = async (message: any) => {
   console.log('handleMessageSent triggered with:', message)
   
@@ -135,15 +146,12 @@ const handleMessageSent = async (message: any) => {
   }
 }
 
-const handleClearSession = () => {
-  aiAgentStore.clearSession()
-}
-
 const handleReset = async () => {
   try {
     isResetting.value = true
     await aiAgentStore.generateToken()
     aiAgentStore.clearSession()
+    aiAgentStore.setWelcomeMessage(getWelcomeMessage())
     useToast().add({
       title: t('common.success'),
       description: t('aiAgent.chatReset'),

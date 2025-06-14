@@ -298,7 +298,8 @@ export default {
     resetChat: 'Reset chat and generate new token',
     clearHistory: 'Clear chat history',
     chatReset: 'Chat has been reset successfully',
-    resetError: 'Failed to reset chat'
+    resetError: 'Failed to reset chat',
+    welcomeMessage: 'Hello! I am your AI assistant. I am ready to help you with your questions and tasks. How can I help you today?'
   },
   feedback: {
     title: 'Feedback',

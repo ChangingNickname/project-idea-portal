@@ -25,18 +25,6 @@ interface AiAgentState {
 const STORAGE_KEY = 'ai_agent_session'
 const TOKEN_KEY = 'ai_agent_token'
 
-const welcomeMessage = {
-  role: 'assistant' as const,
-  content: 'Привет! Я ваш AI ассистент. Я готов помочь вам с вашими вопросами и задачами. Как я могу вам помочь сегодня?',
-  timestamp: new Date().toISOString(),
-  user: {
-    id: 'assistant',
-    email: 'ai@assistant.com',
-    avatar: '/images/ai-avatar.png',
-    displayName: 'AI Assistant'
-  }
-}
-
 // Функция для загрузки состояния из sessionStorage
 const loadState = (): Partial<AiAgentState> => {
   if (process.server) return {}
@@ -45,13 +33,13 @@ const loadState = (): Partial<AiAgentState> => {
     const storedState = sessionStorage.getItem(STORAGE_KEY)
     const storedToken = sessionStorage.getItem(TOKEN_KEY)
     return {
-      messages: storedState ? JSON.parse(storedState) : [welcomeMessage],
+      messages: storedState ? JSON.parse(storedState) : [],
       sessionToken: storedToken
     }
   } catch (error) {
     console.error('Failed to load AI agent state from sessionStorage:', error)
     return {
-      messages: [welcomeMessage],
+      messages: [],
       sessionToken: null
     }
   }
@@ -77,11 +65,16 @@ export const useAiAgentStore = defineStore('aiagent', {
   state: (): AiAgentState => ({
     sessionToken: null,
     isProcessing: false,
-    messages: [welcomeMessage],
+    messages: [],
     ...loadState()
   }),
 
   actions: {
+    setWelcomeMessage(welcomeMessage: any) {
+      this.messages = [welcomeMessage]
+      saveState({ messages: this.messages })
+    },
+
     async generateToken() {
       try {
         const response = await $fetch<{ token: string }>('/api/aiagent/token.generate')
@@ -263,8 +256,8 @@ export const useAiAgentStore = defineStore('aiagent', {
 
     clearSession() {
       this.sessionToken = null
-      this.messages = [welcomeMessage]
-      saveState({ sessionToken: null, messages: [welcomeMessage] })
+      this.messages = []
+      saveState({ sessionToken: null, messages: [] })
     }
   }
 })
