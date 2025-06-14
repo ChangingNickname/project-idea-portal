@@ -39,6 +39,9 @@ export default defineEventHandler(async (event): Promise<User> => {
       const profileDoc = await db.collection('profiles').doc(uid).get()
       const profileData = profileDoc.exists ? profileDoc.data() : null
 
+      // Получаем base64 аватар только из Firestore
+      const avatarBase64 = profileData?.avatar || null
+
       // Проверяем, добавил ли пользователь меня в друзья
       let isAddedToFriends = false
       if (isAuthenticated && currentUserId) {
@@ -54,10 +57,12 @@ export default defineEventHandler(async (event): Promise<User> => {
 
       // Если пользователь запрашивает свои данные или добавил меня в друзья, возвращаем полные данные
       if (isAuthenticated && (currentUserId === uid || isAddedToFriends)) {
+        console.log('userRecord', userRecord)
+        console.log('avatarBase64', avatarBase64)
         return {
           id: userRecord.uid,
           email: userRecord.email || null,
-          avatar: profileData?.avatar || userRecord.photoURL || null,
+          avatar: avatarBase64,
           emailVerified: userRecord.emailVerified,
           displayName: profileData?.displayName || userRecord.displayName || null,
           position: profileData?.position || null,
@@ -104,7 +109,7 @@ export default defineEventHandler(async (event): Promise<User> => {
       return {
         id: userRecord.uid,
         email: null,
-        avatar: profileData?.avatar || userRecord.photoURL || null,
+        avatar: avatarBase64,
         emailVerified: false,
         displayName: profileData?.displayName || userRecord.displayName || userRecord.email || null,
         position: profileData?.position || null,

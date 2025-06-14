@@ -12,17 +12,33 @@ export const useUserStore = defineStore('user', {
   },
 
   actions: {
+    async fetchUserProfile(userId: string) {
+      if (!userId) return
+      try {
+        const profile = await $fetch(`/api/user/${userId}/profile`)
+        this.user = profile
+      } catch (e) {
+        console.error('Ошибка загрузки профиля:', e)
+      }
+    },
+
     async init() {
       // Check localStorage first
       const storedUser = checkStoredUser()
       if (storedUser) {
         this.user = storedUser
+        // Подгружаем актуальный профиль
+        await this.fetchUserProfile(storedUser.id)
       }
 
       // Listen to auth state changes
-      onAuthStateChanged((user) => {
-        this.user = user
+      onAuthStateChanged(async (user) => {
         this.loading = false
+        if (user && user.id) {
+          await this.fetchUserProfile(user.id)
+        } else {
+          this.user = null
+        }
       })
     },
 
