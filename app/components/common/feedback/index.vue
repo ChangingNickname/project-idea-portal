@@ -58,14 +58,7 @@
 
 <script setup lang="ts">
 const isModalOpen = ref(false)
-const buttonVariant = ref<'outline' | 'solid'>('outline')
+const buttonVariant = ref<'outline' | 'solid'>('solid')
 const buttonColor = ref<'primary'>('primary')
 const templateUrl = '/template.pdf'
-
-const animateButton = () => {
-  buttonVariant.value = buttonVariant.value === 'outline' ? 'solid' : 'outline'
-}
-onMounted(() => {
-  setInterval(animateButton, 2000)
-})
 </script>
