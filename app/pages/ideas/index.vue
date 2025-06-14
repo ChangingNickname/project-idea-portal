@@ -243,32 +243,33 @@
           </UButton>
         </div>
       </div>
-      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 px-2 md:px-4 lg:px-6">
-        <div v-for="post in posts" :key="post.id" class="flex flex-col h-full">
-          <PostsCard :post="post" />
-          <div class="mt-2 flex justify-end">
-            <UButton
-              v-if="post.status === 'draft' && post.ownerId === userStore.user?.id"
-              :to="`/article-builder?id=${post.id}`"
-              color="primary"
-              variant="soft"
-              class="inline-flex items-center"
-            >
-              <Icon name="lucide:edit" class="w-5 h-5 mr-2" />
-              {{ $t('common.edit') }}
-            </UButton>
+      <div v-else>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 px-2 md:px-4 lg:px-6">
+          <div v-for="post in posts" :key="post.id" class="flex flex-col h-full">
+            <PostsCard :post="post" />
+            <div class="mt-2 flex justify-end">
+              <UButton
+                v-if="post.status === 'draft' && post.ownerId === userStore.user?.id"
+                :to="`/article-builder?id=${post.id}`"
+                color="primary"
+                variant="soft"
+                class="inline-flex items-center"
+              >
+                <Icon name="lucide:edit" class="w-5 h-5 mr-2" />
+                {{ $t('common.edit') }}
+              </UButton>
+            </div>
           </div>
         </div>
         <!-- Пагинация -->
-        <div class="col-span-full flex justify-center mt-6">
-          <template v-if="pagination.pages > 1">
-            <UPagination
-              v-model="currentPage"
-              :total="pagination.total"
-              :page-count="pagination.pages"
-              :items-per-page="itemsPerPage"
-            />
-          </template>
+        <div v-if="pagination.pages > 1" class="flex justify-center mt-6">
+          <UPagination
+            v-model:page="currentPage"
+            :total="pagination.total"
+            :page-count="pagination.pages"
+            :items-per-page="itemsPerPage"
+            @update:page="handlePageChange"
+          />
         </div>
       </div>
     </div>
@@ -479,8 +480,9 @@
       searchFilterStore.setKeywords(searchState.value.keywords || '')
       searchFilterStore.setSelectedAuthors(searchState.value.authors || [])
 
+      console.log('Loading posts with query:', query)
       const response = await $fetch<{ posts: Post[], pagination: any }>('/api/posts/search', { query })
-      console.log('Posts response:', response.posts)
+      console.log('Search response:', response)
       
       // Загружаем профили авторов для каждого поста
       const postsWithAuthors = await Promise.all(response.posts.map(async (post) => {
@@ -506,7 +508,11 @@
       
       console.log('Processed posts with authors:', postsWithAuthors)
       posts.value = postsWithAuthors
-      pagination.value = response.pagination
+      pagination.value = {
+        ...response.pagination,
+        page: currentPage.value
+      }
+      console.log('Updated pagination:', pagination.value)
     } catch (error) {
       console.error('Error loading posts:', error)
       useToast().add({
@@ -520,7 +526,8 @@
   }
   
   // Следим за изменениями параметров
-  watch([currentPage, sortBy, sortDirection], () => {
+  watch([sortBy, sortDirection], () => {
+    currentPage.value = 1 // Reset to first page when sort changes
     loadPosts()
   })
   
@@ -552,15 +559,32 @@
     loadPosts()
   }
   
-  // Загружаем статьи при монтировании
+  // Add responsive items per page
+  const updateItemsPerPage = () => {
+    itemsPerPage.value = window.innerWidth >= 768 ? 10 : 9
+  }
+
+  // Update items per page on mount and resize
   onMounted(() => {
+    updateItemsPerPage()
+    window.addEventListener('resize', updateItemsPerPage)
     loadPosts()
   })
-  
+
+  onUnmounted(() => {
+    window.removeEventListener('resize', updateItemsPerPage)
+  })
+
   // Add new function to handle new project creation
   const articleBuilderStore = useArticleBuilderStore()
   const handleNewProject = () => {
     articleBuilderStore.resetDraft()
     navigateTo('/article-builder')
+  }
+
+  // Restore handlePageChange function
+  const handlePageChange = async (page: number) => {
+    currentPage.value = page
+    await loadPosts()
   }
   </script>
