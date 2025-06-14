@@ -44,7 +44,7 @@
               <UButton
                 icon="i-lucide-user-plus"
                 size="xl"
-                :color="userStore.isAuthenticated ? 'neutral' : 'primary'"
+                :color="userStore.isAuthenticated ? 'success' : 'primary'"
                 :disabled="userStore.isAuthenticated"
                 variant="solid"
                 class="rounded-full shadow-none w-24 h-24 flex items-center justify-center"

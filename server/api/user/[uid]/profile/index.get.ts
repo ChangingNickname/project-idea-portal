@@ -57,8 +57,6 @@ export default defineEventHandler(async (event): Promise<User> => {
 
       // Если пользователь запрашивает свои данные или добавил меня в друзья, возвращаем полные данные
       if (isAuthenticated && (currentUserId === uid || isAddedToFriends)) {
-        console.log('userRecord', userRecord)
-        console.log('avatarBase64', avatarBase64)
         return {
           id: userRecord.uid,
           email: userRecord.email || null,
