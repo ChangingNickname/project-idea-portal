@@ -80,6 +80,22 @@ import hljs from 'highlight.js'
 import 'highlight.js/styles/vs2015.css'
 import { useI18n } from 'vue-i18n'
 
+interface MessageState {
+  isEditing: boolean
+  isDeleting: boolean
+  isReplying: boolean
+  editContent: string
+  error: string | null
+  isRead: boolean
+  messageContent: string
+}
+
+interface JoinRequestResponse {
+  accepted: boolean
+  postId: string
+  userId: string
+}
+
 const props = defineProps<{
   id?: string
   user: User
@@ -98,6 +114,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'markAsRead', messageId: string): void
+  (e: 'joinRequestResponse', response: JoinRequestResponse): void
 }>()
 
 const state = ref<MessageState>({
@@ -106,7 +123,8 @@ const state = ref<MessageState>({
   isReplying: false,
   editContent: '',
   error: null,
-  isRead: false
+  isRead: false,
+  messageContent: props.message || ''
 })
 
 const { t } = useI18n()
@@ -129,8 +147,8 @@ marked.setOptions({
 
 // Рендерим markdown с очисткой от потенциально опасного HTML
 const renderedMessage = computed(async () => {
-  if (!props.message) return ''
-  const rawHtml = await marked.parse(props.message)
+  if (!state.value.messageContent) return ''
+  const rawHtml = await marked.parse(state.value.messageContent)
   return DOMPurify.sanitize(rawHtml, {
     ALLOWED_TAGS: [
       'p', 'br', 'strong', 'em', 'code', 'pre', 'blockquote',
@@ -211,19 +229,59 @@ const handleMessageClick = (event: MouseEvent) => {
   if (target.tagName === 'A') {
     event.preventDefault()
     const href = target.getAttribute('href')
+    console.log('Clicked link:', {
+      href,
+      text: target.textContent,
+      type: props.type,
+      metadata: props.metadata
+    })
+
     if (href) {
       if (href.startsWith('/api/')) {
+        console.log('Processing API request:', href)
+        
+        // Проверяем, что это запрос на присоединение
+        if (href.includes('/join/')) {
+          const isAccepted = target.textContent?.toLowerCase() === 'да'
+          const postId = href.split('/join/')[1]?.split('?')[0]
+          
+          if (postId && props.metadata?.postId) {
+            console.log('Emitting join request response:', {
+              accepted: isAccepted,
+              postId: props.metadata.postId,
+              userId: props.user.id
+            })
+
+            emit('joinRequestResponse', {
+              accepted: isAccepted,
+              postId: props.metadata.postId,
+              userId: props.user.id
+            })
+          }
+        }
+
         // Обработка API запросов
         $fetch(href, { method: 'POST' })
           .then(() => {
+            console.log('API request successful')
             // Обновляем сообщение после успешного ответа
-            if (props.type === 'join_request') {
+            if (props.type === 'join_request' && props.metadata?.postId) {
+              const isAccepted = target.textContent?.toLowerCase() === 'да'
+              console.log('Join request response:', {
+                isAccepted,
+                postId: props.metadata.postId,
+                userId: props.user.id
+              })
+
+              // Обновляем текст сообщения
               const newMessage = props.message?.replace(
                 /\[(Да|Нет)\]\(.*?\)/g,
                 (match, text) => `[${text}]`
               )
               if (newMessage) {
-                props.message = newMessage
+                console.log('Updating message content:', newMessage)
+                // Используем локальное состояние вместо изменения props
+                state.value.messageContent = newMessage
               }
             }
           })
@@ -232,6 +290,7 @@ const handleMessageClick = (event: MouseEvent) => {
           })
       } else {
         // Обычные ссылки
+        console.log('Opening external link:', href)
         window.open(href, '_blank')
       }
     }

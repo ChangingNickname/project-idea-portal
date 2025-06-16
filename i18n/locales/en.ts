@@ -242,7 +242,12 @@ export default {
       likes: 'likes',
       participants: 'participants',
       join: 'Join Project',
-      joinTooltip: 'Write to the author to join the project'
+      joinTooltip: 'Write to the author to join the project',
+      joinRequest: 'I want to join your project "{title}"',
+      joinRequestAccepted: 'Your request to join project "{title}" has been accepted',
+      joinRequestDeclined: 'Your request to join project "{title}" has been declined',
+      acceptJoinRequest: 'Accept',
+      declineJoinRequest: 'Decline'
     }
   },
   profile: {

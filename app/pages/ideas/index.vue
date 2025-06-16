@@ -228,13 +228,13 @@
         </div>
         <!-- Пагинация -->
         <div v-if="pagination.pages > 1" class="flex justify-center mt-6">
-            <UPagination
-            v-model:page="currentPage"
-              :total="pagination.total"
-              :page-count="pagination.pages"
-              :items-per-page="itemsPerPage"
+          <UPagination
+            v-model="currentPage"
+            :total="pagination.total"
+            :page-count="pagination.pages"
+            :items-per-page="itemsPerPage"
             @update:page="handlePageChange"
-            />
+          />
         </div>
       </div>
     </div>
@@ -445,7 +445,7 @@
       const query: any = {
         page: currentPage.value,
         limit: itemsPerPage.value,
-        search: searchQuery.value,
+        q: searchQuery.value,
         sortBy: sortBy.value,
         sortDirection: sortDirection.value,
         title: searchState.value.title,
@@ -459,14 +459,6 @@
       if (searchState.value.dateRange?.start) {
         const date = searchState.value.dateRange.start as CalendarDate
         query.dateFrom = new Date(date.year, date.month - 1, date.day).toISOString()
-        searchFilterStore.setDateRange(
-          new Date(date.year, date.month - 1, date.day),
-          searchState.value.dateRange.end ? new Date(
-            (searchState.value.dateRange.end as CalendarDate).year,
-            (searchState.value.dateRange.end as CalendarDate).month - 1,
-            (searchState.value.dateRange.end as CalendarDate).day
-          ) : null
-        )
       }
       if (searchState.value.dateRange?.end) {
         const date = searchState.value.dateRange.end as CalendarDate
@@ -480,45 +472,15 @@
         }
       })
 
-      // Save values to store
-      searchFilterStore.setTitle(searchState.value.title || '')
-      searchFilterStore.setDomain(searchState.value.domain || '')
-      searchFilterStore.setKeywords(searchState.value.keywords || '')
-      searchFilterStore.setSelectedAuthors(searchState.value.authors || [])
-
       console.log('Loading posts with query:', query)
       const response = await $fetch<{ posts: Post[], pagination: any }>('/api/posts/search', { query })
       console.log('Search response:', response)
       
-      // Load author profiles for each post
-      const postsWithAuthors = await Promise.all(response.posts.map(async (post) => {
-        // Load owner profile
-        const owner = post.ownerId ? await $fetch<User>(`/api/user/${post.ownerId}/profile`) : null
-        
-        // Load author profiles
-        const authors = await Promise.all(
-          (post.authorId || [])
-            .filter(id => id !== post.ownerId) // Exclude owner from authors list
-            .map(id => $fetch<User>(`/api/user/${id}/profile`))
-        )
-
-        // Create new post object with correct types
-        const processedPost: Post = {
-          ...post,
-          owner: owner as User, // Cast to User type as we know owner cannot be null
-          author: [owner, ...authors].filter(Boolean) as User[] // Filter null and cast to User[]
-        }
-
-        return processedPost
-      }))
-      
-      console.log('Processed posts with authors:', postsWithAuthors)
-      posts.value = postsWithAuthors
+      posts.value = response.posts
       pagination.value = {
         ...response.pagination,
         page: currentPage.value
       }
-      console.log('Updated pagination:', pagination.value)
     } catch (error) {
       console.error('Error loading posts:', error)
       useToast().add({
@@ -668,6 +630,7 @@
   // Restore handlePageChange function
   const handlePageChange = async (page: number) => {
     currentPage.value = page
+    updateQueryParams()
     await loadPosts()
   }
 

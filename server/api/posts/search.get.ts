@@ -4,6 +4,19 @@ import { Query } from 'firebase-admin/firestore'
 import { getFirestore } from 'firebase-admin/firestore'
 import { checkAuth } from '~~/server/utils/auth'
 
+interface Post {
+  id: string
+  title: string
+  ownerId: string
+  authorId: string[]
+  subjectAreas?: Array<{
+    key: string
+    i18nKey: string
+  }>
+  status: 'draft' | 'published' | 'archived'
+  [key: string]: any
+}
+
 export default defineEventHandler(async (event) => {
   const db = getFirestore()
 
@@ -24,14 +37,32 @@ export default defineEventHandler(async (event) => {
     const limit = Number(query.limit) || 9
     const sortBy = (query.sortBy as string) || 'createdAt'
     const sortDirection = (query.sortDirection as 'asc' | 'desc') || 'desc'
+    const ownerId = query.ownerId as string
+    const authorId = query.authorId as string
 
     // Базовый запрос
-    let postsQuery = db.collection('posts')
+    let postsQuery: Query = db.collection('posts')
 
     // Применяем фильтры
     if (searchQuery) {
-      postsQuery = postsQuery.where('title', '>=', searchQuery)
-        .where('title', '<=', searchQuery + '\uf8ff')
+      const searchLower = searchQuery.toLowerCase()
+      postsQuery = postsQuery.where('title', '>=', searchLower)
+        .where('title', '<=', searchLower + '\uf8ff')
+    }
+
+    // Фильтр по статусу
+    const isOwnerOrAuthor = !!ownerId || !!authorId
+    if (!isOwnerOrAuthor) {
+      // Если пользователь не владелец и не автор, показываем только опубликованные
+      postsQuery = postsQuery.where('status', '==', 'published')
+    } else {
+      // Если пользователь владелец или автор, показываем все его посты
+      if (ownerId) {
+        postsQuery = postsQuery.where('ownerId', '==', ownerId)
+      }
+      if (authorId) {
+        postsQuery = postsQuery.where('authorId', 'array-contains', authorId)
+      }
     }
 
     // Получаем все посты
@@ -39,7 +70,7 @@ export default defineEventHandler(async (event) => {
     let posts = postsSnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
-    }))
+    })) as Post[]
 
     // Фильтруем по subjectAreas если указан domain
     if (domain) {
@@ -57,8 +88,8 @@ export default defineEventHandler(async (event) => {
 
     // Применяем сортировку
     posts.sort((a, b) => {
-      const aValue = a[sortBy]
-      const bValue = b[sortBy]
+      const aValue = a[sortBy] || 0
+      const bValue = b[sortBy] || 0
       if (sortDirection === 'asc') {
         return aValue > bValue ? 1 : -1
       }
@@ -73,22 +104,29 @@ export default defineEventHandler(async (event) => {
     // Получаем информацию о владельцах и авторах
     const postsWithProfiles = await Promise.all(
       posts.map(async (post) => {
-        // Получаем информацию о владельце
-        const ownerDoc = await db.collection('profiles').doc(post.ownerId).get()
-        const ownerData = ownerDoc.data()
-        
-        // Получаем информацию об авторах
-        const authorPromises = post.authorId?.map(async (authorId: string) => {
-          const authorDoc = await db.collection('profiles').doc(authorId).get()
-          return authorDoc.data()
-        }) || []
-        
-        const authors = await Promise.all(authorPromises)
+        try {
+          // Получаем информацию о владельце
+          const ownerDoc = await db.collection('profiles').doc(post.ownerId).get()
+          const ownerData = ownerDoc.exists ? ownerDoc.data() : null
+          
+          // Получаем информацию об авторах
+          const authorPromises = (post.authorId || [])
+            .filter(id => id !== post.ownerId) // Исключаем владельца из списка авторов
+            .map(async (authorId: string) => {
+              const authorDoc = await db.collection('profiles').doc(authorId).get()
+              return authorDoc.exists ? authorDoc.data() : null
+            })
+          
+          const authors = (await Promise.all(authorPromises)).filter(Boolean)
 
-        return {
-          ...post,
-          owner: ownerData,
-          author: authors
+          return {
+            ...post,
+            owner: ownerData,
+            author: [ownerData, ...authors].filter(Boolean)
+          }
+        } catch (error) {
+          console.error(`Error fetching profiles for post ${post.id}:`, error)
+          return post
         }
       })
     )

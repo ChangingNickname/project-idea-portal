@@ -254,7 +254,12 @@ export default {
       likes: 'лайков',
       participants: 'участников',
       join: 'Присоединиться',
-      joinTooltip: 'Написать автору для участия в проекте'
+      joinTooltip: 'Написать автору для участия в проекте',
+      joinRequest: 'Я хочу присоединиться к вашему проекту "{title}"',
+      joinRequestAccepted: 'Ваша заявка на участие в проекте "{title}" принята',
+      joinRequestDeclined: 'Ваша заявка на участие в проекте "{title}" отклонена',
+      acceptJoinRequest: 'Принять',
+      declineJoinRequest: 'Отклонить'
     }
   },
   profile: {

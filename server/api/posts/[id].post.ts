@@ -1,51 +1,90 @@
 import { db } from '~~/server/utils/firebase-admin'
-import { defineEventHandler, readBody, createError } from 'h3'
+import { defineEventHandler, createError, readBody } from 'h3'
 import { checkAuth } from '~~/server/utils/auth'
 
 export default defineEventHandler(async (event) => {
   try {
-    const params = event.context.params
-    if (!params || !params.id) {
-      throw createError({ statusCode: 400, message: 'Missing post id' })
-    }
-    const id = params.id
-
-    // Get post document first
-    const postRef = db.collection('posts').doc(id)
-    const postDoc = await postRef.get()
-    if (!postDoc.exists) {
-      throw createError({ statusCode: 404, message: 'Post not found' })
-    }
-
-    const postData = postDoc.data()
-    if (!postData) {
-      throw createError({ statusCode: 500, message: 'Post data is undefined' })
-    }
-
-    // Try to get user ID from body, but don't require it
-    const body = await readBody(event)
-    const userId = body?.userId
-
-    // If we have a userId, check if the user has already viewed the post
-    if (userId) {
-      const viewedBy = Array.isArray(postData.viewedBy) ? postData.viewedBy : []
-      
-      if (!viewedBy.includes(userId)) {
-        await postRef.update({
-          views: (postData.views || 0) + 1,
-          viewedBy: [...viewedBy, userId]
-        })
-      }
-    } else {
-      // If no userId, just increment the view count
-      await postRef.update({
-        views: (postData.views || 0) + 1
+    // Check authentication
+    const authResult = await checkAuth(event)
+    if (!authResult.isAuthenticated || !authResult.currentUserId) {
+      throw createError({
+        statusCode: 401,
+        message: 'Требуется авторизация'
       })
     }
 
-    return { success: true }
+    // Get post ID from route params
+    const id = event.context.params?.id
+    if (!id) {
+      throw createError({
+        statusCode: 400,
+        message: 'Post ID is required'
+      })
+    }
+
+    // Get request body
+    const body = await readBody(event)
+    if (!body) {
+      throw createError({
+        statusCode: 400,
+        message: 'Request body is required'
+      })
+    }
+
+    // Get post document
+    const postRef = db.collection('posts').doc(id)
+    const postDoc = await postRef.get()
+    
+    if (!postDoc.exists) {
+      throw createError({
+        statusCode: 404,
+        message: 'Post not found'
+      })
+    }
+
+    // Check if user is the owner or author
+    const postData = postDoc.data()
+    if (!postData) {
+      throw createError({
+        statusCode: 404,
+        message: 'Пост не найден'
+      })
+    }
+
+    const isParticipant = postData.currentParticipants?.includes(authResult.currentUserId)
+
+    // Если это запрос на выход из проекта
+    if (body.action === 'leaveProject') {
+      if (!isParticipant) {
+        throw createError({
+          statusCode: 403,
+          message: 'Вы не являетесь участником этого проекта'
+        })
+      }
+
+      // Удаляем пользователя из списка участников
+      const updatedParticipants = postData.currentParticipants.filter(
+        (id: string) => id !== authResult.currentUserId
+      )
+
+      const updateData = {
+        currentParticipants: updatedParticipants,
+        updatedAt: new Date().toISOString()
+      }
+      await postRef.update(updateData)
+
+      return {
+        success: true,
+        message: 'Вы успешно вышли из проекта'
+      }
+    }
+
+    throw createError({
+      statusCode: 400,
+      message: 'Неизвестное действие'
+    })
   } catch (error: any) {
-    console.error('Error updating views:', error)
+    console.error('Error processing post action:', error)
     throw createError({
       statusCode: error.statusCode || 500,
       message: error.message || 'Internal server error'
