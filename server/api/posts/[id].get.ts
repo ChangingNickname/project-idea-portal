@@ -45,9 +45,20 @@ export default defineEventHandler(async (event) => {
         })
       )
 
+      // Fetch owner profile
+      const ownerDoc = await db.collection('profiles').doc(post.ownerId).get()
+      const ownerProfile = ownerDoc.exists ? {
+        id: ownerDoc.id,
+        ...ownerDoc.data()
+      } : null
+
       return {
         ...post,
-        author: authorProfiles.filter(Boolean)
+        author: authorProfiles.filter(Boolean),
+        owner: ownerProfile,
+        likes: post.likes || 0,
+        views: post.views || 0,
+        viewedBy: post.viewedBy || []
       }
     }
 
@@ -85,9 +96,20 @@ export default defineEventHandler(async (event) => {
       })
     )
 
+    // Fetch owner profile
+    const ownerDoc = await db.collection('profiles').doc(post.ownerId).get()
+    const ownerProfile = ownerDoc.exists ? {
+      id: ownerDoc.id,
+      ...ownerDoc.data()
+    } : null
+
     return {
       ...post,
-      author: authorProfiles.filter(Boolean)
+      author: authorProfiles.filter(Boolean),
+      owner: ownerProfile,
+      likes: post.likes || 0,
+      views: post.views || 0,
+      viewedBy: post.viewedBy || []
     }
   } catch (error: any) {
     console.error('Error fetching post:', error)

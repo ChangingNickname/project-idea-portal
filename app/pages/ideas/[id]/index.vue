@@ -25,28 +25,7 @@ const { t } = useI18n()
 onMounted(async () => {
     try {
         const response = await $fetch(`/api/posts/${route.params.id}`)
-        
-        // Fetch owner information
-        const ownerResponse = await $fetch(`/api/user/${response.ownerId}/profile`)
-        
-        // Fetch author information for each author ID
-        const authorPromises = response.authorId?.map(async (authorId: string) => {
-            try {
-                const authorResponse = await $fetch(`/api/user/${authorId}/profile`)
-                return authorResponse
-            } catch (error) {
-                console.error(`Failed to fetch author ${authorId}:`, error)
-                return null
-            }
-        }) || []
-
-        const authors = await Promise.all(authorPromises)
-        
-        post.value = {
-            ...response,
-            owner: ownerResponse,
-            author: authors.filter(Boolean)
-        } as Post
+        post.value = response as Post
     } catch (error) {
         console.error('Failed to fetch post:', error)
         post.value = null
@@ -60,10 +39,15 @@ onMounted(async () => {
             if (entry && entry.isIntersecting && !hasMarkedViewed && post.value && userStore.user) {
                 hasMarkedViewed = true
                 try {
-                    await $fetch(`/api/posts/${post.value.id}/view`, {
+                    const newViews = (post.value.views || 0) + 1
+                    await $fetch(`/api/posts/meta/${post.value.id}`, {
                         method: 'POST',
-                        body: { userId: userStore.user.id }
+                        body: { views: newViews }
                     })
+                    if (post.value) {
+                        post.value.views = newViews
+                        post.value.viewedBy = [...(post.value.viewedBy || []), userStore.user.id]
+                    }
                 } catch (e) {
                     console.error('Failed to mark post as viewed:', e)
                 }

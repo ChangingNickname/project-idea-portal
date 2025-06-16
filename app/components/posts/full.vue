@@ -78,15 +78,26 @@
           {{ post.views || 0 }} {{ t('post.view.views') }}
         </div>
         <UButton
-          color="neutral"
+          :color="isLiked ? 'primary' : 'neutral'"
           variant="ghost"
           :ui="{ 
-            base: 'flex items-center gap-2 px-2 py-1'
+            base: 'flex items-center gap-2 px-2 py-1',
+            color: {
+              primary: 'text-primary-500 dark:text-primary-400',
+              neutral: 'text-gray-500 dark:text-gray-400'
+            }
           }"
-          :class="{ 'text-primary': isLiked }"
+          :disabled="isLiking"
           @click="toggleLike"
         >
-          <Icon name="lucide:heart" class="w-4 h-4" :class="{ 'fill-current': isLiked }" />
+          <Icon 
+            name="lucide:heart" 
+            class="w-4 h-4" 
+            :class="{ 
+              'fill-current text-primary-500 dark:text-primary-400': isLiked,
+              'text-gray-500 dark:text-gray-400': !isLiked 
+            }" 
+          />
           {{ post.likes || 0 }} {{ t('post.view.likes') }}
         </UButton>
       </div>
@@ -128,6 +139,9 @@ const router = useRouter()
 
 // Состояние лайка
 const isLiked = ref(false)
+const isLiking = ref(false)
+const lastLikeTime = ref(0)
+const LIKE_DEBOUNCE = 1000 // Минимальный интервал между лайками в мс
 const participants = ref<User[]>([])
 
 // Загружаем профили участников
@@ -168,7 +182,7 @@ const incrementViews = async () => {
 }
 
 // Проверяем, лайкнул ли текущий пользователь пост
-watchEffect(() => {
+onMounted(() => {
   if (userStore.user && props.post.viewedBy) {
     isLiked.value = props.post.viewedBy.includes(userStore.user.id)
   }
@@ -184,15 +198,19 @@ onMounted(async () => {
 
 // Функция для лайка/анлайка
 const toggleLike = async () => {
-  if (!userStore.user || !props.post.id) return
+  if (!userStore.user || !props.post.id || isLiking.value) return
 
   try {
-    const newLikes = isLiked.value ? (props.post.likes || 0) - 1 : (props.post.likes || 0) + 1
-    const newViewedBy = isLiked.value 
+    isLiking.value = true
+
+    // Проверяем текущее состояние лайка
+    const currentIsLiked = props.post.viewedBy?.includes(userStore.user.id) || false
+    const newLikes = currentIsLiked ? Math.max(0, (props.post.likes || 0) - 1) : (props.post.likes || 0) + 1
+    const newViewedBy = currentIsLiked 
       ? (props.post.viewedBy || []).filter(id => id !== userStore.user?.id)
       : [...(props.post.viewedBy || []), userStore.user.id]
 
-    await $fetch(`/api/posts/meta/${props.post.id}`, {
+    const updatedPost = await $fetch(`/api/posts/meta/${props.post.id}`, {
       method: 'POST',
       body: {
         likes: newLikes,
@@ -201,10 +219,10 @@ const toggleLike = async () => {
     })
 
     // Обновляем локальное состояние
-    isLiked.value = !isLiked.value
+    isLiked.value = !currentIsLiked
     if (props.post) {
-      props.post.likes = newLikes
-      props.post.viewedBy = newViewedBy
+      props.post.likes = updatedPost.likes
+      props.post.viewedBy = updatedPost.viewedBy
     }
   } catch (error) {
     console.error('Failed to toggle like:', error)
@@ -213,6 +231,10 @@ const toggleLike = async () => {
       description: t('common.failedToUpdateLike'),
       color: 'error'
     })
+  } finally {
+    setTimeout(() => {
+      isLiking.value = false
+    }, 500)
   }
 }
 

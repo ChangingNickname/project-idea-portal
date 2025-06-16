@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
 
     // Get post document
     const postDoc = await db.collection('posts').doc(id).get()
-    
+
     if (!postDoc.exists) {
       throw createError({
         statusCode: 404,
@@ -38,17 +38,6 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // Проверяем, является ли пользователь владельцем или автором
-    const isOwner = post.ownerId === authResult.currentUserId
-    const isAuthor = post.authorId?.includes(authResult.currentUserId)
-
-    if (!isOwner && !isAuthor) {
-      throw createError({
-        statusCode: 403,
-        message: 'Только владелец или автор может изменять метаданные поста'
-      })
-    }
-
     // Get request body
     const body = await readBody(event)
     if (!body) {
@@ -63,23 +52,25 @@ export default defineEventHandler(async (event) => {
       updatedAt: new Date().toISOString()
     }
 
-    // Обновляем просмотры только если это новый просмотр
-    if (typeof body.views === 'number' && !post.viewedBy?.includes(authResult.currentUserId)) {
-      updateData.views = body.views
-      updateData.viewedBy = [...(post.viewedBy || []), authResult.currentUserId]
-    }
-
-    // Обновляем лайки
+    // Обновляем лайки и просмотры
     if (typeof body.likes === 'number') {
       updateData.likes = body.likes
     }
+    if (Array.isArray(body.viewedBy)) {
+      updateData.viewedBy = body.viewedBy
+    }
 
+    // Обновляем документ
     await postDoc.ref.update(updateData)
 
-    return {
-      ...post,
-      ...updateData
-    }
+    // Получаем обновленные данные
+    const updatedDoc = await postDoc.ref.get()
+    const updatedPost = {
+      id: updatedDoc.id,
+      ...updatedDoc.data()
+    } as Post
+
+    return updatedPost
   } catch (error: any) {
     console.error('Error updating post meta:', error)
     throw createError({
