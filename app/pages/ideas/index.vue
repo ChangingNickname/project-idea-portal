@@ -46,18 +46,13 @@
                     <UInput v-model="searchState.title" :placeholder="$t('post.create.titlePlaceholder')" class="w-full" />
                   </UFormField>
                   
-                  <!-- Domain -->
-                  <UFormField :label="$t('post.create.domain')" name="domain">
-                    <UInput v-model="searchState.domain" :placeholder="$t('post.create.domainPlaceholder')" class="w-full" />
-                  </UFormField>
-                  
                   <!-- Keywords -->
                   <UFormField :label="$t('post.create.keywords')" name="keywords">
                     <UInput v-model="searchState.keywords" :placeholder="$t('post.create.keywordsPlaceholder')" class="w-full" />
                   </UFormField>
                   
                   <!-- Subject Areas -->
-                  <UFormField :label="$t('common.subjectAreas')" name="subjectAreas">
+                  <UFormField :label="$t('common.subjectAreas')" name="domain">
                     <div class="space-y-4">
                       <UButton
                         color="neutral"
@@ -290,22 +285,20 @@
 
   const searchSchema = z.object({
     title: z.string().optional(),
-    domain: z.string().optional(),
     keywords: z.string().optional(),
     dateRange: z.object({
       start: z.custom<DateValue>().optional(),
       end: z.custom<DateValue>().optional()
     }).optional(),
     authors: z.array(z.string()).optional(),
-    subjectAreas: z.array(z.string()).optional()
+    domain: z.array(z.string()).optional()
   })
 
   type SearchState = z.infer<typeof searchSchema>
 
   const searchState = ref<SearchState>({
-    title: searchFilterStore.title,
-    domain: searchFilterStore.domain,
-    keywords: searchFilterStore.keywords,
+    title: '',
+    keywords: '',
     dateRange: {
       start: searchFilterStore.dateRange.start ? new CalendarDate(
         searchFilterStore.dateRange.start.getFullYear(),
@@ -319,7 +312,7 @@
       ) : undefined
     } as DateRange,
     authors: searchFilterStore.selectedAuthors,
-    subjectAreas: []
+    domain: []
   })
   
   const selectedAuthors = ref<string[]>(searchFilterStore.selectedAuthors)
@@ -349,11 +342,10 @@
       currentPage.value = 1
       searchState.value = {
         title: '',
-        domain: '',
         keywords: '',
         dateRange: undefined,
         authors: [],
-        subjectAreas: []
+        domain: []
       }
       selectedAuthors.value = []
       selectedSubjectAreas.value = []
@@ -377,7 +369,6 @@
     
     searchState.value = {
       title: (query.title as string) || '',
-      domain: (query.domain as string) || '',
       keywords: (query.keywords as string) || '',
       dateRange: dateFrom ? {
         start: new CalendarDate(
@@ -392,7 +383,7 @@
         ) : undefined
       } : undefined,
       authors: (query.authors as string)?.split(',') || [],
-      subjectAreas: (query.subjectAreas as string)?.split(',') || []
+      domain: (query.domain as string)?.split(',') || []
     }
     
     // Initialize selected authors
@@ -412,7 +403,6 @@
     
     // Add advanced search parameters only if they exist
     if (searchState.value.title) query.title = searchState.value.title
-    if (searchState.value.domain) query.domain = searchState.value.domain
     if (searchState.value.keywords) query.keywords = searchState.value.keywords
     
     // Handle dates
@@ -430,8 +420,8 @@
     if (searchState.value.authors?.length) {
       query.authors = searchState.value.authors.join(',')
     }
-    if (searchState.value.subjectAreas?.length) {
-      query.subjectAreas = searchState.value.subjectAreas.join(',')
+    if (searchState.value.domain?.length) {
+      query.domain = searchState.value.domain.join(',')
     }
     
     // Update URL without page reload
@@ -449,10 +439,9 @@
         sortBy: sortBy.value,
         sortDirection: sortDirection.value,
         title: searchState.value.title,
-        domain: searchState.value.domain,
         keywords: searchState.value.keywords,
         authors: searchState.value.authors,
-        subjectAreas: selectedSubjectAreas.value.map(area => area.key)
+        domain: selectedSubjectAreas.value.map(area => area.key)
       }
       
       // Add dates from dateRange if they exist
@@ -573,14 +562,13 @@
   const resetAdvancedSearch = () => {
     searchState.value = {
       title: '',
-      domain: '',
       keywords: '',
       dateRange: {
         start: undefined,
         end: undefined
       },
       authors: [],
-      subjectAreas: []
+      domain: []
     }
     selectedAuthors.value = []
     authors.value = []
@@ -660,7 +648,7 @@
   // Update removeSubjectArea function with proper type
   const removeSubjectArea = (area: SubjectArea) => {
     selectedSubjectAreas.value = selectedSubjectAreas.value.filter(a => a.key !== area.key)
-    searchState.value.subjectAreas = selectedSubjectAreas.value.map(a => a.key)
+    searchState.value.domain = selectedSubjectAreas.value.map(a => a.key)
   }
 
   // Update selected areas
@@ -672,6 +660,6 @@
       label: area.label,
       icon: area.icon || undefined
     }))
-    searchState.value.subjectAreas = areas.map(area => area.key)
+    searchState.value.domain = areas.map(area => area.key)
   }
   </script>

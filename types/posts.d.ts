@@ -11,7 +11,10 @@ declare global {
         author: User[] // Список авторов (включая владельца)
         authorId: string[] // ID авторов (включая владельца)
         keywords: string[]
-        domain: string
+        subjectAreas: Array<{
+            key: string
+            i18nKey: string
+        }>
         content: string
         createdAt: string
         updatedAt: string

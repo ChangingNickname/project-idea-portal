@@ -33,6 +33,7 @@ export default defineEventHandler(async (event) => {
     const query = getQuery(event)
     const searchQuery = (query.q as string) || ''
     const domain = (query.domain as string) || ''
+    const domains = domain ? domain.split(',') : []
     const page = Number(query.page) || 1
     const limit = Number(query.limit) || 9
     const sortBy = (query.sortBy as string) || 'createdAt'
@@ -73,12 +74,11 @@ export default defineEventHandler(async (event) => {
     })) as Post[]
 
     // Фильтруем по subjectAreas если указан domain
-    if (domain) {
+    if (domains.length > 0) {
       posts = posts.filter(post => {
         const subjectAreas = post.subjectAreas || []
         return subjectAreas.some(area => 
-          area.i18nKey === `subjectAreas.${domain}` || 
-          area.key === domain.split('.').pop()
+          domains.includes(area.key) // Проверяем только по key
         )
       })
     }

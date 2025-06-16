@@ -340,21 +340,18 @@ interface Post {
   title: string
   cover: string | null
   annotation: string
-  owner: User
-  ownerId: string
+  content: string
+  keywords: string[]
+  subjectAreas: Array<{
+    key: string
+    label: string
+    i18nKey: string
+    icon?: string
+  }>
+  status: 'draft' | 'published' | 'archived'
+  deadline?: string
   author: User[]
   authorId: string[]
-  keywords: string[]
-  domain: string
-  content: string
-  createdAt: string
-  updatedAt: string
-  status: PostStatus
-  views: number
-  likes: number
-  viewedBy: string[]
-  deadline?: string
-  subjectAreas: SubjectArea[]
 }
 
 // Форма
@@ -363,21 +360,13 @@ const form = ref<Post>({
   title: '',
   cover: null,
   annotation: '',
-  owner: userStore.user!,
-  ownerId: userStore.user!.id,
-  author: [],
-  authorId: [],
-  keywords: [],
-  domain: '',
   content: '',
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
+  keywords: [],
+  subjectAreas: [],
   status: 'draft',
-  views: 0,
-  likes: 0,
-  viewedBy: [],
   deadline: undefined,
-  subjectAreas: []
+  author: [],
+  authorId: []
 })
 
 // Вычисляемое свойство для дополнительных авторов
@@ -411,7 +400,7 @@ watch(() => props.modelValue, (newValue) => {
 }, { deep: true })
 
 // Эмитить update только при реальных изменениях формы (например, по id, title, keywords, content и т.д.)
-watch(() => [form.value.id, form.value.title, form.value.cover, form.value.annotation, form.value.keywords, form.value.domain, form.value.content, form.value.status], () => {
+watch(() => [form.value.id, form.value.title, form.value.cover, form.value.annotation, form.value.keywords, form.value.content, form.value.status], () => {
   emit('update', { ...form.value })
 })
 
@@ -458,21 +447,13 @@ const resetForm = () => {
     title: '',
     cover: null,
     annotation: '',
-    owner: userStore.user!,
-    ownerId: userStore.user!.id,
-    author: [],
-    authorId: [],
-    keywords: [],
-    domain: '',
     content: '',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    keywords: [],
+    subjectAreas: [],
     status: 'draft',
-    views: 0,
-    likes: 0,
-    viewedBy: [],
     deadline: undefined,
-    subjectAreas: []
+    author: [],
+    authorId: []
   }
   emit('update', form.value)
 }

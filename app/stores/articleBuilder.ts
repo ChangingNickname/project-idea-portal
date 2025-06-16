@@ -11,6 +11,17 @@ interface ArticleBuilderState {
   isEditing: boolean
   lastExternalUpdate: number
   isMobile: boolean
+  title: string
+  cover: string | null
+  annotation: string
+  content: string
+  keywords: string[]
+  subjectAreas: Array<{
+    key: string
+    i18nKey: string
+  }>
+  status: 'draft' | 'published' | 'archived'
+  deadline?: string
 }
 
 const STORAGE_KEY = 'article_builder_panels'
@@ -65,8 +76,7 @@ export const useArticleBuilderStore = defineStore('articleBuilder', {
         cover: null,
         annotation: '',
         keywords: [],
-        domain: '',
-        content: '',
+        subjectAreas: [],
         status: 'draft',
         views: 0,
         likes: 0,
@@ -75,7 +85,15 @@ export const useArticleBuilderStore = defineStore('articleBuilder', {
         author: userStore.user ? [userStore.user] : [],
         authorId: userStore.user ? [userStore.user.id] : [],
         deadline: undefined
-      }
+      },
+      title: '',
+      cover: null,
+      annotation: '',
+      content: '',
+      keywords: [],
+      subjectAreas: [],
+      status: 'draft',
+      deadline: undefined
     }
   },
 
@@ -210,8 +228,7 @@ export const useArticleBuilderStore = defineStore('articleBuilder', {
         cover: null,
         annotation: '',
         keywords: [],
-        domain: '',
-        content: '',
+        subjectAreas: [],
         status: 'draft',
         views: 0,
         likes: 0,
@@ -222,6 +239,46 @@ export const useArticleBuilderStore = defineStore('articleBuilder', {
         deadline: undefined
       }
       this.isEditing = false
+      this.title = ''
+      this.cover = null
+      this.annotation = ''
+      this.content = ''
+      this.keywords = []
+      this.subjectAreas = []
+      this.status = 'draft'
+      this.deadline = undefined
+    },
+
+    setTitle(title: string) {
+      this.title = title
+    },
+
+    setCover(cover: string | null) {
+      this.cover = cover
+    },
+
+    setAnnotation(annotation: string) {
+      this.annotation = annotation
+    },
+
+    setContent(content: string) {
+      this.content = content
+    },
+
+    setKeywords(keywords: string[]) {
+      this.keywords = keywords
+    },
+
+    setSubjectAreas(subjectAreas: Array<{ key: string; i18nKey: string }>) {
+      this.subjectAreas = subjectAreas
+    },
+
+    setStatus(status: 'draft' | 'published' | 'archived') {
+      this.status = status
+    },
+
+    setDeadline(deadline?: string) {
+      this.deadline = deadline
     }
   }
 }) 
