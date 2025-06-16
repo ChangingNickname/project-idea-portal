@@ -6,6 +6,7 @@ export default {
     signUp: 'Sign Up',
     language: 'Language',
     selectLanguage: 'Select Language',
+    write: 'Write',
     // User menu translations
     user: 'User',
     profile: 'Profile',

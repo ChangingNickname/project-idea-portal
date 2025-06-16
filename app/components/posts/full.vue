@@ -76,7 +76,7 @@
 <script setup lang="ts">
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
-import { computed, ref, watchEffect } from 'vue'
+import { computed, ref, watchEffect, watch } from 'vue'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/vs2015.css'
 import UserCard from '~/components/user/Card.vue'

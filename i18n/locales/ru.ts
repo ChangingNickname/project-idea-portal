@@ -6,6 +6,7 @@ export default {
     signUp: 'Регистрация',
     language: 'Язык',
     selectLanguage: 'Выберите язык',
+    write: 'Написать',
     // User menu translations
     user: 'Пользователь',
     profile: 'Профиль',
