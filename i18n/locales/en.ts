@@ -247,7 +247,14 @@ export default {
       joinRequestAccepted: 'Your request to join project "{title}" has been accepted',
       joinRequestDeclined: 'Your request to join project "{title}" has been declined',
       acceptJoinRequest: 'Accept',
-      declineJoinRequest: 'Decline'
+      declineJoinRequest: 'Decline',
+      leave: 'Leave Project',
+      leaveTooltip: 'Leave the project',
+      leftProject: 'You have left the project',
+      failedToLeave: 'Failed to leave the project',
+      removeParticipant: 'Remove participant',
+      participantRemoved: 'Participant has been removed from the project',
+      failedToRemoveParticipant: 'Failed to remove participant from the project'
     }
   },
   profile: {

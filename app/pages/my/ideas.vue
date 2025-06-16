@@ -138,7 +138,7 @@
                 @click="handleLeaveProject(post)"
               >
                 <Icon name="lucide:log-out" class="w-5 h-5 mr-2" />
-                {{ t('common.leaveProject') }}
+                {{ t('post.view.failedTo') }}
               </UButton>
             </div>
           </div>

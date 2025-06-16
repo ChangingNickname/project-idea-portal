@@ -16,16 +16,30 @@
           <div v-if="post.owner" class="flex flex-col gap-2">
             <span class="text-sm text-gray-500 dark:text-gray-400">{{ t('post.author') }}</span>
             <UserCard :user="post.owner" />
-            <NuxtLink
-              v-if="userStore.user && post.owner && userStore.user.id !== post.owner.id"
-              :to="`/user/${post.owner.id}/chat`"
-              class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
-              :title="t('post.view.joinTooltip')"
-              @click.prevent="sendJoinRequest"
-            >
-              <Icon name="lucide:message-square" class="w-4 h-4" />
-              {{ t('post.view.join') }}
-            </NuxtLink>
+            <template v-if="userStore.user && post.owner && userStore.user.id !== post.owner.id">
+              <UButton
+                v-if="!isParticipant"
+                :to="`/user/${post.owner.id}/chat`"
+                color="primary"
+                class="inline-flex items-center gap-2"
+                :title="t('post.view.joinTooltip')"
+                @click.prevent="sendJoinRequest"
+              >
+                <Icon name="lucide:message-square" class="w-4 h-4" />
+                {{ t('post.view.join') }}
+              </UButton>
+              <UButton
+                v-else
+                color="error"
+                variant="soft"
+                class="inline-flex items-center gap-2"
+                :title="t('post.view.leaveTooltip')"
+                @click="leaveProject"
+              >
+                <Icon name="lucide:log-out" class="w-4 h-4" />
+                {{ t('post.view.leave') }}
+              </UButton>
+            </template>
           </div>
           <!-- Соавторы -->
           <template v-if="post.author.filter(a => a?.id !== post.owner?.id).length">
@@ -103,16 +117,23 @@
       </div>
 
       <!-- Участники -->
-      <div v-if="participants.length" class="mt-8">
-        <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
-          {{ t('post.view.participants') }}
-        </h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <UserCard 
-            v-for="participant in participants" 
-            :key="participant.id"
-            :user="participant"
-          />
+      <div v-if="post.currentParticipants && post.currentParticipants.length > 0" class="flex flex-col gap-2">
+        <span class="text-sm text-gray-500 dark:text-gray-400">{{ t('post.participants') }}</span>
+        <div class="flex flex-wrap gap-2">
+          <div v-for="participantId in post.currentParticipants" :key="participantId" class="relative group">
+            <UserCard :user="participants[participantId] || { id: participantId }" />
+            <!-- Кнопка удаления для автора -->
+            <UButton
+              v-if="userStore.user && post.owner && userStore.user.id === post.owner.id && participantId !== post.owner.id"
+              color="error"
+              variant="soft"
+              size="xs"
+              icon="i-lucide-x"
+              class="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity"
+              :title="t('post.view.removeParticipant')"
+              @click="removeParticipant(participantId)"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -140,26 +161,45 @@ const router = useRouter()
 // Состояние лайка
 const isLiked = ref(false)
 const isLiking = ref(false)
+const isParticipant = ref(false)
 const lastLikeTime = ref(0)
 const LIKE_DEBOUNCE = 1000 // Минимальный интервал между лайками в мс
-const participants = ref<User[]>([])
+const participants = ref<Record<string, User>>({})
 
 // Загружаем профили участников
-const loadParticipants = async () => {
-  if (!props.post.currentParticipants?.length) return
-  
+const loadParticipantProfile = async (participantId: string) => {
+  if (participants.value[participantId]) return
+
   try {
-    const profiles = await Promise.all(
-      props.post.currentParticipants.map(async (participantId) => {
-        const response = await $fetch<User>(`/api/user/${participantId}/profile`)
-        return response
-      })
-    )
-    participants.value = profiles
+    const profile = await $fetch<User>(`/api/user/${participantId}/profile`)
+    participants.value[participantId] = profile
   } catch (error) {
-    console.error('Failed to load participants profiles:', error)
+    console.error('Failed to load participant profile:', error)
   }
 }
+
+// Загружаем профили при монтировании
+onMounted(async () => {
+  if (props.post.currentParticipants?.length) {
+    await Promise.all(
+      props.post.currentParticipants.map(participantId => loadParticipantProfile(participantId))
+    )
+  }
+})
+
+// Проверяем, лайкнул ли текущий пользователь пост
+onMounted(() => {
+  if (userStore.user && props.post.viewedBy) {
+    isLiked.value = props.post.viewedBy.includes(userStore.user.id)
+  }
+})
+
+// Проверяем, является ли пользователь участником
+onMounted(() => {
+  if (userStore.user && props.post.currentParticipants) {
+    isParticipant.value = props.post.currentParticipants.includes(userStore.user.id)
+  }
+})
 
 // Увеличиваем счетчик просмотров
 const incrementViews = async () => {
@@ -181,19 +221,9 @@ const incrementViews = async () => {
   }
 }
 
-// Проверяем, лайкнул ли текущий пользователь пост
-onMounted(() => {
-  if (userStore.user && props.post.viewedBy) {
-    isLiked.value = props.post.viewedBy.includes(userStore.user.id)
-  }
-})
-
 // Загружаем данные при монтировании
 onMounted(async () => {
-  await Promise.all([
-    loadParticipants(),
-    incrementViews()
-  ])
+  await incrementViews()
 })
 
 // Функция для лайка/анлайка
@@ -311,6 +341,72 @@ const sendJoinRequest = async () => {
     router.push(`/user/${props.post.owner.id}/chat`)
   } catch (error) {
     console.error('Failed to send join request:', error)
+  }
+}
+
+// Функция для выхода из проекта
+const leaveProject = async () => {
+  if (!userStore.user || !props.post.owner || !props.post.id) return
+
+  try {
+    const updatedPost = await $fetch<Post>(`/api/posts/${props.post.id}`, {
+      method: 'POST',
+      body: {
+        action: 'leaveProject'
+      }
+    })
+
+    // Обновляем локальное состояние
+    isParticipant.value = false
+    if (props.post) {
+      props.post.currentParticipants = updatedPost.currentParticipants
+    }
+
+    useToast().add({
+      title: t('common.success'),
+      description: t('post.view.leftProject'),
+      color: 'success'
+    })
+  } catch (error) {
+    console.error('Failed to leave project:', error)
+    useToast().add({
+      title: t('common.error'),
+      description: t('post.view.failedToLeave'),
+      color: 'error'
+    })
+  }
+}
+
+// Функция для удаления участника
+const removeParticipant = async (participantId: string) => {
+  if (!userStore.user || !props.post.owner || !props.post.id) return
+
+  try {
+    const updatedPost = await $fetch<Post>(`/api/posts/${props.post.id}`, {
+      method: 'POST',
+      body: {
+        action: 'removeParticipant',
+        participantId
+      }
+    })
+
+    // Обновляем локальное состояние
+    if (props.post) {
+      props.post.currentParticipants = updatedPost.currentParticipants
+    }
+
+    useToast().add({
+      title: t('common.success'),
+      description: t('post.view.participantRemoved'),
+      color: 'success'
+    })
+  } catch (error) {
+    console.error('Failed to remove participant:', error)
+    useToast().add({
+      title: t('common.error'),
+      description: t('post.view.failedToRemoveParticipant'),
+      color: 'error'
+    })
   }
 }
 </script>

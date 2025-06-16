@@ -259,7 +259,14 @@ export default {
       joinRequestAccepted: 'Ваша заявка на участие в проекте "{title}" принята',
       joinRequestDeclined: 'Ваша заявка на участие в проекте "{title}" отклонена',
       acceptJoinRequest: 'Принять',
-      declineJoinRequest: 'Отклонить'
+      declineJoinRequest: 'Отклонить',
+      leave: 'Выйти из проекта',
+      leaveTooltip: 'Покинуть проект',
+      leftProject: 'Вы вышли из проекта',
+      failedToLeave: 'Не удалось выйти из проекта',
+      removeParticipant: 'Удалить участника',
+      participantRemoved: 'Участник удален из проекта',
+      failedToRemoveParticipant: 'Не удалось удалить участника из проекта'
     }
   },
   profile: {
