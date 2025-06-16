@@ -12,7 +12,18 @@
           <!-- Владелец -->
           <div class="flex flex-col items-start mr-6">
             <span class="text-xs text-gray-500 dark:text-gray-400 mb-1">{{ t('post.author') }}</span>
-            <UserCard v-if="post.owner" :user="post.owner" />
+            <div class="flex items-center gap-4">
+              <UserCard v-if="post.owner" :user="post.owner" />
+              <NuxtLink
+                v-if="userStore.user && post.owner && userStore.user.id !== post.owner.id"
+                :to="`/user/${post.owner.id}/chat`"
+                class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                :title="t('post.view.joinTooltip')"
+              >
+                <Icon name="lucide:message-square" class="w-4 h-4" />
+                {{ t('post.view.join') }}
+              </NuxtLink>
+            </div>
           </div>
           <!-- Соавторы -->
           <div v-if="post.author.filter(a => a?.id !== post.owner?.id).length" class="flex flex-col items-start gap-2">
@@ -80,12 +91,14 @@ import { computed, ref, watchEffect, watch } from 'vue'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/vs2015.css'
 import UserCard from '~/components/user/Card.vue'
+import { useUserStore } from '~/stores/user'
 
 const props = defineProps<{
   post: Partial<Post>
 }>()
 
 const { t } = useI18n()
+const userStore = useUserStore()
 
 // Настройка marked для безопасного рендеринга
 marked.setOptions({

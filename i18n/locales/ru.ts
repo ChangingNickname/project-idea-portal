@@ -248,11 +248,13 @@ export default {
       addAuthors: 'Добавить авторов'
     },
     view: {
-      noTitle: 'Без заголовка',
+      noTitle: 'Без названия',
       cover: 'Обложка',
       views: 'просмотров',
       likes: 'лайков',
-      participants: 'участников'
+      participants: 'участников',
+      join: 'Присоединиться',
+      joinTooltip: 'Написать автору для участия в проекте'
     }
   },
   profile: {

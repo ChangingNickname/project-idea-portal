@@ -236,11 +236,13 @@ export default {
       addAuthors: 'Add Authors'
     },
     view: {
-      noTitle: 'No title',
-      cover: 'Cover',
+      noTitle: 'Untitled Post',
+      cover: 'Post Cover',
       views: 'views',
       likes: 'likes',
-      participants: 'participants'
+      participants: 'participants',
+      join: 'Join Project',
+      joinTooltip: 'Write to the author to join the project'
     }
   },
   profile: {
