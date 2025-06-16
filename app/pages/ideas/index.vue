@@ -354,7 +354,7 @@
     }
     
     // Initialize search query
-    searchQuery.value = (query.search as string) || ''
+    searchQuery.value = (query.q as string) || ''
     
     // Initialize sorting
     sortBy.value = (query.sortBy as string) || 'createdAt'
@@ -367,6 +367,7 @@
     const dateFrom = query.dateFrom ? new Date(query.dateFrom as string) : undefined
     const dateTo = query.dateTo ? new Date(query.dateTo as string) : undefined
     
+    // Initialize all form fields from URL
     searchState.value = {
       title: (query.title as string) || '',
       keywords: (query.keywords as string) || '',
@@ -388,7 +389,36 @@
     
     // Initialize selected authors
     selectedAuthors.value = searchState.value.authors || []
-    selectedSubjectAreas.value = []
+    
+    // Initialize selected subject areas
+    if (searchState.value.domain.length > 0) {
+      selectedSubjectAreas.value = searchState.value.domain.map(key => ({
+        key,
+        label: t(`subjectAreas.${key}`),
+        icon: getSubjectAreaIcon(key)
+      }))
+    } else {
+      selectedSubjectAreas.value = []
+    }
+  }
+
+  // Helper function to get subject area icon
+  const getSubjectAreaIcon = (key: string) => {
+    const icons: Record<string, string> = {
+      web: 'i-lucide-globe',
+      mobile: 'i-lucide-smartphone',
+      backend: 'i-lucide-server',
+      frontend: 'i-lucide-layout',
+      data_science: 'i-lucide-bar-chart',
+      ai: 'i-lucide-brain',
+      ml: 'i-lucide-cpu',
+      game: 'i-lucide-gamepad',
+      devops: 'i-lucide-terminal',
+      security: 'i-lucide-shield',
+      algorithms: 'i-lucide-code',
+      testing: 'i-lucide-bug'
+    }
+    return icons[key] || undefined
   }
 
   // Update URL with current parameters
@@ -441,7 +471,7 @@
         title: searchState.value.title,
         keywords: searchState.value.keywords,
         authors: searchState.value.authors,
-        domain: selectedSubjectAreas.value.map(area => area.key)
+        domain: route.query.domain || selectedSubjectAreas.value.map(area => area.key)
       }
       
       // Add dates from dateRange if they exist

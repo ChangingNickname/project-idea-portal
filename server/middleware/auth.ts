@@ -49,7 +49,7 @@ export default defineEventHandler(async (event) => {
   
   if (!authResult.isAuthenticated) {
     console.log('Unauthorized access to:', path)
-    return sendRedirect(event, '/login')
+    return sendRedirect(event, '/')
   }
 
   // // Проверяем верификацию почты

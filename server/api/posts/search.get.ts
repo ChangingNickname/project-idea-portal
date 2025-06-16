@@ -32,8 +32,19 @@ export default defineEventHandler(async (event) => {
   try {
     const query = getQuery(event)
     const searchQuery = (query.q as string) || ''
-    const domain = (query.domain as string) || ''
-    const domains = domain ? domain.split(',') : []
+    const domain = query.domain
+    const domains = Array.isArray(domain) 
+      ? domain 
+      : typeof domain === 'string' 
+        ? domain.split(',') 
+        : []
+    
+    console.log('Search params:', {
+      domain,
+      domains,
+      query
+    })
+
     const page = Number(query.page) || 1
     const limit = Number(query.limit) || 9
     const sortBy = (query.sortBy as string) || 'createdAt'
@@ -73,15 +84,31 @@ export default defineEventHandler(async (event) => {
       ...doc.data()
     })) as Post[]
 
+    console.log('Before domain filter:', {
+      totalPosts: posts.length,
+      firstPostSubjectAreas: posts[0]?.subjectAreas
+    })
+
     // Фильтруем по subjectAreas если указан domain
     if (domains.length > 0) {
       posts = posts.filter(post => {
         const subjectAreas = post.subjectAreas || []
-        return subjectAreas.some(area => 
-          domains.includes(area.key) // Проверяем только по key
+        const hasMatchingDomain = subjectAreas.some(area => 
+          domains.includes(area.key)
         )
+        console.log('Post filter:', {
+          postId: post.id,
+          subjectAreas,
+          hasMatchingDomain
+        })
+        return hasMatchingDomain
       })
     }
+
+    console.log('After domain filter:', {
+      totalPosts: posts.length,
+      domains
+    })
 
     // Получаем общее количество после фильтрации
     const total = posts.length
