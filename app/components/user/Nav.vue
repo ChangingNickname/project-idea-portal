@@ -3,17 +3,20 @@
     <div v-if="!loading" class="relative" ref="dropdownRef">
       <UButton
         color="neutral"
-        variant="ghost"
+        variant="soft"
         class="relative"
         @click="isOpen = !isOpen"
       >
-        <div class="relative">
+        <div class="relative flex items-center gap-2">
           <Avatar
             :src="user?.avatar || undefined"
             :email="user?.email || undefined"
             :alt="user?.displayName || user?.email || ''"
             :isActive="true"
           />
+          <span>
+            {{ user?.displayName || truncateEmail(user?.email) }}
+          </span>
           <UChip
             v-if="totalUnread > 0"
             :text="totalUnread"
