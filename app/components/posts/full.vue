@@ -19,6 +19,7 @@
                 :to="`/user/${post.owner.id}/chat`"
                 class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
                 :title="t('post.view.joinTooltip')"
+                @click.prevent="sendJoinRequest"
               >
                 <Icon name="lucide:message-square" class="w-4 h-4" />
                 {{ t('post.view.join') }}
@@ -92,6 +93,7 @@ import hljs from 'highlight.js'
 import 'highlight.js/styles/vs2015.css'
 import UserCard from '~/components/user/Card.vue'
 import { useUserStore } from '~/stores/user'
+import { useRouter } from 'vue-router'
 
 const props = defineProps<{
   post: Partial<Post>
@@ -99,6 +101,7 @@ const props = defineProps<{
 
 const { t } = useI18n()
 const userStore = useUserStore()
+const router = useRouter()
 
 // Настройка marked для безопасного рендеринга
 marked.setOptions({
@@ -150,6 +153,31 @@ const safeContent = ref('')
 watchEffect(async () => {
   safeContent.value = await renderedContent.value
 })
+
+const sendJoinRequest = async () => {
+  if (!userStore.user || !props.post.owner || !props.post.id || !props.post.title) return
+
+  try {
+    const message = `Пользователь желает принять участие в проекте "${props.post.title}" (ID: ${props.post.id})\n\nПринять его?\n\n[Да](/api/user/${props.post.owner.id}/join/${props.post.id}?accept=true)\n[Нет](/api/user/${props.post.owner.id}/join/${props.post.id}?accept=false)`
+
+    await $fetch(`/api/user/${props.post.owner.id}/message`, {
+      method: 'POST',
+      body: {
+        message,
+        type: 'join_request',
+        metadata: {
+          postId: props.post.id,
+          postTitle: props.post.title,
+          requesterId: userStore.user.id
+        }
+      }
+    })
+
+    router.push(`/user/${props.post.owner.id}/chat`)
+  } catch (error) {
+    console.error('Failed to send join request:', error)
+  }
+}
 </script>
 
 <style>

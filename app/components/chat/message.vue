@@ -31,6 +31,7 @@
             ? 'bg-primary-500 text-white dark:bg-primary-600' 
             : 'bg-gray-100 dark:bg-gray-800'
         ]"
+        @click="handleMessageClick"
       >
         <div v-html="safeMessage" />
       </div>
@@ -91,6 +92,8 @@ const props = defineProps<{
   }[]
   showUserInfo?: boolean
   isCurrentUser?: boolean
+  type?: string
+  metadata?: Record<string, any>
 }>()
 
 const emit = defineEmits<{
@@ -201,6 +204,39 @@ onUnmounted(() => {
     observer.unobserve(messageRef.value)
   }
 })
+
+// Обработка кликов по сообщению
+const handleMessageClick = (event: MouseEvent) => {
+  const target = event.target as HTMLElement
+  if (target.tagName === 'A') {
+    event.preventDefault()
+    const href = target.getAttribute('href')
+    if (href) {
+      if (href.startsWith('/api/')) {
+        // Обработка API запросов
+        $fetch(href, { method: 'POST' })
+          .then(() => {
+            // Обновляем сообщение после успешного ответа
+            if (props.type === 'join_request') {
+              const newMessage = props.message?.replace(
+                /\[(Да|Нет)\]\(.*?\)/g,
+                (match, text) => `[${text}]`
+              )
+              if (newMessage) {
+                props.message = newMessage
+              }
+            }
+          })
+          .catch(error => {
+            console.error('Failed to process action:', error)
+          })
+      } else {
+        // Обычные ссылки
+        window.open(href, '_blank')
+      }
+    }
+  }
+}
 </script>
 
 <style>
