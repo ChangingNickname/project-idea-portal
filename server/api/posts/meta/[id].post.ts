@@ -59,11 +59,19 @@ export default defineEventHandler(async (event) => {
     }
 
     // Обновляем только метаданные
-    const updateData = {
-      views: body.views || post.views || 0,
-      likes: body.likes || post.likes || 0,
-      viewedBy: body.viewedBy || post.viewedBy || [],
+    const updateData: any = {
       updatedAt: new Date().toISOString()
+    }
+
+    // Обновляем просмотры только если это новый просмотр
+    if (typeof body.views === 'number' && !post.viewedBy?.includes(authResult.currentUserId)) {
+      updateData.views = body.views
+      updateData.viewedBy = [...(post.viewedBy || []), authResult.currentUserId]
+    }
+
+    // Обновляем лайки
+    if (typeof body.likes === 'number') {
+      updateData.likes = body.likes
     }
 
     await postDoc.ref.update(updateData)

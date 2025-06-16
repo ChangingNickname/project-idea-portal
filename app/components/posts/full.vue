@@ -7,32 +7,37 @@
       </h1>
 
       <!-- Авторы -->
-      <div v-if="post.author && post.author.length" class="mb-8">
-        <div class="flex flex-wrap gap-4 items-center">
+      <div v-if="post.author && post.author.length" class="mt-8">
+        <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
+          {{ t('post.authors') }}
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <!-- Владелец -->
-          <div class="flex flex-col items-start mr-6">
-            <span class="text-xs text-gray-500 dark:text-gray-400 mb-1">{{ t('post.author') }}</span>
-            <div class="flex items-center gap-4">
-              <UserCard v-if="post.owner" :user="post.owner" />
-              <NuxtLink
-                v-if="userStore.user && post.owner && userStore.user.id !== post.owner.id"
-                :to="`/user/${post.owner.id}/chat`"
-                class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
-                :title="t('post.view.joinTooltip')"
-                @click.prevent="sendJoinRequest"
-              >
-                <Icon name="lucide:message-square" class="w-4 h-4" />
-                {{ t('post.view.join') }}
-              </NuxtLink>
-            </div>
+          <div v-if="post.owner" class="flex flex-col gap-2">
+            <span class="text-sm text-gray-500 dark:text-gray-400">{{ t('post.author') }}</span>
+            <UserCard :user="post.owner" />
+            <NuxtLink
+              v-if="userStore.user && post.owner && userStore.user.id !== post.owner.id"
+              :to="`/user/${post.owner.id}/chat`"
+              class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+              :title="t('post.view.joinTooltip')"
+              @click.prevent="sendJoinRequest"
+            >
+              <Icon name="lucide:message-square" class="w-4 h-4" />
+              {{ t('post.view.join') }}
+            </NuxtLink>
           </div>
           <!-- Соавторы -->
-          <div v-if="post.author.filter(a => a?.id !== post.owner?.id).length" class="flex flex-col items-start gap-2">
-            <span class="text-xs text-gray-500 dark:text-gray-400 mb-1">{{ t('post.coAuthors') }}</span>
-            <template v-for="author in post.author.filter(a => a?.id !== post.owner?.id)" :key="author.id">
-              <UserCard :user="author" />
-            </template>
-          </div>
+          <template v-if="post.author.filter(a => a?.id !== post.owner?.id).length">
+            <div class="flex flex-col gap-2">
+              <span class="text-sm text-gray-500 dark:text-gray-400">{{ t('post.coAuthors') }}</span>
+              <UserCard 
+                v-for="author in post.author.filter(a => a?.id !== post.owner?.id)" 
+                :key="author.id"
+                :user="author"
+              />
+            </div>
+          </template>
         </div>
       </div>
 
@@ -72,13 +77,31 @@
           <Icon name="lucide:eye" class="w-4 h-4" />
           {{ post.views || 0 }} {{ t('post.view.views') }}
         </div>
-        <div class="flex items-center gap-2">
-          <Icon name="lucide:heart" class="w-4 h-4" />
+        <UButton
+          color="neutral"
+          variant="ghost"
+          :ui="{ 
+            base: 'flex items-center gap-2 px-2 py-1'
+          }"
+          :class="{ 'text-primary': isLiked }"
+          @click="toggleLike"
+        >
+          <Icon name="lucide:heart" class="w-4 h-4" :class="{ 'fill-current': isLiked }" />
           {{ post.likes || 0 }} {{ t('post.view.likes') }}
-        </div>
-        <div class="flex items-center gap-2">
-          <Icon name="lucide:users" class="w-4 h-4" />
-          {{ post.currentParticipants || 0 }} {{ t('post.view.participants') }}
+        </UButton>
+      </div>
+
+      <!-- Участники -->
+      <div v-if="participants.length" class="mt-8">
+        <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
+          {{ t('post.view.participants') }}
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <UserCard 
+            v-for="participant in participants" 
+            :key="participant.id"
+            :user="participant"
+          />
         </div>
       </div>
     </div>
@@ -88,7 +111,7 @@
 <script setup lang="ts">
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
-import { computed, ref, watchEffect, watch } from 'vue'
+import { computed, ref, watchEffect, watch, onMounted } from 'vue'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/vs2015.css'
 import UserCard from '~/components/user/Card.vue'
@@ -102,6 +125,96 @@ const props = defineProps<{
 const { t } = useI18n()
 const userStore = useUserStore()
 const router = useRouter()
+
+// Состояние лайка
+const isLiked = ref(false)
+const participants = ref<User[]>([])
+
+// Загружаем профили участников
+const loadParticipants = async () => {
+  if (!props.post.currentParticipants?.length) return
+  
+  try {
+    const profiles = await Promise.all(
+      props.post.currentParticipants.map(async (participantId) => {
+        const response = await $fetch<User>(`/api/user/${participantId}/profile`)
+        return response
+      })
+    )
+    participants.value = profiles
+  } catch (error) {
+    console.error('Failed to load participants profiles:', error)
+  }
+}
+
+// Увеличиваем счетчик просмотров
+const incrementViews = async () => {
+  if (!props.post.id) return
+  
+  try {
+    const newViews = (props.post.views || 0) + 1
+    await $fetch(`/api/posts/meta/${props.post.id}`, {
+      method: 'POST',
+      body: {
+        views: newViews
+      }
+    })
+    if (props.post) {
+      props.post.views = newViews
+    }
+  } catch (error) {
+    console.error('Failed to increment views:', error)
+  }
+}
+
+// Проверяем, лайкнул ли текущий пользователь пост
+watchEffect(() => {
+  if (userStore.user && props.post.viewedBy) {
+    isLiked.value = props.post.viewedBy.includes(userStore.user.id)
+  }
+})
+
+// Загружаем данные при монтировании
+onMounted(async () => {
+  await Promise.all([
+    loadParticipants(),
+    incrementViews()
+  ])
+})
+
+// Функция для лайка/анлайка
+const toggleLike = async () => {
+  if (!userStore.user || !props.post.id) return
+
+  try {
+    const newLikes = isLiked.value ? (props.post.likes || 0) - 1 : (props.post.likes || 0) + 1
+    const newViewedBy = isLiked.value 
+      ? (props.post.viewedBy || []).filter(id => id !== userStore.user?.id)
+      : [...(props.post.viewedBy || []), userStore.user.id]
+
+    await $fetch(`/api/posts/meta/${props.post.id}`, {
+      method: 'POST',
+      body: {
+        likes: newLikes,
+        viewedBy: newViewedBy
+      }
+    })
+
+    // Обновляем локальное состояние
+    isLiked.value = !isLiked.value
+    if (props.post) {
+      props.post.likes = newLikes
+      props.post.viewedBy = newViewedBy
+    }
+  } catch (error) {
+    console.error('Failed to toggle like:', error)
+    useToast().add({
+      title: t('common.error'),
+      description: t('common.failedToUpdateLike'),
+      color: 'error'
+    })
+  }
+}
 
 // Настройка marked для безопасного рендеринга
 marked.setOptions({
