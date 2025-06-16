@@ -54,7 +54,8 @@ export default defineEventHandler(async (event) => {
     }
     if (participantId) {
       console.log('Searching for posts where user is participant:', participantId)
-      postsQuery = postsQuery.where('participants', 'array-contains', participantId as string)
+      postsQuery = postsQuery.where('currentParticipants', 'array-contains', participantId as string)
+      console.log('Query after participant filter:', postsQuery)
     }
     if (executionPolicy) {
       postsQuery = postsQuery.where('executionPolicy', '==', executionPolicy as string)
@@ -67,6 +68,7 @@ export default defineEventHandler(async (event) => {
     // Get total count before pagination
     const totalSnapshot = await postsQuery.count().get()
     const total = totalSnapshot.data().count
+    console.log('Total posts found:', total)
 
     // Apply sorting and pagination
     const postsSnapshot = await postsQuery
@@ -79,6 +81,7 @@ export default defineEventHandler(async (event) => {
       id: doc.id,
       ...doc.data()
     })) as Post[]
+    console.log('Posts found:', posts.length)
 
     // Apply text search if provided
     if (search && typeof search === 'string') {

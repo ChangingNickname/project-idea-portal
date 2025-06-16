@@ -38,7 +38,10 @@
           :readBy="message.read_by"
           :showUserInfo="shouldShowUserInfo(message)"
           :isCurrentUser="message.from_user_id === currentUser?.id"
+          :type="message.type"
+          :metadata="message.metadata"
           @markAsRead="markMessageAsRead"
+          @joinRequestResponse="handleJoinRequestResponse"
         />
       </div>
 
@@ -291,6 +294,43 @@ const shouldShowUserInfo = (message: Message) => {
   
   const previousMessage = messages.value[messageIndex - 1]
   return !previousMessage || previousMessage.from_user_id !== message.from_user_id
+}
+
+// Добавляем обработчик ответа на запрос о присоединении
+const handleJoinRequestResponse = async ({ accepted, postId, userId }: { accepted: boolean, postId: string, userId: string }) => {
+  try {
+    // Обновляем пост, добавляя пользователя в участники
+    if (accepted) {
+      await $fetch(`/api/posts/${postId}`, {
+        method: 'PUT',
+        body: {
+          currentParticipants: [userId]
+        }
+      })
+    }
+
+    // Отправляем сообщение об ответе
+    const responseMessage = accepted 
+      ? `Вы приняты в проект!`
+      : `Ваш запрос на присоединение к проекту отклонен.`
+
+    await $fetch(`/api/user/${userId}/message`, {
+      method: 'POST',
+      body: {
+        message: responseMessage,
+        type: 'join_response',
+        metadata: {
+          postId,
+          accepted
+        }
+      }
+    })
+
+    // Перезагружаем сообщения для обновления UI
+    await loadMessages()
+  } catch (error) {
+    console.error('Error handling join request response:', error)
+  }
 }
 </script>
 

@@ -526,4 +526,10 @@ const handleRestore = async () => {
     }
   }
 }
+
+// Handle new project
+const handleNewProject = () => {
+  store.resetDraft()
+  navigateTo('/ideas/article-builder')
+}
 </script>

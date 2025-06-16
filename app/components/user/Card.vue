@@ -27,7 +27,7 @@
         <p v-if="user?.position" class="text-xs text-gray-500 dark:text-gray-400 truncate">
           {{ user.position }}
         </p>
-        <p v-if="user?.displayName && user?.email" class="text-xs text-gray-500 dark:text-gray-400 truncate">
+        <p v-if="user?.email && !user?.displayName" class="text-xs text-gray-500 dark:text-gray-400 truncate">
           {{ user?.email }}
         </p>
         <div v-if="user?.contacts" class="flex items-center gap-2 mt-1">
@@ -96,6 +96,14 @@
             class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-3xl max-h-[calc(100vh-2rem)] overflow-y-auto"
           >
             <div class="absolute top-4 right-4 flex items-center gap-2">
+              <NuxtLink
+                :to="`/user/${user.id}/chat`"
+                class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 flex items-center gap-1"
+                @click="isModalOpen = false"
+              >
+                <UIcon name="i-lucide-message-square" class="w-5 h-5" />
+                <span class="text-sm">{{ t('common.write') }}</span>
+              </NuxtLink>
               <NuxtLink
                 :to="`/user/${user.id}/profile`"
                 class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 flex items-center gap-1"

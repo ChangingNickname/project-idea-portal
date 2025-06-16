@@ -131,13 +131,14 @@
             <PostsCard :post="post" />
             <div class="mt-2 text-right">
               <UButton
-                :to="`/article-builder?id=${post.id}`"
-                color="primary"
+                color="error"
                 variant="soft"
                 class="inline-flex items-center"
+                :loading="leavingProjectId === post.id"
+                @click="handleLeaveProject(post)"
               >
-                <Icon name="lucide:edit" class="w-5 h-5 mr-2" />
-                {{ t('common.edit') }}
+                <Icon name="lucide:log-out" class="w-5 h-5 mr-2" />
+                {{ t('common.leaveProject') }}
               </UButton>
             </div>
           </div>
@@ -241,6 +242,7 @@ const pagination = ref({
   limit: 9,
   pages: 1
 })
+const leavingProjectId = ref<string | null>(null)
 
 const sortOptions = [
   { 
@@ -382,5 +384,35 @@ watch(() => userStore.isAuthenticated, (isAuthenticated) => {
 const handleNewProject = () => {
   articleBuilderStore.resetDraft()
   navigateTo('/article-builder')
+}
+
+const handleLeaveProject = async (post: Post) => {
+  try {
+    leavingProjectId.value = post.id
+    await $fetch(`/api/posts/${post.id}`, {
+      method: 'POST',
+      body: {
+        action: 'leaveProject'
+      }
+    })
+    
+    // Remove post from participant posts
+    participantPosts.value = participantPosts.value.filter(p => p.id !== post.id)
+    
+    useToast().add({
+      title: t('common.success'),
+      description: t('common.leftProject'),
+      color: 'success'
+    })
+  } catch (error: any) {
+    console.error('Error leaving project:', error)
+    useToast().add({
+      title: t('common.error'),
+      description: error.message || t('common.failedToLeaveProject'),
+      color: 'error'
+    })
+  } finally {
+    leavingProjectId.value = null
+  }
 }
 </script>

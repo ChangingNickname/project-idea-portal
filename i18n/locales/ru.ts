@@ -6,6 +6,7 @@ export default {
     signUp: 'Регистрация',
     language: 'Язык',
     selectLanguage: 'Выберите язык',
+    write: 'Написать',
     // User menu translations
     user: 'Пользователь',
     profile: 'Профиль',
@@ -247,11 +248,18 @@ export default {
       addAuthors: 'Добавить авторов'
     },
     view: {
-      noTitle: 'Без заголовка',
+      noTitle: 'Без названия',
       cover: 'Обложка',
       views: 'просмотров',
       likes: 'лайков',
-      participants: 'участников'
+      participants: 'участников',
+      join: 'Присоединиться',
+      joinTooltip: 'Написать автору для участия в проекте',
+      joinRequest: 'Я хочу присоединиться к вашему проекту "{title}"',
+      joinRequestAccepted: 'Ваша заявка на участие в проекте "{title}" принята',
+      joinRequestDeclined: 'Ваша заявка на участие в проекте "{title}" отклонена',
+      acceptJoinRequest: 'Принять',
+      declineJoinRequest: 'Отклонить'
     }
   },
   profile: {

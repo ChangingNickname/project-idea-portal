@@ -53,20 +53,57 @@ export default defineEventHandler(async (event) => {
 
     const isOwner = postData.ownerId === authResult.currentUserId
     const isAuthor = postData.authorId?.includes(authResult.currentUserId)
+    const isParticipant = postData.currentParticipants?.includes(authResult.currentUserId)
 
-    if (!isOwner && !isAuthor) {
-      throw createError({
-        statusCode: 403,
-        message: 'Только владелец или автор может редактировать пост'
-      })
-    }
+    // Если это запрос на выход из проекта
+    if (body.action === 'leaveProject') {
+      if (!isParticipant) {
+        throw createError({
+          statusCode: 403,
+          message: 'Вы не являетесь участником этого проекта'
+        })
+      }
 
-    // Update post
-    const updateData = {
-      ...body,
-      updatedAt: new Date().toISOString()
+      // Удаляем пользователя из списка участников
+      const updatedParticipants = postData.currentParticipants.filter(
+        (id: string) => id !== authResult.currentUserId
+      )
+
+      const updateData = {
+        currentParticipants: updatedParticipants,
+        updatedAt: new Date().toISOString()
+      }
+      await postRef.update(updateData)
+    } else if (body.currentParticipants) {
+      // Проверяем, что текущий пользователь является владельцем или автором
+      if (!isOwner && !isAuthor) {
+        throw createError({
+          statusCode: 403,
+          message: 'Только владелец или автор может управлять участниками'
+        })
+      }
+
+      // Обновляем список участников
+      const updateData = {
+        currentParticipants: body.currentParticipants,
+        updatedAt: new Date().toISOString()
+      }
+      await postRef.update(updateData)
+    } else {
+      // Обычное обновление поста
+      if (!isOwner && !isAuthor) {
+        throw createError({
+          statusCode: 403,
+          message: 'Только владелец или автор может редактировать пост'
+        })
+      }
+
+      const updateData = {
+        ...body,
+        updatedAt: new Date().toISOString()
+      }
+      await postRef.update(updateData)
     }
-    await postRef.update(updateData)
 
     // Get updated post
     const updatedPost = await postRef.get()

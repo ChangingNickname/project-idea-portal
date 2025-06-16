@@ -6,6 +6,7 @@ export default {
     signUp: 'Sign Up',
     language: 'Language',
     selectLanguage: 'Select Language',
+    write: 'Write',
     // User menu translations
     user: 'User',
     profile: 'Profile',
@@ -235,11 +236,18 @@ export default {
       addAuthors: 'Add Authors'
     },
     view: {
-      noTitle: 'No title',
-      cover: 'Cover',
+      noTitle: 'Untitled Post',
+      cover: 'Post Cover',
       views: 'views',
       likes: 'likes',
-      participants: 'participants'
+      participants: 'participants',
+      join: 'Join Project',
+      joinTooltip: 'Write to the author to join the project',
+      joinRequest: 'I want to join your project "{title}"',
+      joinRequestAccepted: 'Your request to join project "{title}" has been accepted',
+      joinRequestDeclined: 'Your request to join project "{title}" has been declined',
+      acceptJoinRequest: 'Accept',
+      declineJoinRequest: 'Decline'
     }
   },
   profile: {
