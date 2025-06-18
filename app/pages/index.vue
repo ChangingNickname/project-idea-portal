@@ -151,8 +151,7 @@ const isProfileComplete = computed(() => {
   if (!userStore.user) return false
   return !!(
     userStore.user.displayName &&
-    userStore.user.position &&
-    userStore.user.avatar
+    userStore.user.position
   )
 })
 
