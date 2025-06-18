@@ -58,7 +58,17 @@ export default defineEventHandler(async (event) => {
         owner: ownerProfile,
         likes: post.likes || 0,
         views: post.views || 0,
-        viewedBy: post.viewedBy || []
+        viewedBy: post.viewedBy || [],
+        subjectAreas: post.subjectAreas || [],
+        title: post.title || '',
+        cover: post.cover || null,
+        annotation: post.annotation || '',
+        keywords: post.keywords || [],
+        content: post.content || '',
+        status: post.status || 'draft',
+        deadline: post.deadline,
+        createdAt: post.createdAt,
+        updatedAt: post.updatedAt
       }
     }
 
@@ -109,7 +119,17 @@ export default defineEventHandler(async (event) => {
       owner: ownerProfile,
       likes: post.likes || 0,
       views: post.views || 0,
-      viewedBy: post.viewedBy || []
+      viewedBy: post.viewedBy || [],
+      subjectAreas: post.subjectAreas || [],
+      title: post.title || '',
+      cover: post.cover || null,
+      annotation: post.annotation || '',
+      keywords: post.keywords || [],
+      content: post.content || '',
+      status: post.status || 'draft',
+      deadline: post.deadline,
+      createdAt: post.createdAt,
+      updatedAt: post.updatedAt
     }
   } catch (error: any) {
     console.error('Error fetching post:', error)

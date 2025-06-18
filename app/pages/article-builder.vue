@@ -246,7 +246,7 @@ const loadPost = async (id: string) => {
         cover: response.cover || null,
         annotation: response.annotation || '',
         keywords: response.keywords || [],
-        domain: response.domain || '',
+        subjectAreas: response.subjectAreas || [],
         content: response.content || '',
         status: response.status || 'draft',
         views: response.views || 0,
@@ -254,7 +254,6 @@ const loadPost = async (id: string) => {
         owner: response.owner,
         ownerId: response.ownerId,
         author: response.author?.map(author => {
-          // Если автор - текущий пользователь, используем данные из user store
           if (author?.id === userStore.user?.id) {
             return userStore.user
           }
@@ -264,7 +263,7 @@ const loadPost = async (id: string) => {
         createdAt: response.createdAt,
         updatedAt: response.updatedAt
       }
-      store.updateDraft(postData)
+      store.updateDraft(postData, true)
       previewKey.value++
     }
   } catch (error) {
@@ -297,6 +296,18 @@ onMounted(async () => {
     }
   }
 })
+
+// Watch for route changes
+watch(
+  () => route.query.id,
+  async (newId) => {
+    if (newId) {
+      await loadPost(newId as string)
+    } else {
+      store.resetDraft()
+    }
+  }
+)
 
 // Обновляем вычисляемое свойство для сетки
 const gridClass = computed(() => {
