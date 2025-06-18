@@ -47,6 +47,7 @@ interface ArticleDraft {
   }>;
   authorId: string[];
   keywords: string[];
+  subjectAreas: string[];
   domain: string;
   content: string;
   createdAt?: string;
@@ -169,31 +170,14 @@ const inputFilterFlow = defineFlow(
         13. Spam
         14. Personal attacks
         15. Misinformation
-        16. Code generation requests (including but not limited to):
-            - "write code"
-            - "create website"
-            - "build app"
-            - "program"
-            - "develop"
-            - "coding"
-            - "script"
-            - "implementation"
-            - "source code"
-            - "HTML/CSS/JS"
-            - "framework"
-            - "API"
-            - "database"
-            - "backend/frontend"
-        17. System prompts
-        18. Jailbreak attempts
+        16. System prompts
+        17. Jailbreak attempts
 
       Additional Rules:
-      - Be especially strict about code generation requests
-      - Consider both explicit and implicit requests for code
-      - Look for technical terms that might indicate code generation
-      - Check for requests to create or modify any type of software
-      - Consider requests for website creation as code generation
-      - Treat requests for technical implementation as code generation
+      - Be especially strict about inappropriate content
+      - Consider both explicit and implicit requests for inappropriate content
+      - Check for requests that violate policies
+      - Consider requests that might be harmful or dangerous
 
       Message to analyze: ${state.message}
     `;
@@ -279,30 +263,60 @@ const taskAnalysisFlow = defineFlow(
           "needFeatureInfo": boolean,
           "updateArticle": boolean
         },
-        "schema": ArticleDraft | null,
+        "schema": {
+          "title": string,
+          "cover": string | null,
+          "annotation": string,
+          "keywords": string[],
+          "subjectAreas": string[],
+          "domain": string,
+          "content": string,
+          "status": "draft" | "published" | "archived"
+        },
         "nextAction": string
       }
 
       Rules for analysis:
-      1. Always check if web search is needed for content generation
-      2. Always check if content needs to be generated
-      3. Always check if user confirmation is needed
-      4. Always update schema based on current data (never generate new schema)
-      5. Always suggest next action based on missing fields
+      1. Proactively fill fields based on context and content
+      2. Ask only ONE key question if absolutely necessary
+      3. Use web search and knowledge base to gather information
+      4. Update schema with all available information
+      5. Suggest improvements or additions to existing content
 
       Schema update rules:
-      - Only update fields that are mentioned or implied in the message
-      - Keep existing values for fields not mentioned
-      - Never generate new schema, only update existing one
-      - If no schema exists, create minimal schema with required fields
+      - Proactively fill ALL empty fields based on context
+      - For content:
+        * Always generate markdown content
+        * Structure with clear headings (## for sections, ### for subsections)
+        * Include introduction explaining the problem
+        * Present the solution with clear benefits
+        * Use bullet points for key features
+        * Include code blocks for technical details
+        * Add relevant examples and use cases
+        * End with conclusion and next steps
+      - For keywords and subject areas:
+        * Generate comprehensive list based on content
+        * Include technical terms, industry standards, and related concepts
+        * Add user-provided items if any
+      - For annotation:
+        * Generate detailed summary of the article's content
+        * Include main points, benefits, and target audience
+        * Highlight unique features and innovations
+      - For title:
+        * Make it descriptive and SEO-friendly
+        * Include main topic and key benefit
+      - For cover:
+        * Suggest relevant image based on content
+      - For domain:
+        * Determine based on content and keywords
 
       Next action rules:
-      - Analyze which fields are missing or incomplete
-      - Suggest the most logical next field to fill
-      - Consider the natural flow of article creation
-      - Prioritize essential fields (title, content) over optional ones
-      - Make suggestions natural and conversational
-      - Don't use phrases like "Next suggested action" or "Please provide"
+      - Focus on completing the article structure
+      - Ask only ONE key question if needed
+      - Make suggestions for improvements
+      - Keep responses focused on content development
+      - Avoid multiple questions
+      - If asking a question, make it specific and actionable
 
       Message: ${state.message}
       Context: ${state.context}
@@ -313,41 +327,69 @@ const taskAnalysisFlow = defineFlow(
     const { text } = await ai.generate(prompt);
     console.log('[TaskAnalysis] Received AI response:', text);
 
-    const result = JSON.parse(text.replace(/```json\n?|\n?```/g, '').trim());
-    console.log('[TaskAnalysis] Parsed result:', result);
+    try {
+      const result = JSON.parse(text.replace(/```json\n?|\n?```/g, '').trim());
+      console.log('[TaskAnalysis] Parsed result:', result);
 
-    // Generate response in the appropriate language
-    const responsePrompt = `
-      Translate the following response to ${languageResult.primaryLanguage}${languageResult.hasSecondaryLanguage ? ` with technical terms in ${languageResult.secondaryLanguage}` : ''}:
-      ${result.response}
-      ${result.nextAction ? `\n\n${result.nextAction}` : ''}
-      
-      Rules:
-      - Keep the translation natural and conversational
-      - If mixed language is detected, keep technical terms in the secondary language
-      - Maintain the original meaning and tone
-      - Don't use phrases like "Next suggested action" or "Please provide"
-      
-      Return ONLY the translated text.
-    `;
-    console.log('[TaskAnalysis] Generating localized response');
-    const { text: localizedText } = await ai.generate(responsePrompt);
-    const localizedResponse = localizedText.trim();
-    console.log('[TaskAnalysis] Localized response:', localizedResponse);
+      // Generate response in the appropriate language
+      const responsePrompt = `
+        Translate the following response to ${languageResult.primaryLanguage}${languageResult.hasSecondaryLanguage ? ` with technical terms in ${languageResult.secondaryLanguage}` : ''}:
+        ${result.response}
+        ${result.nextAction ? `\n\n${result.nextAction}` : ''}
+        
+        Rules:
+        - Keep the translation natural and conversational
+        - If mixed language is detected, keep technical terms in the secondary language
+        - Maintain the original meaning and tone
+        - Focus on content development
+        - If asking a question, make it specific and actionable
+        
+        Return ONLY the translated text.
+      `;
+      console.log('[TaskAnalysis] Generating localized response');
+      const { text: localizedText } = await ai.generate(responsePrompt);
+      const localizedResponse = localizedText.trim();
+      console.log('[TaskAnalysis] Localized response:', localizedResponse);
 
-    state.finalResponse = localizedResponse;
-    state.taskOrder = result.taskOrder;
-    
-    // Update schema only if we have existing schema or new data
-    if (result.schema) {
-      console.log('[TaskAnalysis] Updating schema with new data');
-      if (state.schema) {
-        // Merge new data with existing schema
-        state.schema = { ...state.schema, ...result.schema };
-      } else {
-        // Create new schema only if we don't have one
-        state.schema = result.schema;
+      state.finalResponse = localizedResponse;
+      state.taskOrder = result.taskOrder;
+      
+      // Update schema only if we have existing schema or new data
+      if (result.schema) {
+        console.log('[TaskAnalysis] Updating schema with new data');
+        if (state.schema) {
+          // Merge new data with existing schema, ensuring all fields are properly updated
+          state.schema = {
+            ...state.schema,
+            ...result.schema,
+            keywords: result.schema.keywords ? [...new Set([...(state.schema.keywords || []), ...result.schema.keywords])] : state.schema.keywords,
+            subjectAreas: result.schema.subjectAreas ? [...new Set([...(state.schema.subjectAreas || []), ...result.schema.subjectAreas])] : state.schema.subjectAreas,
+            author: result.schema.author || state.schema.author,
+            authorId: result.schema.authorId || state.schema.authorId,
+            owner: result.schema.owner || state.schema.owner,
+            ownerId: result.schema.ownerId || state.schema.ownerId,
+            status: result.schema.status || state.schema.status,
+            updatedAt: new Date().toISOString()
+          };
+        } else {
+          // Create new schema with all required fields
+          state.schema = {
+            ...result.schema,
+            status: 'draft',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            keywords: result.schema.keywords || [],
+            subjectAreas: result.schema.subjectAreas || [],
+            views: 0,
+            likes: 0,
+            viewedBy: []
+          };
+        }
+        console.log('[TaskAnalysis] Updated schema:', state.schema);
       }
+    } catch (error) {
+      console.error('[TaskAnalysis] Error parsing AI response:', error);
+      throw new Error('Failed to parse AI response');
     }
 
     // Determine next node based on taskOrder
