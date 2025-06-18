@@ -74,6 +74,12 @@ interface AIResponse {
   };
   userClarification?: string;
   featureInfo?: string;
+  error?: {
+    type: string;
+    message: string;
+    details?: string;
+    shouldReset: boolean;
+  };
 }
 
 interface TaskState {
@@ -115,15 +121,28 @@ interface ChatMessage {
     id: string;
     data: string;
   }>;
+  schema?: ArticleDraft;
+  error?: {
+    type: string;
+    message: string;
+    details?: string;
+    shouldReset: boolean;
+  };
 }
 
 interface ChatSession {
   messages: ChatMessage[];
-  send: (message: string, articleDraft?: ArticleDraft) => Promise<{ text: string; schema?: ArticleDraft }>;
+  send: (message: string, articleDraft?: ArticleDraft) => Promise<{ text: string; schema?: ArticleDraft; error?: AIResponse['error'] }>;
 }
 
 // Store active chat sessions
 const chatSessions = new Map<string, ChatSession>();
+
+// Reset chat session
+function resetChatSession(sessionToken: string) {
+  console.log('[ResetChatSession] Resetting chat session:', sessionToken);
+  chatSessions.delete(sessionToken);
+}
 
 // Input Filter Flow
 const inputFilterFlow = defineFlow(
@@ -459,7 +478,13 @@ export async function ask(
     if (result.nextNode === 'end') {
       console.log('[Ask] Input filter rejected message, returning early');
       return {
-        finalResponse: result.state.finalResponse
+        finalResponse: result.state.finalResponse,
+        error: {
+          type: 'input_filter',
+          message: 'Message was rejected by input filter',
+          details: result.state.finalResponse,
+          shouldReset: false
+        }
       };
     }
 
@@ -482,7 +507,13 @@ export async function ask(
   } catch (error) {
     console.error('[Ask] Error occurred:', error);
     return {
-      finalResponse: "Sorry, an error occurred while processing your message. Please try again."
+      finalResponse: "Произошла ошибка при обработке сообщения. Пожалуйста, сбросьте чат. Если проблема повторяется, обратитесь к администратору.",
+      error: {
+        type: 'processing_error',
+        message: error instanceof Error ? error.message : 'Unknown error occurred',
+        details: error instanceof Error ? error.stack : undefined,
+        shouldReset: true
+      }
     };
   }
 }
@@ -491,72 +522,108 @@ export async function ask(
 export async function createValidatedChat(event: H3Event) {
   console.log('[CreateValidatedChat] Starting chat session creation');
   const config = useRuntimeConfig();
+  let sessionToken: string | undefined;
   
-  // Validate session token
-  console.log('[CreateValidatedChat] Getting session token');
-  const sessionToken = await getTokenFromEvent(event);
-  if (!config.jwtSecret) {
-    console.error('[CreateValidatedChat] JWT secret not configured');
-    throw new Error('JWT secret is not configured');
-  }
-  console.log('[CreateValidatedChat] Validating token');
-  validateToken(sessionToken, { jwtSecret: config.jwtSecret as string }, event);
-
-  // Get or create chat session
-  console.log('[CreateValidatedChat] Checking for existing session');
-  let chatSession = chatSessions.get(sessionToken);
-  if (!chatSession) {
-    console.log('[CreateValidatedChat] Creating new chat session');
-    const newSession: ChatSession = {
-      messages: [],
-      send: async (message: string, articleDraft?: ArticleDraft) => {
-        console.log('[ChatSession] Processing new message');
-        console.log('[ChatSession] Input:', { message, articleDraft });
-
-        // Add user message to history
-        const userMessage: ChatMessage = {
-          role: 'user',
-          content: message,
-          timestamp: new Date().toISOString()
-        };
-        newSession.messages.push(userMessage);
-        console.log('[ChatSession] Added user message to history');
-        
-        // Get AI response
-        console.log('[ChatSession] Getting AI response');
-        const response = await ask(message, articleDraft, newSession.messages);
-        
-        // Add assistant message to history
-        const assistantMessage: ChatMessage = {
-          role: 'assistant',
-          content: response.finalResponse,
-          timestamp: new Date().toISOString(),
-          user: {
-            id: 'assistant',
-            email: 'ai@assistant.com',
-            avatar: '/images/ai-avatar.png',
-            displayName: 'AI Assistant'
-          }
-        };
-        newSession.messages.push(assistantMessage);
-        console.log('[ChatSession] Added assistant message to history');
-        
-        const result = { 
-          text: response.finalResponse,
-          schema: response.schema
-        };
-        console.log('[ChatSession] Returning response:', result);
-        return result;
+  try {
+    // Validate session token
+    console.log('[CreateValidatedChat] Getting session token');
+    sessionToken = await getTokenFromEvent(event);
+    if (!config.jwtSecret) {
+      console.error('[CreateValidatedChat] JWT secret not configured');
+      if (sessionToken) {
+        resetChatSession(sessionToken);
       }
-    };
-    chatSessions.set(sessionToken, newSession);
-    chatSession = newSession;
-    console.log('[CreateValidatedChat] New chat session created');
-  } else {
-    console.log('[CreateValidatedChat] Using existing chat session');
-  }
+      throw {
+        type: 'configuration_error',
+        message: 'JWT secret is not configured',
+        details: 'Server configuration is incomplete',
+        shouldReset: true
+      };
+    }
+    console.log('[CreateValidatedChat] Validating token');
+    validateToken(sessionToken, { jwtSecret: config.jwtSecret as string }, event);
 
-  return chatSession;
+    // Get or create chat session
+    console.log('[CreateValidatedChat] Checking for existing session');
+    let chatSession = chatSessions.get(sessionToken);
+    if (!chatSession) {
+      console.log('[CreateValidatedChat] Creating new chat session');
+      const newSession: ChatSession = {
+        messages: [],
+        send: async (message: string, articleDraft?: ArticleDraft) => {
+          console.log('[ChatSession] Processing new message');
+          console.log('[ChatSession] Input:', { message, articleDraft });
+
+          try {
+            // Add user message to history
+            const userMessage: ChatMessage = {
+              role: 'user',
+              content: message,
+              timestamp: new Date().toISOString()
+            };
+            newSession.messages.push(userMessage);
+            console.log('[ChatSession] Added user message to history');
+            
+            // Get AI response
+            console.log('[ChatSession] Getting AI response');
+            const response = await ask(message, articleDraft, newSession.messages);
+            
+            // Add assistant message to history
+            const assistantMessage: ChatMessage = {
+              role: 'assistant',
+              content: response.finalResponse,
+              timestamp: new Date().toISOString(),
+              user: {
+                id: 'assistant',
+                email: 'ai@assistant.com',
+                avatar: '/images/ai-avatar.png',
+                displayName: 'AI Assistant'
+              }
+            };
+            newSession.messages.push(assistantMessage);
+            console.log('[ChatSession] Added assistant message to history');
+            
+            const result = { 
+              text: response.finalResponse,
+              schema: response.schema,
+              error: response.error
+            };
+            console.log('[ChatSession] Returning response:', result);
+            return result;
+          } catch (error) {
+            console.error('[ChatSession] Error processing message:', error);
+            if (sessionToken) {
+              resetChatSession(sessionToken);
+            }
+            throw {
+              type: 'chat_session_error',
+              message: error instanceof Error ? error.message : 'Unknown error occurred',
+              details: error instanceof Error ? error.stack : undefined,
+              shouldReset: true
+            };
+          }
+        }
+      };
+      chatSessions.set(sessionToken, newSession);
+      chatSession = newSession;
+      console.log('[CreateValidatedChat] New chat session created');
+    } else {
+      console.log('[CreateValidatedChat] Using existing chat session');
+    }
+
+    return chatSession;
+  } catch (error) {
+    console.error('[CreateValidatedChat] Error creating chat session:', error);
+    if (sessionToken) {
+      resetChatSession(sessionToken);
+    }
+    throw {
+      type: 'chat_creation_error',
+      message: error instanceof Error ? error.message : 'Unknown error occurred',
+      details: error instanceof Error ? error.stack : undefined,
+      shouldReset: true
+    };
+  }
 }
 
 // Cleanup function to remove expired sessions
