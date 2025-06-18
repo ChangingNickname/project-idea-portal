@@ -224,7 +224,7 @@
         <!-- Пагинация -->
         <div v-if="pagination.pages > 1" class="flex justify-center mt-6">
           <UPagination
-            v-model="currentPage"
+            v-model:page="currentPage"
             :total="pagination.total"
             :page-count="pagination.pages"
             :items-per-page="itemsPerPage"
