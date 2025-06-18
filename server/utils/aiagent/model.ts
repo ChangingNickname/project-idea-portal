@@ -242,8 +242,30 @@ const taskAnalysisFlow = defineFlow(
       schema: state.schema
     });
 
+    // First detect the language of the input message
+    const languagePrompt = `
+      Analyze the following message and return ONLY a JSON object in this format:
+      {
+        "primaryLanguage": string,
+        "hasSecondaryLanguage": boolean,
+        "secondaryLanguage": string | null
+      }
+
+      Rules:
+      - Detect primary language (e.g., 'ru', 'en', 'es')
+      - Check if message contains mixed languages
+      - If mixed, identify secondary language
+      - Consider technical terms in English as part of mixed language
+
+      Message to analyze: ${state.message}
+    `;
+    console.log('[TaskAnalysis] Detecting message language');
+    const { text: languageText } = await ai.generate(languagePrompt);
+    const languageResult = JSON.parse(languageText.replace(/```json\n?|\n?```/g, '').trim());
+    console.log('[TaskAnalysis] Language detection result:', languageResult);
+
     const prompt = `
-      Analyze the following message and determine the required actions.
+      Analyze the following message and determine the required actions for content generation.
       Return ONLY a JSON object in this format:
       {
         "response": string,
@@ -257,8 +279,30 @@ const taskAnalysisFlow = defineFlow(
           "needFeatureInfo": boolean,
           "updateArticle": boolean
         },
-        "schema": ArticleDraft | null
+        "schema": ArticleDraft | null,
+        "nextAction": string
       }
+
+      Rules for analysis:
+      1. Always check if web search is needed for content generation
+      2. Always check if content needs to be generated
+      3. Always check if user confirmation is needed
+      4. Always update schema based on current data (never generate new schema)
+      5. Always suggest next action based on missing fields
+
+      Schema update rules:
+      - Only update fields that are mentioned or implied in the message
+      - Keep existing values for fields not mentioned
+      - Never generate new schema, only update existing one
+      - If no schema exists, create minimal schema with required fields
+
+      Next action rules:
+      - Analyze which fields are missing or incomplete
+      - Suggest the most logical next field to fill
+      - Consider the natural flow of article creation
+      - Prioritize essential fields (title, content) over optional ones
+      - Make suggestions natural and conversational
+      - Don't use phrases like "Next suggested action" or "Please provide"
 
       Message: ${state.message}
       Context: ${state.context}
@@ -272,11 +316,38 @@ const taskAnalysisFlow = defineFlow(
     const result = JSON.parse(text.replace(/```json\n?|\n?```/g, '').trim());
     console.log('[TaskAnalysis] Parsed result:', result);
 
-    state.finalResponse = result.response;
+    // Generate response in the appropriate language
+    const responsePrompt = `
+      Translate the following response to ${languageResult.primaryLanguage}${languageResult.hasSecondaryLanguage ? ` with technical terms in ${languageResult.secondaryLanguage}` : ''}:
+      ${result.response}
+      ${result.nextAction ? `\n\n${result.nextAction}` : ''}
+      
+      Rules:
+      - Keep the translation natural and conversational
+      - If mixed language is detected, keep technical terms in the secondary language
+      - Maintain the original meaning and tone
+      - Don't use phrases like "Next suggested action" or "Please provide"
+      
+      Return ONLY the translated text.
+    `;
+    console.log('[TaskAnalysis] Generating localized response');
+    const { text: localizedText } = await ai.generate(responsePrompt);
+    const localizedResponse = localizedText.trim();
+    console.log('[TaskAnalysis] Localized response:', localizedResponse);
+
+    state.finalResponse = localizedResponse;
     state.taskOrder = result.taskOrder;
+    
+    // Update schema only if we have existing schema or new data
     if (result.schema) {
       console.log('[TaskAnalysis] Updating schema with new data');
-      state.schema = { ...state.schema, ...result.schema };
+      if (state.schema) {
+        // Merge new data with existing schema
+        state.schema = { ...state.schema, ...result.schema };
+      } else {
+        // Create new schema only if we don't have one
+        state.schema = result.schema;
+      }
     }
 
     // Determine next node based on taskOrder
