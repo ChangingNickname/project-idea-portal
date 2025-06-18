@@ -279,6 +279,49 @@ export const useArticleBuilderStore = defineStore('articleBuilder', {
 
     setDeadline(deadline?: string) {
       this.deadline = deadline
+    },
+
+    async loadPost(id: string) {
+      try {
+        const response = await $fetch<Post>(`/api/posts/${id}`)
+        if (response) {
+          // Обновляем черновик с полученными данными
+          this.updateDraft({
+            id: response.id,
+            title: response.title || '',
+            cover: response.cover || null,
+            annotation: response.annotation || '',
+            keywords: response.keywords || [],
+            subjectAreas: response.subjectAreas || [],
+            content: response.content || '',
+            status: response.status || 'draft',
+            views: response.views || 0,
+            likes: response.likes || 0,
+            owner: response.owner,
+            ownerId: response.ownerId,
+            author: response.author || [],
+            authorId: response.authorId || [],
+            createdAt: response.createdAt,
+            updatedAt: response.updatedAt,
+            deadline: response.deadline
+          }, true)
+
+          // Обновляем локальные поля
+          this.title = response.title || ''
+          this.cover = response.cover || null
+          this.annotation = response.annotation || ''
+          this.content = response.content || ''
+          this.keywords = response.keywords || []
+          this.subjectAreas = response.subjectAreas || []
+          this.status = response.status || 'draft'
+          this.deadline = response.deadline
+
+          return response
+        }
+      } catch (error) {
+        console.error('Failed to load post:', error)
+        throw error
+      }
     }
   }
 }) 

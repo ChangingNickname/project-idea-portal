@@ -237,40 +237,13 @@ const canChangeStatus = computed(() => {
 const loadPost = async (id: string) => {
   try {
     isLoading.value = true
-    const response = await $fetch<Post>(`/api/posts/${id}`)
-    if (response) {
-      // Ensure all required fields are present
-      const postData: Partial<Post> = {
-        id: response.id,
-        title: response.title || '',
-        cover: response.cover || null,
-        annotation: response.annotation || '',
-        keywords: response.keywords || [],
-        subjectAreas: response.subjectAreas || [],
-        content: response.content || '',
-        status: response.status || 'draft',
-        views: response.views || 0,
-        likes: response.likes || 0,
-        owner: response.owner,
-        ownerId: response.ownerId,
-        author: response.author?.map(author => {
-          if (author?.id === userStore.user?.id) {
-            return userStore.user
-          }
-          return author
-        }) || [],
-        authorId: response.authorId || [],
-        createdAt: response.createdAt,
-        updatedAt: response.updatedAt
-      }
-      store.updateDraft(postData, true)
-      previewKey.value++
-    }
-  } catch (error) {
+    await store.loadPost(id)
+    previewKey.value++
+  } catch (error: any) {
     console.error(t('common.loadError'), error)
     useToast().add({
       title: t('common.error'),
-      description: t('common.loadError'),
+      description: error.data?.message || t('common.loadError'),
       color: 'error'
     })
   } finally {
