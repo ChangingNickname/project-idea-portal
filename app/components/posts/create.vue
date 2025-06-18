@@ -162,22 +162,6 @@
       </div>
     </div>
 
-    <!-- Домен -->
-    <div>
-      <label for="domain" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-        {{ t('post.create.domain') }}
-      </label>
-      <input
-        id="domain"
-        v-model="form.domain"
-        type="text"
-        required
-        :disabled="isDisabled"
-        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
-        :placeholder="t('post.create.domainPlaceholder')"
-      />
-    </div>
-
     <!-- Предметные области -->
     <div>
       <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -210,8 +194,7 @@
               variant="soft"
               class="flex items-center gap-1"
             >
-              <UIcon v-if="area.icon" :name="area.icon" class="w-4 h-4" />
-              {{ area.label }}
+              {{ t(area.i18nKey) }}
               <UIcon
                 name="i-lucide-x"
                 class="w-4 h-4 cursor-pointer"
@@ -326,32 +309,13 @@ const articleBuilderStore = useArticleBuilderStore()
 const { t } = useI18n()
 
 type ExecutionPolicy = 'public' | 'contest'
-type PostStatus = 'draft' | 'published' | 'archived'
 
-interface SubjectArea {
+// Интерфейс для UI компонента выбора предметных областей
+interface SubjectAreaUI {
   key: string
   label: string
   i18nKey: string
   icon?: string
-}
-
-interface Post {
-  id: string
-  title: string
-  cover: string | null
-  annotation: string
-  content: string
-  keywords: string[]
-  subjectAreas: Array<{
-    key: string
-    label: string
-    i18nKey: string
-    icon?: string
-  }>
-  status: 'draft' | 'published' | 'archived'
-  deadline?: string
-  author: User[]
-  authorId: string[]
 }
 
 // Форма
@@ -366,7 +330,14 @@ const form = ref<Post>({
   status: 'draft',
   deadline: undefined,
   author: [],
-  authorId: []
+  authorId: [],
+  owner: userStore.user!,
+  ownerId: userStore.user?.id || '',
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+  views: 0,
+  likes: 0,
+  viewedBy: []
 })
 
 // Вычисляемое свойство для дополнительных авторов
@@ -453,7 +424,14 @@ const resetForm = () => {
     status: 'draft',
     deadline: undefined,
     author: [],
-    authorId: []
+    authorId: [],
+    owner: userStore.user!,
+    ownerId: userStore.user?.id || '',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    views: 0,
+    likes: 0,
+    viewedBy: []
   }
   emit('update', form.value)
 }
@@ -540,13 +518,11 @@ watch(() => articleBuilderStore.lastExternalUpdate, (newTimestamp) => {
 const showSubjectAreas = ref(false)
 
 // Обновление предметных областей
-const updateSubjectAreas = (areas: SubjectArea[]) => {
+const updateSubjectAreas = (areas: SubjectAreaUI[]) => {
   if (!areas) return
   form.value.subjectAreas = areas.map(area => ({
     key: area.key,
-    label: area.label,
-    i18nKey: area.i18nKey,
-    icon: area.icon || undefined
+    i18nKey: area.i18nKey
   }))
   emit('update', form.value)
 }
