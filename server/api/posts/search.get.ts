@@ -4,19 +4,6 @@ import { Query } from 'firebase-admin/firestore'
 import { getFirestore } from 'firebase-admin/firestore'
 import { checkAuth } from '~~/server/utils/auth'
 
-interface Post {
-  id: string
-  title: string
-  ownerId: string
-  authorId: string[]
-  subjectAreas?: Array<{
-    key: string
-    i18nKey: string
-  }>
-  status: 'draft' | 'published' | 'archived'
-  [key: string]: any
-}
-
 export default defineEventHandler(async (event) => {
   const db = getFirestore()
 
@@ -32,17 +19,22 @@ export default defineEventHandler(async (event) => {
   try {
     const query = getQuery(event)
     const searchQuery = (query.q as string) || ''
-    const domain = query.domain
-    const domains = Array.isArray(domain) 
-      ? domain 
-      : typeof domain === 'string' 
-        ? domain.split(',') 
+    
+    // Accept both 'domain' and 'subjectAreas' for backward compatibility
+    const subjectAreas = query.subjectAreas || query.domain
+    const subjectAreasArray = Array.isArray(subjectAreas) 
+      ? subjectAreas 
+      : typeof subjectAreas === 'string' 
+        ? subjectAreas.split(',') 
         : []
     
     console.log('Search params:', {
-      domain,
-      domains,
-      query
+      subjectAreas,
+      subjectAreasArray,
+      query,
+      ownerId: query.ownerId,
+      authorId: query.authorId,
+      isOwnerOrAuthor: !!query.ownerId || !!query.authorId
     })
 
     const page = Number(query.page) || 1
@@ -64,50 +56,75 @@ export default defineEventHandler(async (event) => {
 
     // Фильтр по статусу
     const isOwnerOrAuthor = !!ownerId || !!authorId
+    console.log('Status filter check:', {
+      isOwnerOrAuthor,
+      ownerId,
+      authorId,
+      willShowOnlyPublished: !isOwnerOrAuthor
+    })
+    
     if (!isOwnerOrAuthor) {
       // Если пользователь не владелец и не автор, показываем только опубликованные
       postsQuery = postsQuery.where('status', '==', 'published')
+      console.log('Applied published-only filter')
     } else {
       // Если пользователь владелец или автор, показываем все его посты
       if (ownerId) {
         postsQuery = postsQuery.where('ownerId', '==', ownerId)
+        console.log('Applied owner filter for:', ownerId)
       }
       if (authorId) {
         postsQuery = postsQuery.where('authorId', 'array-contains', authorId)
+        console.log('Applied author filter for:', authorId)
       }
     }
 
     // Получаем все посты
     const postsSnapshot = await postsQuery.get()
-    let posts = postsSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    })) as Post[]
+    let posts = postsSnapshot.docs.map(doc => {
+      const data = doc.data()
+      // Remove cover field from logging to avoid large base64 data
+      const { cover, ...dataWithoutCover } = data
+      console.log(`Post ${doc.id} raw data:`, dataWithoutCover)
+      return {
+        id: doc.id,
+        ...data
+      }
+    }) as Post[]
 
-    console.log('Before domain filter:', {
+    console.log('Before any filters:', {
       totalPosts: posts.length,
-      firstPostSubjectAreas: posts[0]?.subjectAreas
+      posts: posts.map(p => ({ id: p.id, status: p.status, subjectAreas: p.subjectAreas?.length || 0 }))
     })
 
-    // Фильтруем по subjectAreas если указан domain
-    if (domains.length > 0) {
+    console.log('Before subjectAreas filter:', {
+      totalPosts: posts.length,
+      firstPostSubjectAreas: posts[0]?.subjectAreas,
+      firstPostKeys: posts[0] ? Object.keys(posts[0]) : [],
+      firstPostFull: posts[0] ? (() => { const { cover, ...rest } = posts[0]; return rest; })() : null
+    })
+
+    // Фильтруем по subjectAreas если указан subjectAreas
+    if (subjectAreasArray.length > 0) {
       posts = posts.filter(post => {
-        const subjectAreas = post.subjectAreas || []
-        const hasMatchingDomain = subjectAreas.some(area => 
-          domains.includes(area.key)
+        const postSubjectAreas = post.subjectAreas || []
+        const hasMatchingSubjectAreas = postSubjectAreas.some(area => 
+          subjectAreasArray.includes(area.key)
         )
         console.log('Post filter:', {
           postId: post.id,
-          subjectAreas,
-          hasMatchingDomain
+          postSubjectAreas,
+          searchSubjectAreas: subjectAreasArray,
+          hasMatchingSubjectAreas
         })
-        return hasMatchingDomain
+        return hasMatchingSubjectAreas
       })
     }
 
-    console.log('After domain filter:', {
+    console.log('After subjectAreas filter:', {
       totalPosts: posts.length,
-      domains
+      subjectAreas: subjectAreasArray,
+      remainingPosts: posts.map(p => ({ id: p.id, status: p.status }))
     })
 
     // Получаем общее количество после фильтрации
@@ -115,8 +132,8 @@ export default defineEventHandler(async (event) => {
 
     // Применяем сортировку
     posts.sort((a, b) => {
-      const aValue = a[sortBy] || 0
-      const bValue = b[sortBy] || 0
+      const aValue = a[sortBy as keyof Post] || 0
+      const bValue = b[sortBy as keyof Post] || 0
       if (sortDirection === 'asc') {
         return aValue > bValue ? 1 : -1
       }

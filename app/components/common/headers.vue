@@ -130,11 +130,11 @@ const items = computed(() => [
   ...subjectAreas.map(area => ({
     label: screenWidth.value < 640 ? '' : t(area.i18nKey),
     icon: area.icon,
-    to: `/ideas?domain=${area.key}`,
+    to: `/ideas?subjectAreas=${area.children?.map(child => child.key).join(',') || area.key}`,
     children: area.children?.map(child => ({
       label: screenWidth.value < 640 ? '' : t(child.i18nKey),
       icon: area.icon,
-      to: `/ideas?domain=${area.key}.${child.key}`
+      to: `/ideas?subjectAreas=${child.key}`
     }))
   }))
 ])

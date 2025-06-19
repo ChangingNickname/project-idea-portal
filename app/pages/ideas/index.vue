@@ -52,7 +52,7 @@
                   </UFormField>
                   
                   <!-- Subject Areas -->
-                  <UFormField :label="$t('common.subjectAreas')" name="domain">
+                  <UFormField :label="$t('common.subjectAreas')" name="subjectAreas">
                     <div class="space-y-4">
                       <UButton
                         color="neutral"
@@ -243,7 +243,6 @@
   import { useRoute, useRouter } from 'vue-router'
   import { z } from 'zod'
   import { CalendarDate, type DateValue, DateFormatter, getLocalTimeZone } from '@internationalized/date'
-  import type { DateRange } from '@internationalized/date'
   import Avatar from '~/components/user/Avatar.vue'
   import UserCard from '~/components/user/Card.vue'
   import { useSearchFilterStore } from '~/stores/searchFilter'
@@ -291,7 +290,7 @@
       end: z.custom<DateValue>().optional()
     }).optional(),
     authors: z.array(z.string()).optional(),
-    domain: z.array(z.string()).optional()
+    subjectAreas: z.array(z.string()).optional()
   })
 
   type SearchState = z.infer<typeof searchSchema>
@@ -310,9 +309,9 @@
         searchFilterStore.dateRange.end.getMonth() + 1,
         searchFilterStore.dateRange.end.getDate()
       ) : undefined
-    } as DateRange,
+    },
     authors: searchFilterStore.selectedAuthors,
-    domain: []
+    subjectAreas: []
   })
   
   const selectedAuthors = ref<string[]>(searchFilterStore.selectedAuthors)
@@ -345,7 +344,7 @@
         keywords: '',
         dateRange: undefined,
         authors: [],
-        domain: []
+        subjectAreas: []
       }
       selectedAuthors.value = []
       selectedSubjectAreas.value = []
@@ -384,15 +383,15 @@
         ) : undefined
       } : undefined,
       authors: (query.authors as string)?.split(',') || [],
-      domain: (query.domain as string)?.split(',') || []
+      subjectAreas: (query.subjectAreas as string)?.split(',') || []
     }
     
     // Initialize selected authors
     selectedAuthors.value = searchState.value.authors || []
     
     // Initialize selected subject areas
-    if (searchState.value.domain.length > 0) {
-      selectedSubjectAreas.value = searchState.value.domain.map(key => ({
+    if (searchState.value.subjectAreas?.length > 0) {
+      selectedSubjectAreas.value = searchState.value.subjectAreas.map(key => ({
         key,
         label: t(`subjectAreas.${key}`),
         icon: getSubjectAreaIcon(key)
@@ -450,8 +449,8 @@
     if (searchState.value.authors?.length) {
       query.authors = searchState.value.authors.join(',')
     }
-    if (searchState.value.domain?.length) {
-      query.domain = searchState.value.domain.join(',')
+    if (searchState.value.subjectAreas?.length) {
+      query.subjectAreas = searchState.value.subjectAreas.join(',')
     }
     
     // Update URL without page reload
@@ -471,7 +470,7 @@
         title: searchState.value.title,
         keywords: searchState.value.keywords,
         authors: searchState.value.authors,
-        domain: route.query.domain || selectedSubjectAreas.value.map(area => area.key)
+        subjectAreas: route.query.subjectAreas || selectedSubjectAreas.value.map(area => area.key)
       }
       
       // Add dates from dateRange if they exist
@@ -598,7 +597,7 @@
         end: undefined
       },
       authors: [],
-      domain: []
+      subjectAreas: []
     }
     selectedAuthors.value = []
     authors.value = []
@@ -678,7 +677,7 @@
   // Update removeSubjectArea function with proper type
   const removeSubjectArea = (area: SubjectArea) => {
     selectedSubjectAreas.value = selectedSubjectAreas.value.filter(a => a.key !== area.key)
-    searchState.value.domain = selectedSubjectAreas.value.map(a => a.key)
+    searchState.value.subjectAreas = selectedSubjectAreas.value.map(a => a.key)
   }
 
   // Update selected areas
@@ -690,6 +689,6 @@
       label: area.label,
       icon: area.icon || undefined
     }))
-    searchState.value.domain = areas.map(area => area.key)
+    searchState.value.subjectAreas = areas.map(area => area.key)
   }
   </script>
