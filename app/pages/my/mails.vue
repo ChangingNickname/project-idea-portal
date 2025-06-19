@@ -52,10 +52,9 @@
 
     <!-- Filters and sorting -->
     <div class="flex items-center gap-4 mb-6">
-      <UDropdownMenu
+      <UDropdown
         :items="sortOptions"
         :model-value="sortBy"
-        class="w-64"
         @update:model-value="handleSortChange"
       >
         <UButton
@@ -69,7 +68,7 @@
           </div>
           <UIcon name="i-lucide-chevron-down" class="w-4 h-4" />
         </UButton>
-      </UDropdownMenu>
+      </UDropdown>
       <UButton
         :icon="sortDirection === 'asc' ? 'i-lucide-arrow-up' : 'i-lucide-arrow-down'"
         color="neutral"
@@ -87,59 +86,61 @@
         {{ searchQuery ? t('common.noChatsFound') : t('common.noActiveChats') }}
       </div>
 
-      <div v-else v-for="chat in filteredChats" :key="chat.userId" class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-        <div class="flex items-center justify-between">
-          <div class="flex-1">
-            <UserCard 
-              :user="{
-                id: chat.user.id,
-                email: chat.user.email,
-                displayName: chat.user.displayName || chat.user.email,
-                avatar: chat.user.avatar || null,
-                emailVerified: chat.user.emailVerified,
-                position: null,
-                disabled: false,
-                isAnonymous: false,
-                providerData: [],
-                contacts: {
+      <div v-else v-for="chat in filteredChats" :key="chat.userId">
+        <NuxtLink
+          :to="`/user/${chat.userId}/chat`"
+          class="block bg-white dark:bg-gray-800 rounded-lg shadow p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+        >
+          <div class="flex items-center justify-between">
+            <div class="flex-1">
+              <UserCard 
+                :user="{
+                  id: chat.user.id,
                   email: chat.user.email,
-                  phone: null,
-                  telegram: null,
-                  whatsapp: null,
-                  viber: null,
-                  discord: null,
-                  linkedin: null,
-                  github: null,
-                  website: null
-                },
-                customClaims: null,
-                metadata: {
-                  creationTime: null,
-                  lastSignInTime: null,
-                  lastRefreshTime: null
-                },
-                tenantId: null,
-                multiFactor: null
-              }" 
-            />
-          </div>
-          <div class="flex items-center gap-4">
-            <div class="text-sm text-gray-500 dark:text-gray-400">
-              {{ formatDate(chat.lastMessage?.created_at) }}
+                  displayName: chat.user.displayName || chat.user.email,
+                  avatar: chat.user.avatar || null,
+                  emailVerified: chat.user.emailVerified,
+                  position: null,
+                  disabled: false,
+                  isAnonymous: false,
+                  providerData: [],
+                  contacts: {
+                    email: chat.user.email,
+                    phone: null,
+                    telegram: null,
+                    whatsapp: null,
+                    viber: null,
+                    discord: null,
+                    linkedin: null,
+                    github: null,
+                    website: null
+                  },
+                  customClaims: null,
+                  metadata: {
+                    creationTime: null,
+                    lastSignInTime: null,
+                    lastRefreshTime: null
+                  },
+                  tenantId: null,
+                  multiFactor: null
+                }" 
+              />
             </div>
-            <UChip
-              v-if="unreadCount(chat.userId) > 0"
-              :text="unreadCount(chat.userId)"
-              size="3xl"
-            />
-            <NuxtLink :to="`/user/${chat.userId}/chat`" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
-              <UIcon name="i-lucide-external-link" class="w-4 h-4" />
-            </NuxtLink>
+            <div class="flex items-center gap-4">
+              <div class="text-sm text-gray-500 dark:text-gray-400">
+                {{ formatDate(chat.lastMessage?.created_at) }}
+              </div>
+              <UChip
+                v-if="unreadCount(chat.userId) > 0"
+                :text="unreadCount(chat.userId)"
+                size="3xl"
+              />
+            </div>
           </div>
-        </div>
-        <div v-if="chat.lastMessage" class="mt-2 text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
-          {{ chat.lastMessage.message }}
-        </div>
+          <div v-if="chat.lastMessage" class="mt-2 text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
+            {{ chat.lastMessage.message }}
+          </div>
+        </NuxtLink>
       </div>
 
       <!-- Pagination -->
@@ -261,11 +262,13 @@ const filteredChats = computed(() => {
       default:
         const dateA = a.lastMessage?.created_at ? new Date(a.lastMessage.created_at).getTime() : 0
         const dateB = b.lastMessage?.created_at ? new Date(b.lastMessage.created_at).getTime() : 0
-        comparison = dateB - dateA
+        comparison = sortDirection.value === 'asc'
+          ? dateA - dateB
+          : dateB - dateA
         break
     }
 
-    return sortDirection.value === 'asc' ? comparison : -comparison
+    return comparison
   })
 
   return result
