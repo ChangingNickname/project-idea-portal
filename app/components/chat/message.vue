@@ -246,16 +246,19 @@ const handleMessageClick = (event: MouseEvent) => {
           const postId = href.split('/join/')[1]?.split('?')[0]
           
           if (postId && props.metadata?.postId) {
+            // Используем requesterId из метаданных, а не ID отправителя сообщения
+            const userId = props.metadata.requesterId || props.user.id
+            
             console.log('Emitting join request response:', {
               accepted: isAccepted,
               postId: props.metadata.postId,
-              userId: props.user.id
+              userId: userId
             })
 
             emit('joinRequestResponse', {
               accepted: isAccepted,
               postId: props.metadata.postId,
-              userId: props.user.id
+              userId: userId
             })
           }
         }

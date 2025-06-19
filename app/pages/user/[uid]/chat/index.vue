@@ -298,15 +298,19 @@ const shouldShowUserInfo = (message: Message) => {
 
 // Добавляем обработчик ответа на запрос о присоединении
 const handleJoinRequestResponse = async ({ accepted, postId, userId }: { accepted: boolean, postId: string, userId: string }) => {
+  console.log('handleJoinRequestResponse called with:', { accepted, postId, userId })
+  
   try {
     // Обновляем пост, добавляя пользователя в участники
     if (accepted) {
+      console.log('Adding user to participants:', userId)
       await $fetch(`/api/posts/${postId}`, {
         method: 'PUT',
         body: {
           currentParticipants: [userId]
         }
-      })
+      } as any)
+      console.log('User added to participants successfully')
     }
 
     // Отправляем сообщение об ответе

@@ -93,7 +93,21 @@ export default defineEventHandler(async (event) => {
     } else {
       // Обычное обновление поста (включая участников, если они переданы)
       console.log('Starting regular post update...')
-      if (!isOwner && !isAuthor) {
+      
+      // Проверяем, есть ли обновление currentParticipants
+      const isUpdatingParticipants = body.currentParticipants !== undefined
+      
+      // Если обновляем только участников, разрешаем это владельцу или автору
+      if (isUpdatingParticipants && Object.keys(body).length === 1) {
+        if (!isOwner && !isAuthor) {
+          console.log('Permission denied: user is not owner or author for participant update')
+          throw createError({
+            statusCode: 403,
+            message: 'Only the owner or author can update participants'
+          })
+        }
+      } else if (!isOwner && !isAuthor) {
+        // Для других обновлений требуем права владельца или автора
         console.log('Permission denied: user is not owner or author')
         throw createError({
           statusCode: 403,
@@ -116,8 +130,18 @@ export default defineEventHandler(async (event) => {
       Object.entries(updateFields).forEach(([key, value]) => {
         console.log(`Processing field ${key}:`, value, 'type:', typeof value)
         if (value !== undefined && value !== null) {
-          // Проверяем специальные типы данных
-          if (Array.isArray(value)) {
+          // Специальная обработка для currentParticipants
+          if (key === 'currentParticipants' && Array.isArray(value)) {
+            // Объединяем существующих участников с новыми, убирая дубликаты
+            const existingParticipants = Array.isArray(postData.currentParticipants) 
+              ? postData.currentParticipants 
+              : []
+            const newParticipants = value.filter((id: string) => !existingParticipants.includes(id))
+            const updatedParticipants = [...existingParticipants, ...newParticipants]
+            
+            processedFields[key] = updatedParticipants
+            console.log(`Updated currentParticipants: existing=${existingParticipants}, new=${value}, result=${updatedParticipants}`)
+          } else if (Array.isArray(value)) {
             processedFields[key] = value
             console.log(`Added array field ${key}:`, value)
           } else if (typeof value === 'object') {

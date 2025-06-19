@@ -350,7 +350,7 @@ const leaveProject = async () => {
 
   try {
     const updatedPost = await $fetch<Post>(`/api/posts/${props.post.id}`, {
-      method: 'POST',
+      method: 'PUT',
       body: {
         action: 'leaveProject'
       }
@@ -382,11 +382,16 @@ const removeParticipant = async (participantId: string) => {
   if (!userStore.user || !props.post.owner || !props.post.id) return
 
   try {
+    // Получаем текущих участников и удаляем указанного
+    const currentParticipants = Array.isArray(props.post.currentParticipants) 
+      ? props.post.currentParticipants 
+      : []
+    const updatedParticipants = currentParticipants.filter(id => id !== participantId)
+
     const updatedPost = await $fetch<Post>(`/api/posts/${props.post.id}`, {
-      method: 'POST',
+      method: 'PUT',
       body: {
-        action: 'removeParticipant',
-        participantId
+        currentParticipants: updatedParticipants
       }
     })
 

@@ -556,6 +556,7 @@ const handleNewProject = () => {
 // Функция для изменения размера AI агента
 const startResize = (event: MouseEvent) => {
   event.preventDefault()
+  event.stopPropagation()
   
   const aiPanel = aiPanelRef.value
   if (!aiPanel) return
@@ -566,6 +567,7 @@ const startResize = (event: MouseEvent) => {
   const startHeight = aiPanel.offsetHeight
   
   const handleMouseMove = (e: MouseEvent) => {
+    e.preventDefault()
     const deltaX = e.clientX - startX
     const deltaY = e.clientY - startY
     
@@ -588,6 +590,7 @@ const startResize = (event: MouseEvent) => {
 // Функция для перетаскивания AI агента
 const startDrag = (event: MouseEvent) => {
   event.preventDefault()
+  event.stopPropagation()
   
   const aiPanel = aiPanelRef.value
   if (!aiPanel) return
@@ -598,14 +601,22 @@ const startDrag = (event: MouseEvent) => {
   const startTop = aiPanel.offsetTop
   
   const handleMouseMove = (e: MouseEvent) => {
+    e.preventDefault()
     const deltaX = e.clientX - startX
     const deltaY = e.clientY - startY
     
     const newLeft = startLeft + deltaX
     const newTop = startTop + deltaY
     
-    aiPanel.style.left = `${newLeft}px`
-    aiPanel.style.top = `${newTop}px`
+    // Ограничиваем перемещение в пределах окна
+    const maxLeft = window.innerWidth - aiPanel.offsetWidth
+    const maxTop = window.innerHeight - aiPanel.offsetHeight
+    
+    const constrainedLeft = Math.max(0, Math.min(newLeft, maxLeft))
+    const constrainedTop = Math.max(0, Math.min(newTop, maxTop))
+    
+    aiPanel.style.left = `${constrainedLeft}px`
+    aiPanel.style.top = `${constrainedTop}px`
   }
   
   const handleMouseUp = () => {
