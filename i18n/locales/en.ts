@@ -180,6 +180,8 @@ export default {
     avatarHelp: 'Click to change avatar',
     subjectAreas: 'Subject Areas',
     selectSubjectAreas: 'Select Subject Areas',
+    selectedAreas: 'Selected Areas',
+    newChat: 'New Chat',
   },
   message: {
     status: {
@@ -207,6 +209,7 @@ export default {
     coAuthors: 'Co-authors',
     owner: 'Owner',
     authors: 'Authors',
+    participants: 'Participants',
     updated: 'Updated',
     views: 'Views',
     likes: 'Likes',
@@ -254,7 +257,8 @@ export default {
       failedToLeave: 'Failed to leave the project',
       removeParticipant: 'Remove participant',
       participantRemoved: 'Participant has been removed from the project',
-      failedToRemoveParticipant: 'Failed to remove participant from the project'
+      failedToRemoveParticipant: 'Failed to remove participant from the project',
+      failedTo: 'Failed to'
     }
   },
   profile: {

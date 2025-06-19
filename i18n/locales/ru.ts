@@ -190,6 +190,8 @@ export default {
     avatarHelp: 'Нажмите, чтобы изменить аватар',
     subjectAreas: 'Предметные области',
     selectSubjectAreas: 'Выберите предметные области',
+    selectedAreas: 'Выбранные области',
+    newChat: 'Новый чат',
   },
   message: {
     title: 'Сообщения',
@@ -219,6 +221,7 @@ export default {
     coAuthors: 'Соавторы',
     owner: 'Владелец',
     authors: 'Авторы',
+    participants: 'Участники',
     updated: 'Обновлено',
     views: 'Просмотры',
     likes: 'Лайки',
@@ -266,7 +269,8 @@ export default {
       failedToLeave: 'Не удалось выйти из проекта',
       removeParticipant: 'Удалить участника',
       participantRemoved: 'Участник удален из проекта',
-      failedToRemoveParticipant: 'Не удалось удалить участника из проекта'
+      failedToRemoveParticipant: 'Не удалось удалить участника из проекта',
+      failedTo: 'Не удалось'
     }
   },
   profile: {
