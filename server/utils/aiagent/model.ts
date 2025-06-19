@@ -507,7 +507,7 @@ export async function ask(
   } catch (error) {
     console.error('[Ask] Error occurred:', error);
     return {
-      finalResponse: "Произошла ошибка при обработке сообщения. Пожалуйста, сбросьте чат. Если проблема повторяется, обратитесь к администратору.",
+      finalResponse: "An error occurred while processing the message. Please reset the chat. If the problem persists, contact the administrator.",
       error: {
         type: 'processing_error',
         message: error instanceof Error ? error.message : 'Unknown error occurred',
@@ -614,6 +614,76 @@ export async function createValidatedChat(event: H3Event) {
     return chatSession;
   } catch (error) {
     console.error('[CreateValidatedChat] Error creating chat session:', error);
+    
+    // Если ошибка связана с отсутствием сессии, но токен валидный, создаем новую сессию
+    if (sessionToken && error instanceof Error && error.message.includes('Session not found')) {
+      console.log('[CreateValidatedChat] Attempting to recreate session for valid token');
+      try {
+        // Создаем новую сессию чата
+        const newSession: ChatSession = {
+          messages: [],
+          send: async (message: string, articleDraft?: ArticleDraft) => {
+            console.log('[ChatSession] Processing new message in recreated session');
+            console.log('[ChatSession] Input:', { message, articleDraft });
+
+            try {
+              // Add user message to history
+              const userMessage: ChatMessage = {
+                role: 'user',
+                content: message,
+                timestamp: new Date().toISOString()
+              };
+              newSession.messages.push(userMessage);
+              console.log('[ChatSession] Added user message to history');
+              
+              // Get AI response
+              console.log('[ChatSession] Getting AI response');
+              const response = await ask(message, articleDraft, newSession.messages);
+              
+              // Add assistant message to history
+              const assistantMessage: ChatMessage = {
+                role: 'assistant',
+                content: response.finalResponse,
+                timestamp: new Date().toISOString(),
+                user: {
+                  id: 'assistant',
+                  email: 'ai@assistant.com',
+                  avatar: '/images/ai-avatar.png',
+                  displayName: 'AI Assistant'
+                }
+              };
+              newSession.messages.push(assistantMessage);
+              console.log('[ChatSession] Added assistant message to history');
+              
+              const result = { 
+                text: response.finalResponse,
+                schema: response.schema,
+                error: response.error
+              };
+              console.log('[ChatSession] Returning response:', result);
+              return result;
+            } catch (error) {
+              console.error('[ChatSession] Error processing message:', error);
+              if (sessionToken) {
+                resetChatSession(sessionToken);
+              }
+              throw {
+                type: 'chat_session_error',
+                message: error instanceof Error ? error.message : 'Unknown error occurred',
+                details: error instanceof Error ? error.stack : undefined,
+                shouldReset: true
+              };
+            }
+          }
+        };
+        chatSessions.set(sessionToken, newSession);
+        console.log('[CreateValidatedChat] Successfully recreated chat session');
+        return newSession;
+      } catch (recreateError) {
+        console.error('[CreateValidatedChat] Failed to recreate session:', recreateError);
+      }
+    }
+    
     if (sessionToken) {
       resetChatSession(sessionToken);
     }

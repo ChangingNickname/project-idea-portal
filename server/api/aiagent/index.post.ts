@@ -6,15 +6,32 @@ export default defineEventHandler(async (event) => {
     const config = useRuntimeConfig()
     
     // Validate session token
-    const sessionToken = await getTokenFromEvent(event)
-    if (!config.jwtSecret) {
+    let sessionToken: string
+    try {
+      sessionToken = await getTokenFromEvent(event)
+    } catch (error) {
+      console.error('[API] Failed to get session token:', error)
+      // Return user-friendly message instead of technical error
       return {
-        answer: 'Произошла ошибка конфигурации сервера. Пожалуйста, сбросьте чат. Если проблема повторяется, обратитесь к администратору.',
+        answer: "I'm having trouble processing your message right now. Please try again in a moment.",
+        error: {
+          type: 'session_error',
+          message: 'Session token is required',
+          details: 'Token not found in request',
+          shouldReset: false
+        }
+      }
+    }
+
+    if (!config.jwtSecret) {
+      console.error('[API] JWT secret is not configured')
+      return {
+        answer: "I'm having trouble processing your message right now. Please try again in a moment.",
         error: {
           type: 'configuration_error',
           message: 'JWT secret is not configured',
           details: 'Server configuration is incomplete',
-          shouldReset: true
+          shouldReset: false
         }
       }
     }
@@ -22,24 +39,41 @@ export default defineEventHandler(async (event) => {
     try {
       validateToken(sessionToken, { jwtSecret: config.jwtSecret as string }, event)
     } catch (error) {
+      console.error('[API] Token validation failed:', error)
+      // Return user-friendly message instead of technical error
       return {
-        answer: 'Произошла ошибка сессии. Пожалуйста, сбросьте чат. Если проблема повторяется, обратитесь к администратору.',
+        answer: "I'm having trouble processing your message right now. Please try again in a moment.",
         error: {
           type: 'session_error',
           message: 'Invalid or expired session',
           details: error instanceof Error ? error.message : 'Unknown session error',
-          shouldReset: true
+          shouldReset: false
         }
       }
     }
 
     // Get request body
-    const body = await readBody(event)
+    let body: any
+    try {
+      body = await readBody(event)
+    } catch (error) {
+      console.error('[API] Failed to read request body:', error)
+      return {
+        answer: "I'm having trouble processing your message right now. Please try again in a moment.",
+        error: {
+          type: 'request_error',
+          message: 'Failed to read request body',
+          details: error instanceof Error ? error.message : 'Unknown request error',
+          shouldReset: false
+        }
+      }
+    }
+
     const { message, articleDraft, messageHistory } = body
 
     if (!message) {
       return {
-        answer: 'Ошибка валидации: сообщение обязательно',
+        answer: "I need a message to help you. Please provide your question or request.",
         error: {
           type: 'validation_error',
           message: 'Message is required',
@@ -49,8 +83,42 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // Process message and get response
-    const result = await ask(message, articleDraft, messageHistory)
+    // Process message and get response with automatic retry
+    let result
+    try {
+      result = await ask(message, articleDraft, messageHistory)
+    } catch (error) {
+      console.error('[API] Error in ask function:', error)
+      
+      // If it's a session-related error, try to recreate and retry once
+      if (error instanceof Error && (
+        error.message.includes('Session not found') || 
+        error.message.includes('chat_creation_error')
+      )) {
+        console.log('[API] Session error detected, attempting to recreate and retry')
+        try {
+          // Wait a moment for session recreation
+          await new Promise(resolve => setTimeout(resolve, 100))
+          
+          // Retry the request
+          result = await ask(message, articleDraft, messageHistory)
+          console.log('[API] Successfully retried after session recreation')
+        } catch (retryError) {
+          console.error('[API] Retry failed:', retryError)
+          return {
+            answer: "I'm having trouble processing your message right now. Please try again in a moment.",
+            error: {
+              type: 'processing_error',
+              message: 'Failed to process message after retry',
+              details: retryError instanceof Error ? retryError.message : 'Unknown retry error',
+              shouldReset: false
+            }
+          }
+        }
+      } else {
+        throw error
+      }
+    }
 
     // Log service information in development mode
     if (process.env.NODE_ENV === 'development') {
@@ -69,15 +137,16 @@ export default defineEventHandler(async (event) => {
       error: result.error
     }
   } catch (error) {
-    console.error('Error processing AI agent message:', error)
+    console.error('[API] Error processing AI agent message:', error)
     
+    // Return user-friendly message instead of technical error
     return {
-      answer: 'Произошла ошибка при обработке сообщения. Пожалуйста, сбросьте чат. Если проблема повторяется, обратитесь к администратору.',
+      answer: "I'm having trouble processing your message right now. Please try again in a moment.",
       error: {
         type: 'processing_error',
         message: error instanceof Error ? error.message : 'Unknown error occurred',
         details: error instanceof Error ? error.stack : undefined,
-        shouldReset: true
+        shouldReset: false
       }
     }
   }

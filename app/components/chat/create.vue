@@ -5,7 +5,7 @@
         v-model="message"
         :placeholder="t('common.typeMessage')"
         class="flex-1"
-        :rows="6"
+        :rows="3"
         :auto-rows="false"
         @keydown="handleKeyDown"
       >
@@ -14,7 +14,8 @@
             type="submit"
             color="primary"
             variant="ghost"
-            :disabled="!message.trim()"
+            :disabled="!message.trim() || isSending"
+            :loading="isSending"
           >
             <Icon name="lucide:send" class="w-5 h-5" />
           </UButton>
@@ -29,6 +30,7 @@ import { ref } from 'vue'
 
 const props = defineProps<{
   userId: string
+  disabled?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -37,6 +39,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 const message = ref('')
+const isSending = ref(false)
 
 const handleKeyDown = (event: KeyboardEvent) => {
   // Если нажат Enter без Shift, отправляем сообщение
@@ -48,10 +51,11 @@ const handleKeyDown = (event: KeyboardEvent) => {
 }
 
 const sendMessage = async () => {
-  if (!message.value.trim()) return
+  if (!message.value.trim() || isSending.value || props.disabled) return
 
   const messageText = message.value
   message.value = ''
+  isSending.value = true
 
   try {
     const newMessage = await $fetch<Message>(`/api/user/${props.userId}/message`, {
@@ -86,14 +90,24 @@ const sendMessage = async () => {
       status: 'error',
       timestamp: Date.now()
     })
+  } finally {
+    isSending.value = false
   }
 }
 </script>
 
 <style scoped>
 :deep(.u-textarea) {
-  min-height: 120px; /* Примерно 6 строк */
-  max-height: 120px;
+  min-height: 80px; /* Примерно 3 строки */
+  max-height: 80px;
   resize: none;
+}
+
+/* Улучшаем отзывчивость в мобильных устройствах */
+@media (max-width: 768px) {
+  :deep(.u-textarea) {
+    min-height: 60px; /* Меньше высота на мобильных */
+    max-height: 60px;
+  }
 }
 </style>

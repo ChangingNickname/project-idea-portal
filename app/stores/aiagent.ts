@@ -77,21 +77,26 @@ export const useAiAgentStore = defineStore('aiagent', {
 
     async generateToken() {
       try {
+        console.log('[AiAgent] Generating new token...')
         const response = await $fetch<{ token: string }>('/api/aiagent/token.generate')
         this.sessionToken = response.token
         saveState({ sessionToken: response.token })
+        console.log('[AiAgent] Token generated successfully')
         return response.token
       } catch (error) {
-        console.error('Failed to generate AI agent token:', error)
+        console.error('[AiAgent] Failed to generate AI agent token:', error)
+        // Очищаем токен при ошибке
+        this.sessionToken = null
+        saveState({ sessionToken: null })
         throw error
       }
     },
 
     async sendMessage(message: string): Promise<string> {
-      console.log('sendMessage called with:', message)
+      console.log('[AiAgent] sendMessage called with:', message)
       
       if (!message) {
-        console.log('Empty message, skipping')
+        console.log('[AiAgent] Empty message, skipping')
         return ''
       }
 
@@ -101,30 +106,31 @@ export const useAiAgentStore = defineStore('aiagent', {
       // Check if post is published and user is not the owner
       if (articleBuilderStore.draft.status === 'published' && 
           articleBuilderStore.draft.ownerId !== userStore.user?.id) {
-        console.log('Cannot interact with published post')
+        console.log('[AiAgent] Cannot interact with published post')
         throw new Error('Cannot interact with published post')
-      }
-
-      if (!this.sessionToken) {
-        console.log('No session token, generating new one')
-        await this.generateToken()
       }
 
       // Проверяем, не отправляется ли уже сообщение
       if (this.isProcessing) {
-        console.log('Message is already being processed in store')
+        console.log('[AiAgent] Message is already being processed in store')
         return ''
       }
 
       try {
         this.isProcessing = true
-        console.log('Store processing message:', message)
+        console.log('[AiAgent] Store processing message:', message)
 
         // Проверяем, не было ли уже отправлено такое сообщение
         const lastMessage = this.messages[this.messages.length - 1]
         if (lastMessage?.role === 'user' && lastMessage.content === message) {
-          console.log('Duplicate message detected in store, skipping')
+          console.log('[AiAgent] Duplicate message detected in store, skipping')
           return ''
+        }
+
+        // Генерируем токен если его нет
+        if (!this.sessionToken) {
+          console.log('[AiAgent] No session token, generating new one')
+          await this.generateToken()
         }
 
         // Извлекаем изображения из сообщения и articleDraft
@@ -173,30 +179,83 @@ export const useAiAgentStore = defineStore('aiagent', {
           }
         }
 
-        console.log('Adding user message to store:', userMessage)
+        console.log('[AiAgent] Adding user message to store:', userMessage)
         this.messages = [...this.messages, userMessage]
         saveState({ messages: this.messages })
 
-        console.log('Sending to API:', {
+        console.log('[AiAgent] Sending to API:', {
           message: processedMessage,
           sessionToken: this.sessionToken,
           imagesCount: images.length
         })
 
-        const response = await $fetch<{ answer: string; schema: any }>('/api/aiagent', {
-          method: 'POST',
-          body: {
-            message: processedMessage,
-            sessionToken: this.sessionToken,
-            articleDraft: processedDraft,
-            images,
-            messageHistory: this.messages.map(msg => ({
-              role: msg.role,
-              content: msg.content,
-              timestamp: msg.timestamp
-            }))
+        // Функция для отправки запроса с автоматическим восстановлением
+        const sendRequestWithAutoRecovery = async (retryCount = 0): Promise<any> => {
+          try {
+            return await $fetch<{ answer: string; schema: any; error?: any }>('/api/aiagent', {
+              method: 'POST',
+              body: {
+                message: processedMessage,
+                sessionToken: this.sessionToken,
+                articleDraft: processedDraft,
+                images,
+                messageHistory: this.messages.map(msg => ({
+                  role: msg.role,
+                  content: msg.content,
+                  timestamp: msg.timestamp
+                }))
+              }
+            })
+          } catch (error: any) {
+            console.error(`[AiAgent] Request failed (attempt ${retryCount + 1}):`, error)
+            
+            // Проверяем, является ли ошибка связанной с токеном
+            const isTokenError = error.data?.error?.type === 'session_error' || 
+                               error.data?.error?.type === 'configuration_error' ||
+                               error.status === 401 ||
+                               error.data?.message?.includes('Invalid session token') ||
+                               error.data?.message?.includes('Session token is required')
+            
+            if (isTokenError && retryCount < 3) {
+              console.log('[AiAgent] Token error detected, automatically regenerating token and retrying...')
+              
+              try {
+                // Генерируем новый токен
+                await this.generateToken()
+                
+                // Повторяем запрос с новым токеном
+                return await sendRequestWithAutoRecovery(retryCount + 1)
+              } catch (retryError) {
+                console.error('[AiAgent] Failed to regenerate token:', retryError)
+                
+                // Если не удалось сгенерировать токен, пробуем еще раз
+                if (retryCount < 2) {
+                  console.log('[AiAgent] Retrying token generation...')
+                  return await sendRequestWithAutoRecovery(retryCount + 1)
+                }
+                
+                throw retryError
+              }
+            }
+            
+            // Если это не ошибка токена или превышено количество попыток, возвращаем дружественное сообщение
+            if (retryCount >= 3) {
+              console.log('[AiAgent] Max retries reached, returning friendly error message')
+              return {
+                answer: "I'm having trouble processing your message right now. Please try again in a moment.",
+                error: {
+                  type: 'max_retries_exceeded',
+                  message: 'Maximum retry attempts reached',
+                  shouldReset: false
+                }
+              }
+            }
+            
+            throw error
           }
-        })
+        }
+
+        const response = await sendRequestWithAutoRecovery()
 
         // Обрабатываем ответ AI, восстанавливая изображения
         let aiResponse = response.answer
@@ -224,40 +283,50 @@ export const useAiAgentStore = defineStore('aiagent', {
 
         // Обновляем схему статьи, если она есть (без добавления в сообщение)
         if (response.schema) {
-          console.log('Received schema update:', response.schema)
+          console.log('[AiAgent] Received schema update:', response.schema)
           articleBuilderStore.updateDraft(response.schema, true)
         }
 
         return aiResponse
       } catch (error: any) {
-        console.error('Failed to send message to AI agent:', error)
+        console.error('[AiAgent] Failed to send message to AI agent:', error)
         
-        // Проверяем, является ли ошибка связанной с невалидным токеном
-        if (error.data?.message?.includes('Invalid session token')) {
-          console.log('Invalid session token detected, generating new one')
-          try {
-            // Генерируем новый токен
-            await this.generateToken()
-            
-            // Повторяем отправку сообщения с новым токеном
-            console.log('Retrying message send with new token')
-            return await this.sendMessage(message)
-          } catch (retryError) {
-            console.error('Failed to retry with new token:', retryError)
-            throw retryError
+        // Добавляем дружественное сообщение об ошибке в чат
+        const errorMessage = {
+          role: 'assistant' as const,
+          content: "I'm having trouble processing your message right now. Please try again in a moment.",
+          timestamp: new Date().toISOString(),
+          user: {
+            id: 'assistant',
+            email: 'ai@assistant.com',
+            avatar: '/images/ai-avatar.png',
+            displayName: 'AI Assistant'
           }
         }
         
-        throw error
+        this.messages = [...this.messages, errorMessage]
+        saveState({ messages: this.messages })
+        
+        // Возвращаем дружественное сообщение вместо выброса ошибки
+        return "I'm having trouble processing your message right now. Please try again in a moment."
       } finally {
         this.isProcessing = false
       }
     },
 
     clearSession() {
+      console.log('[AiAgent] Clearing session')
       this.sessionToken = null
       this.messages = []
       saveState({ sessionToken: null, messages: [] })
+    },
+
+    // Функция для принудительного обновления токена
+    async refreshToken() {
+      console.log('[AiAgent] Forcing token refresh')
+      this.sessionToken = null
+      saveState({ sessionToken: null })
+      return await this.generateToken()
     }
   }
 })

@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col h-full">
     <!-- Header -->
-    <div class="flex items-center justify-between p-4 border-b">
+    <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
       <div class="flex items-center gap-2">
         <UButton
           v-if="messages.length > 0"
@@ -16,7 +16,7 @@
     </div>
 
     <!-- Messages -->
-    <div class="flex-1 overflow-y-auto min-h-0">
+    <div ref="messagesContainer" class="flex-1 overflow-y-auto min-h-0">
       <div class="space-y-4 p-4">
         <ChatMessage
           v-for="(message, index) in messages"
@@ -69,12 +69,11 @@
     </div>
 
     <!-- Input -->
-    <div class="border-t">
+    <div class="border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
       <ChatCreate
         :user-id="'assistant'"
-        :disabled="isSending || aiAgentStore.isProcessing"
+        :disabled="isSending || aiAgentStore.isProcessing || props.disabled"
         @message-sent="handleMessageSent"
-        class="h-[200px] resize-none"
       />
     </div>
   </div>
@@ -88,11 +87,17 @@ import ChatCreate from '~/components/chat/create.vue'
 import Avatar from '~/components/user/Avatar.vue'
 import { useUserStore } from '~/stores/user'
 
+const props = defineProps<{
+  post: any
+  disabled?: boolean
+}>()
+
 const { t } = useI18n()
 const aiAgentStore = useAiAgentStore()
 const userStore = useUserStore()
 const isResetting = ref(false)
 const isSending = ref(false)
+const messagesContainer = ref<HTMLElement>()
 
 const messages = computed(() => aiAgentStore.messages)
 const userEmail = computed(() => userStore.user?.email || '')
@@ -110,18 +115,33 @@ const getWelcomeMessage = () => ({
   }
 })
 
+// Функция для автоматической прокрутки к последнему сообщению
+const scrollToBottom = () => {
+  if (messagesContainer.value) {
+    nextTick(() => {
+      messagesContainer.value!.scrollTop = messagesContainer.value!.scrollHeight
+    })
+  }
+}
+
 // Инициализация приветственного сообщения при монтировании
 onMounted(() => {
   if (messages.value.length === 0) {
     aiAgentStore.setWelcomeMessage(getWelcomeMessage())
   }
+  scrollToBottom()
 })
+
+// Автоматическая прокрутка при добавлении новых сообщений
+watch(messages, () => {
+  scrollToBottom()
+}, { deep: true })
 
 const handleMessageSent = async (message: any) => {
   console.log('handleMessageSent triggered with:', message)
   
-  if (isSending.value) {
-    console.log('Message is already being sent, skipping')
+  if (isSending.value || props.disabled) {
+    console.log('Message is already being sent or disabled, skipping')
     return
   }
   

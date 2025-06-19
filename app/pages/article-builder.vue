@@ -140,8 +140,9 @@
         </div>
 
         <!-- Средняя панель - AI -->
-        <div v-if="store.showAiAgent" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm relative h-full"
-          style="min-height: calc(100vh - 150px); max-height: calc(100vh - 150px); display: flex; flex-direction: column;">
+        <div v-if="store.showAiAgent" class="fixed top-4 left-4 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg shadow-sm relative h-full"
+          style="position: fixed !important; top: 16px !important; left: 16px !important; height: 70vh; display: flex; flex-direction: column; z-index: 50; width: 400px;"
+          ref="aiPanelRef">
           <UTooltip
             :text="!canEditPost ? 'Editing published post is not allowed' : ''"
             :disabled="canEditPost"
@@ -167,6 +168,16 @@
               />
             </div>
           </UTooltip>
+          
+          <!-- Resize handle -->
+          <div 
+            class="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize opacity-50 hover:opacity-100 transition-opacity z-20"
+            @mousedown="startResize"
+          >
+            <div class="w-full h-full flex items-end justify-end">
+              <div class="w-3 h-3 border-r-2 border-b-2 border-gray-400 dark:border-gray-500"></div>
+            </div>
+          </div>
         </div>
 
         <!-- Правая панель - Превью -->
@@ -200,6 +211,7 @@ const route = useRoute()
 const { t } = useI18n()
 const previewKey = ref(0)
 const isLoading = ref(false)
+const aiPanelRef = ref<HTMLElement>()
 
 // Определение мобильного режима
 const isMobile = ref(false)
@@ -288,9 +300,9 @@ const gridClass = computed(() => {
     return 'grid-cols-1'
   }
 
+  // Учитываем только edit и preview панели для сетки, AI агент - это оверлей
   const panels = [
     store.showCreate,
-    store.showAiAgent,
     store.showPreview
   ].filter(Boolean).length
 
@@ -299,8 +311,6 @@ const gridClass = computed(() => {
       return 'grid-cols-1'
     case 2:
       return 'grid-cols-2'
-    case 3:
-      return 'grid-cols-3'
     default:
       return 'grid-cols-1'
   }
@@ -515,5 +525,37 @@ const handleRestore = async () => {
 const handleNewProject = () => {
   store.resetDraft()
   navigateTo('/ideas/article-builder')
+}
+
+// Функция для изменения размера AI агента
+const startResize = (event: MouseEvent) => {
+  event.preventDefault()
+  
+  const aiPanel = aiPanelRef.value
+  if (!aiPanel) return
+  
+  const startX = event.clientX
+  const startY = event.clientY
+  const startWidth = aiPanel.offsetWidth
+  const startHeight = aiPanel.offsetHeight
+  
+  const handleMouseMove = (e: MouseEvent) => {
+    const deltaX = e.clientX - startX
+    const deltaY = e.clientY - startY
+    
+    const newWidth = Math.max(300, startWidth + deltaX)
+    const newHeight = Math.max(400, startHeight + deltaY)
+    
+    aiPanel.style.width = `${newWidth}px`
+    aiPanel.style.height = `${newHeight}px`
+  }
+  
+  const handleMouseUp = () => {
+    document.removeEventListener('mousemove', handleMouseMove)
+    document.removeEventListener('mouseup', handleMouseUp)
+  }
+  
+  document.addEventListener('mousemove', handleMouseMove)
+  document.addEventListener('mouseup', handleMouseUp)
 }
 </script>

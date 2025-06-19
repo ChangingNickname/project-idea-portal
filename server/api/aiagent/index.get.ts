@@ -6,17 +6,35 @@ export default defineEventHandler(async (event) => {
     const config = useRuntimeConfig()
     
     // Validate session token
-    const sessionToken = await getTokenFromEvent(event)
-    if (!config.jwtSecret) {
+    let sessionToken: string
+    try {
+      sessionToken = await getTokenFromEvent(event)
+    } catch (error) {
+      console.error('[API] Failed to get session token:', error)
       return {
         status: 'error',
         timestamp: new Date().toISOString(),
-        answer: 'Произошла ошибка конфигурации сервера. Пожалуйста, сбросьте чат. Если проблема повторяется, обратитесь к администратору.',
+        answer: "I'm having trouble processing your request right now. Please try again in a moment.",
+        error: {
+          type: 'session_error',
+          message: 'Session token is required',
+          details: 'Token not found in request',
+          shouldReset: false
+        }
+      }
+    }
+
+    if (!config.jwtSecret) {
+      console.error('[API] JWT secret is not configured')
+      return {
+        status: 'error',
+        timestamp: new Date().toISOString(),
+        answer: "I'm having trouble processing your request right now. Please try again in a moment.",
         error: {
           type: 'configuration_error',
           message: 'JWT secret is not configured',
           details: 'Server configuration is incomplete',
-          shouldReset: true
+          shouldReset: false
         }
       }
     }
@@ -24,15 +42,16 @@ export default defineEventHandler(async (event) => {
     try {
       validateToken(sessionToken, { jwtSecret: config.jwtSecret as string }, event)
     } catch (error) {
+      console.error('[API] Token validation failed:', error)
       return {
         status: 'error',
         timestamp: new Date().toISOString(),
-        answer: 'Произошла ошибка сессии. Пожалуйста, сбросьте чат. Если проблема повторяется, обратитесь к администратору.',
+        answer: "I'm having trouble processing your request right now. Please try again in a moment.",
         error: {
           type: 'session_error',
           message: 'Invalid or expired session',
           details: error instanceof Error ? error.message : 'Unknown session error',
-          shouldReset: true
+          shouldReset: false
         }
       }
     }
@@ -53,17 +72,17 @@ export default defineEventHandler(async (event) => {
       error: lastMessage?.error
     }
   } catch (error) {
-    console.error('Error validating AI agent session:', error)
+    console.error('[API] Error validating AI agent session:', error)
     
     return {
       status: 'error',
       timestamp: new Date().toISOString(),
-      answer: 'Произошла ошибка при обработке запроса. Пожалуйста, сбросьте чат. Если проблема повторяется, обратитесь к администратору.',
+      answer: "I'm having trouble processing your request right now. Please try again in a moment.",
       error: {
         type: 'session_error',
         message: error instanceof Error ? error.message : 'Unknown error occurred',
         details: error instanceof Error ? error.stack : undefined,
-        shouldReset: true
+        shouldReset: false
       }
     }
   }
