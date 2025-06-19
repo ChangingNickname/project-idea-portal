@@ -60,19 +60,21 @@
           <button
             v-for="link in navigationLinks"
             :key="link.path"
-            class="w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+            class="w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-between"
             @click="handleNavigation(link.path)"
           >
-            <div class="relative">
-              <UIcon :name="link.icon" class="w-4 h-4" />
-              <UChip
-                v-if="link.path === '/mails' && totalUnread > 0"
-                :text="totalUnread"
-                size="3xl"
-                class="absolute -top-2 -right-2"
-              />
+            <div class="flex items-center gap-2">
+              <div class="relative">
+                <UIcon :name="link.icon" class="w-4 h-4" />
+                <UChip
+                  v-if="link.path === '/my/mails' && totalUnread > 0"
+                  :text="totalUnread"
+                  size="3xl"
+                  class="absolute -top-2 -right-2"
+                />
+              </div>
+              {{ link.label }}
             </div>
-            {{ link.label }}
           </button>
         </div>
 
