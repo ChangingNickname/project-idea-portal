@@ -378,10 +378,31 @@ watch(() => props.modelValue, (newValue) => {
   }
 }, { deep: true, immediate: true })
 
-// // Эмитить update только при реальных изменениях формы (например, по id, title, keywords, content и т.д.)
+// Debounce функция для оптимизации обновлений
+const debounce = (func: Function, wait: number) => {
+  let timeout: NodeJS.Timeout
+  return function executedFunction(...args: any[]) {
+    const later = () => {
+      clearTimeout(timeout)
+      func(...args)
+    }
+    clearTimeout(timeout)
+    timeout = setTimeout(later, wait)
+  }
+}
+
+// Debounced emit функция
+const debouncedEmit = debounce((data: Partial<Post>) => {
+  emit('update', data)
+}, 300)
+
+// Эмитить update только при реальных изменениях формы с debounce
 watch(() => [form.value.id, form.value.title, form.value.cover, form.value.annotation, form.value.keywords, form.value.content, form.value.status], () => {
-  emit('update', { ...form.value })
-})
+  // Проверяем, что это не внешнее обновление из store
+  if (articleBuilderStore.lastExternalUpdate === 0 || Date.now() - articleBuilderStore.lastExternalUpdate > 1000) {
+    debouncedEmit({ ...form.value })
+  }
+}, { deep: true })
 
 // Новое ключевое слово
 const newKeyword = ref('')
@@ -441,7 +462,7 @@ const resetForm = () => {
     likes: 0,
     viewedBy: []
   }
-  emit('update', form.value)
+  debouncedEmit(form.value)
 }
 
 // Состояние для модального окна поиска авторов
@@ -473,7 +494,7 @@ const handleAddAuthors = async (userIds: string[]) => {
     showAuthorsSearch.value = false
     selectedAuthors.value = []
 
-    emit('update', form.value)
+    debouncedEmit(form.value)
   } catch (error) {
     console.error('Ошибка добавления авторов:', error)
   }
@@ -487,7 +508,7 @@ const removeAuthor = (authorId: string) => {
     
     form.value.author = form.value.author.filter(a => a?.id !== authorId)
     form.value.authorId = form.value.author.map(a => a?.id).filter(Boolean) as string[]
-    emit('update', form.value)
+    debouncedEmit(form.value)
   }
 }
 
@@ -532,12 +553,12 @@ const updateSubjectAreas = (areas: SubjectAreaUI[]) => {
     key: area.key,
     i18nKey: area.i18nKey
   }))
-  emit('update', form.value)
+  debouncedEmit(form.value)
 }
 
 // Удаление предметной области
 const removeSubjectArea = (key: string) => {
   form.value.subjectAreas = form.value.subjectAreas.filter(area => area.key !== key)
-  emit('update', form.value)
+  debouncedEmit(form.value)
 }
 </script>

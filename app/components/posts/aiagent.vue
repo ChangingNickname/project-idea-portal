@@ -119,7 +119,9 @@ const getWelcomeMessage = () => ({
 const scrollToBottom = () => {
   if (messagesContainer.value) {
     nextTick(() => {
-      messagesContainer.value!.scrollTop = messagesContainer.value!.scrollHeight
+      if (messagesContainer.value) {
+        messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
+      }
     })
   }
 }
