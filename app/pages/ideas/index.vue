@@ -557,7 +557,7 @@
         query: {
           q: searchQuery.value,
           page: 1,
-          limit: 10
+          limit: 15
         }
       })
 

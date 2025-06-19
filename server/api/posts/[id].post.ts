@@ -51,7 +51,11 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    const isParticipant = postData.currentParticipants?.includes(authResult.currentUserId)
+    // Ensure currentParticipants is an array
+    const currentParticipants = Array.isArray(postData.currentParticipants) 
+      ? postData.currentParticipants 
+      : []
+    const isParticipant = currentParticipants.includes(authResult.currentUserId)
 
     // Если это запрос на выход из проекта
     if (body.action === 'leaveProject') {
@@ -63,7 +67,7 @@ export default defineEventHandler(async (event) => {
       }
 
       // Удаляем пользователя из списка участников
-      const updatedParticipants = postData.currentParticipants.filter(
+      const updatedParticipants = currentParticipants.filter(
         (id: string) => id !== authResult.currentUserId
       )
 

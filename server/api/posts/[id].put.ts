@@ -54,7 +54,12 @@ export default defineEventHandler(async (event) => {
 
     const isOwner = postData.ownerId === authResult.currentUserId
     const isAuthor = postData.authorId?.includes(authResult.currentUserId)
-    const isParticipant = postData.currentParticipants?.includes(authResult.currentUserId)
+    
+    // Ensure currentParticipants is an array
+    const currentParticipants = Array.isArray(postData.currentParticipants) 
+      ? postData.currentParticipants 
+      : []
+    const isParticipant = currentParticipants.includes(authResult.currentUserId)
 
     console.log('Auth check:', {
       currentUserId: authResult.currentUserId,
@@ -62,7 +67,8 @@ export default defineEventHandler(async (event) => {
       authorId: postData.authorId,
       isOwner,
       isAuthor,
-      isParticipant
+      isParticipant,
+      currentParticipants
     })
 
     // Если это запрос на выход из проекта
@@ -75,7 +81,7 @@ export default defineEventHandler(async (event) => {
       }
 
       // Удаляем пользователя из списка участников
-      const updatedParticipants = postData.currentParticipants.filter(
+      const updatedParticipants = currentParticipants.filter(
         (id: string) => id !== authResult.currentUserId
       )
 
