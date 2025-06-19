@@ -332,7 +332,7 @@ const gridClass = computed(() => {
 // Обработчик обновления формы
 const handleFormUpdate = (newForm: Partial<Post>) => {
   // Обновляем store только если это не внешнее обновление и данные действительно изменились
-  if (store.lastExternalUpdate === 0 || Date.now() - store.lastExternalUpdate > 1000) {
+  if (store.lastExternalUpdate === 0 || Date.now() - store.lastExternalUpdate > 2000) {
     // Проверяем, что данные действительно изменились
     const hasChanges = 
       newForm.title !== store.draft.title ||
@@ -345,7 +345,10 @@ const handleFormUpdate = (newForm: Partial<Post>) => {
     
     if (hasChanges) {
       store.updateDraft(newForm, false)
-      previewKey.value++
+      // Обновляем previewKey только при значительных изменениях
+      if (newForm.content !== store.draft.content || newForm.title !== store.draft.title) {
+        previewKey.value++
+      }
     }
   }
 }

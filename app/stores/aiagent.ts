@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { useArticleBuilderStore } from '~/stores/articleBuilder'
 import { useUserStore } from '~/stores/user'
+import { nextTick } from 'vue'
 
 interface AiAgentState {
   sessionToken: string | null
@@ -180,6 +181,8 @@ export const useAiAgentStore = defineStore('aiagent', {
         }
 
         console.log('[AiAgent] Adding user message to store:', userMessage)
+        // Используем nextTick для предотвращения потери фокуса
+        await nextTick()
         this.messages = [...this.messages, userMessage]
         saveState({ messages: this.messages })
 
@@ -278,6 +281,7 @@ export const useAiAgentStore = defineStore('aiagent', {
         }
 
         // Добавляем сообщение ассистента
+        await nextTick()
         this.messages = [...this.messages, assistantMessage]
         saveState({ messages: this.messages })
 
@@ -304,6 +308,7 @@ export const useAiAgentStore = defineStore('aiagent', {
           }
         }
         
+        await nextTick()
         this.messages = [...this.messages, errorMessage]
         saveState({ messages: this.messages })
         

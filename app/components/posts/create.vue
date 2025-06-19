@@ -11,6 +11,7 @@
         type="text"
         required
         :disabled="isDisabled"
+        :key="`title-${form.id || 'new'}`"
         class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
         :placeholder="t('post.create.titlePlaceholder')"
       />
@@ -119,6 +120,7 @@
         v-model="form.annotation"
         rows="3"
         :disabled="isDisabled"
+        :key="`annotation-${form.id || 'new'}`"
         class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
         :placeholder="t('post.create.annotationPlaceholder')"
       />
@@ -217,6 +219,7 @@
         rows="10"
         required
         :disabled="isDisabled"
+        :key="`content-${form.id || 'new'}`"
         class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed font-mono"
         :placeholder="t('post.create.contentPlaceholder')"
       />
@@ -391,15 +394,15 @@ const debounce = (func: Function, wait: number) => {
   }
 }
 
-// Debounced emit функция
+// Debounced emit функция с увеличенной задержкой
 const debouncedEmit = debounce((data: Partial<Post>) => {
   emit('update', data)
-}, 300)
+}, 1000) // Увеличиваем задержку с 300ms до 1000ms
 
 // Эмитить update только при реальных изменениях формы с debounce
 watch(() => [form.value.id, form.value.title, form.value.cover, form.value.annotation, form.value.keywords, form.value.content, form.value.status], () => {
   // Проверяем, что это не внешнее обновление из store
-  if (articleBuilderStore.lastExternalUpdate === 0 || Date.now() - articleBuilderStore.lastExternalUpdate > 1000) {
+  if (articleBuilderStore.lastExternalUpdate === 0 || Date.now() - articleBuilderStore.lastExternalUpdate > 2000) {
     debouncedEmit({ ...form.value })
   }
 }, { deep: true })

@@ -55,7 +55,7 @@ input[type="reset"]:hover,
 select:hover,
 textarea:hover,
 [tabindex]:not([tabindex="-1"]):hover {
-  transform: scale(1.05);
+  transform: scale(1.00);
 }
 
 /* Disable hover effect for disabled elements */
