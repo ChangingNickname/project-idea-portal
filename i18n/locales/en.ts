@@ -2,6 +2,7 @@ export default {
   title: 'Idea Portal',
   common: {
     typeMessage: 'Type a message...',
+    editingNotAllowed: 'Editing published post is not allowed',
     signIn: 'Sign In',
     signUp: 'Sign Up',
     language: 'Language',

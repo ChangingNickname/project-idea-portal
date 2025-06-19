@@ -3,10 +3,11 @@
     <form @submit.prevent="sendMessage" class="flex gap-2">
       <UTextarea
         v-model="message"
-        :placeholder="t('common.typeMessage')"
+        :placeholder="props.disabled ? t('common.editingNotAllowed') : t('common.typeMessage')"
         class="flex-1"
         :rows="3"
         :auto-rows="false"
+        :disabled="props.disabled"
         @keydown="handleKeyDown"
       >
         <template #trailing>
@@ -14,7 +15,7 @@
             type="submit"
             color="primary"
             variant="ghost"
-            :disabled="!message.trim() || isSending"
+            :disabled="!message.trim() || isSending || props.disabled"
             :loading="isSending"
           >
             <Icon name="lucide:send" class="w-5 h-5" />

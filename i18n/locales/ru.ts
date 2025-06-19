@@ -2,6 +2,7 @@ export default {
   title: 'Портал идей',
   common: {
     typeMessage: 'Введите сообщение...',
+    editingNotAllowed: 'Редактирование опубликованной публикации не разрешено',
     signIn: 'Войти',
     signUp: 'Регистрация',
     language: 'Язык',

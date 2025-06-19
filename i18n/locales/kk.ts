@@ -1,6 +1,7 @@
 export default {
   common: {
     typeMessage: 'Хабарлама енгізіңіз...',
+    editingNotAllowed: 'Жарияланған жарияланымды өңдеуге рұқсат етілмеген',
     signIn: 'Кіру',
     signUp: 'Тіркелу',
     language: 'Тіл',

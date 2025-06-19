@@ -144,41 +144,32 @@
         <div v-if="store.showAiAgent" class="fixed top-4 left-4 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg shadow-lg relative h-full border-2 border-blue-500 dark:border-blue-400"
           style="position: fixed !important; top: 16px !important; left: 16px !important; height: 70vh; display: flex; flex-direction: column; z-index: 50; width: 400px;"
           ref="aiPanelRef">
-          <UTooltip
-            :text="!canEditPost ? 'Editing published post is not allowed' : ''"
-            :disabled="canEditPost"
-          >
-            <div class="relative h-full flex flex-col flex-1">
-              <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 cursor-move select-none"
-                @mousedown="startDrag">
-                <div class="flex items-center justify-between">
-                  <h2 class="text-lg font-medium">
-                    {{ t('common.aiAssistant') }}
-                  </h2>
-                  <button
-                    @click="store.toggleAiAgent"
-                    class="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
-                  >
-                    <Icon name="lucide:x" class="w-5 h-5" />
-                  </button>
-                </div>
+          <div class="relative h-full flex flex-col flex-1">
+            <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 cursor-move select-none"
+              @mousedown="startDrag">
+              <div class="flex items-center justify-between">
+                <h2 class="text-lg font-medium">
+                  {{ t('common.aiAssistant') }}
+                </h2>
+                <button
+                  @click="store.toggleAiAgent"
+                  class="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+                >
+                  <Icon name="lucide:x" class="w-5 h-5" />
+                </button>
               </div>
-              <div class="flex-1 overflow-hidden">
-                <PostsCreate 
-                  v-if="store.rightPanel === 'create'" 
-                  :model-value="store.draft"
-                  :disabled="!canEditPost"
-                  :key="`create-${previewKey}`"
-                  @update="handleFormUpdate"
-                />
-                <PostsAiagent v-else :post="store.draft" :disabled="!canEditPost" :key="`aiagent-${previewKey}`" style="height: 100%;" />
-              </div>
-              <div 
-                v-if="!canEditPost" 
-                class="absolute inset-0 bg-gray-900/50 dark:bg-gray-900/70 cursor-not-allowed"
-              />
             </div>
-          </UTooltip>
+            <div class="flex-1 overflow-hidden">
+              <PostsCreate 
+                v-if="store.rightPanel === 'create'" 
+                :model-value="store.draft"
+                :disabled="!canEditPost"
+                :key="`create-${previewKey}`"
+                @update="handleFormUpdate"
+              />
+              <PostsAiagent v-else :post="store.draft" :disabled="!canEditPost" :key="`aiagent-${previewKey}`" style="height: 100%;" />
+            </div>
+          </div>
           
           <!-- Resize handle -->
           <div 
