@@ -28,9 +28,20 @@ export default defineEventHandler(async (event) => {
         ? subjectAreas.split(',') 
         : []
     
+    // Additional search parameters
+    const title = query.title as string
+    const keywords = query.keywords as string
+    const dateFrom = query.dateFrom as string
+    const dateTo = query.dateTo as string
+    
     console.log('Search params:', {
+      searchQuery,
       subjectAreas,
       subjectAreasArray,
+      title,
+      keywords,
+      dateFrom,
+      dateTo,
       query,
       ownerId: query.ownerId,
       authorId: query.authorId,
@@ -96,6 +107,41 @@ export default defineEventHandler(async (event) => {
       totalPosts: posts.length,
       posts: posts.map(p => ({ id: p.id, status: p.status, subjectAreas: p.subjectAreas?.length || 0 }))
     })
+
+    // Фильтруем по title если указан
+    if (title) {
+      const titleLower = title.toLowerCase()
+      posts = posts.filter(post => 
+        post.title?.toLowerCase().includes(titleLower)
+      )
+      console.log('After title filter:', { totalPosts: posts.length, title })
+    }
+
+    // Фильтруем по keywords если указан
+    if (keywords) {
+      const keywordsLower = keywords.toLowerCase()
+      posts = posts.filter(post => {
+        const postKeywords = post.keywords || []
+        return postKeywords.some(keyword => 
+          keyword.toLowerCase().includes(keywordsLower)
+        )
+      })
+      console.log('After keywords filter:', { totalPosts: posts.length, keywords })
+    }
+
+    // Фильтруем по датам если указаны
+    if (dateFrom || dateTo) {
+      posts = posts.filter(post => {
+        const postDate = new Date(post.createdAt)
+        const fromDate = dateFrom ? new Date(dateFrom) : null
+        const toDate = dateTo ? new Date(dateTo) : null
+        
+        if (fromDate && postDate < fromDate) return false
+        if (toDate && postDate > toDate) return false
+        return true
+      })
+      console.log('After date filter:', { totalPosts: posts.length, dateFrom, dateTo })
+    }
 
     console.log('Before subjectAreas filter:', {
       totalPosts: posts.length,
