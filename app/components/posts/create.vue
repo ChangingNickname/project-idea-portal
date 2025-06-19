@@ -347,10 +347,18 @@ const additionalAuthors = computed(() => {
 
 // Инициализация автора при монтировании
 onMounted(() => {
-  if (userStore.user) {
+  // Сначала инициализируем форму из props, если они есть
+  if (props.modelValue) {
+    form.value = {
+      ...form.value,
+      ...props.modelValue
+    }
+  }
+  
+  // Затем устанавливаем автора, если его нет
+  if (userStore.user && (!form.value.author || form.value.author.length === 0)) {
     form.value.author = [userStore.user]
     form.value.authorId = [userStore.user.id]
-    emit('update', form.value)
   }
 })
 
@@ -360,17 +368,17 @@ const props = defineProps<{
   disabled: boolean
 }>()
 
-// Обновлять форму из props только если id изменился
+// Обновлять форму из props при любом изменении modelValue
 watch(() => props.modelValue, (newValue) => {
-  if (newValue && newValue.id !== form.value.id) {
+  if (newValue) {
     form.value = {
       ...form.value,
       ...newValue
     }
   }
-}, { deep: true })
+}, { deep: true, immediate: true })
 
-// Эмитить update только при реальных изменениях формы (например, по id, title, keywords, content и т.д.)
+// // Эмитить update только при реальных изменениях формы (например, по id, title, keywords, content и т.д.)
 watch(() => [form.value.id, form.value.title, form.value.cover, form.value.annotation, form.value.keywords, form.value.content, form.value.status], () => {
   emit('update', { ...form.value })
 })

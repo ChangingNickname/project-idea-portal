@@ -128,6 +128,7 @@
                 <PostsCreate 
                   :model-value="store.draft"
                   :disabled="!canEditPost"
+                  :key="previewKey"
                   @update="handleFormUpdate"
                 />
               </div>
@@ -167,9 +168,10 @@
                   v-if="store.rightPanel === 'create'" 
                   :model-value="store.draft"
                   :disabled="!canEditPost"
+                  :key="`create-${previewKey}`"
                   @update="handleFormUpdate"
                 />
-                <PostsAiagent v-else :post="store.draft" :disabled="!canEditPost" :key="previewKey" style="height: 100%;" />
+                <PostsAiagent v-else :post="store.draft" :disabled="!canEditPost" :key="`aiagent-${previewKey}`" style="height: 100%;" />
               </div>
               <div 
                 v-if="!canEditPost" 
@@ -239,6 +241,11 @@ onUnmounted(() => {
   window.removeEventListener('resize', checkMobile)
 })
 
+// Следим за изменениями панелей и обновляем previewKey
+watch(() => [store.showCreate, store.showPreview, store.showAiAgent], () => {
+  previewKey.value++
+})
+
 // Функция проверки прав на редактирование
 const canEditPost = computed(() => {
   if (!userStore.user || !store.draft.id) return true // Новый пост можно редактировать
@@ -294,12 +301,18 @@ onMounted(async () => {
 // Watch for route changes
 watch(
   () => route.query.id,
-  async (newId) => {
+  async (newId, oldId) => {
+    // Если у нас есть новый ID, загружаем пост
     if (newId) {
       await loadPost(newId as string)
-    } else {
+    } 
+    // Если ID был удален (стал null/undefined) и у нас был старый ID, 
+    // то это означает переход к созданию нового поста
+    else if (oldId && !newId) {
       store.resetDraft()
     }
+    // Если ни нового, ни старого ID нет, ничего не делаем
+    // (это может быть первая загрузка страницы)
   }
 )
 
