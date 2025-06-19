@@ -150,9 +150,17 @@
             <div class="relative h-full flex flex-col flex-1">
               <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 cursor-move select-none"
                 @mousedown="startDrag">
-                <h2 class="text-lg font-medium">
-                  {{ t('common.aiAssistant') }}
-                </h2>
+                <div class="flex items-center justify-between">
+                  <h2 class="text-lg font-medium">
+                    {{ t('common.aiAssistant') }}
+                  </h2>
+                  <button
+                    @click="store.toggleAiAgent"
+                    class="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+                  >
+                    <Icon name="lucide:x" class="w-5 h-5" />
+                  </button>
+                </div>
               </div>
               <div class="flex-1 overflow-hidden">
                 <PostsCreate 
