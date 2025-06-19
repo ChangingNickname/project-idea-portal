@@ -140,7 +140,7 @@
         </div>
 
         <!-- Средняя панель - AI -->
-        <div v-if="store.showAiAgent" class="fixed top-4 left-4 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg shadow-sm relative h-full"
+        <div v-if="store.showAiAgent" class="fixed top-4 left-4 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg shadow-lg relative h-full border-2 border-blue-500 dark:border-blue-400"
           style="position: fixed !important; top: 16px !important; left: 16px !important; height: 70vh; display: flex; flex-direction: column; z-index: 50; width: 400px;"
           ref="aiPanelRef">
           <UTooltip
@@ -148,7 +148,8 @@
             :disabled="canEditPost"
           >
             <div class="relative h-full flex flex-col flex-1">
-              <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+              <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 cursor-move select-none"
+                @mousedown="startDrag">
                 <h2 class="text-lg font-medium">
                   {{ t('common.aiAssistant') }}
                 </h2>
@@ -548,6 +549,38 @@ const startResize = (event: MouseEvent) => {
     
     aiPanel.style.width = `${newWidth}px`
     aiPanel.style.height = `${newHeight}px`
+  }
+  
+  const handleMouseUp = () => {
+    document.removeEventListener('mousemove', handleMouseMove)
+    document.removeEventListener('mouseup', handleMouseUp)
+  }
+  
+  document.addEventListener('mousemove', handleMouseMove)
+  document.addEventListener('mouseup', handleMouseUp)
+}
+
+// Функция для перетаскивания AI агента
+const startDrag = (event: MouseEvent) => {
+  event.preventDefault()
+  
+  const aiPanel = aiPanelRef.value
+  if (!aiPanel) return
+  
+  const startX = event.clientX
+  const startY = event.clientY
+  const startLeft = aiPanel.offsetLeft
+  const startTop = aiPanel.offsetTop
+  
+  const handleMouseMove = (e: MouseEvent) => {
+    const deltaX = e.clientX - startX
+    const deltaY = e.clientY - startY
+    
+    const newLeft = startLeft + deltaX
+    const newTop = startTop + deltaY
+    
+    aiPanel.style.left = `${newLeft}px`
+    aiPanel.style.top = `${newTop}px`
   }
   
   const handleMouseUp = () => {
