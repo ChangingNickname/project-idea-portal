@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
     if (!authResult.isAuthenticated || !authResult.currentUserId) {
       throw createError({
         statusCode: 401,
-        message: 'Требуется авторизация'
+        message: 'Authentication required'
       })
     }
 
@@ -24,6 +24,7 @@ export default defineEventHandler(async (event) => {
 
     // Get request body
     const body = await readBody(event)
+    console.log('body', body)
     if (!body) {
       throw createError({
         statusCode: 400,
@@ -47,7 +48,7 @@ export default defineEventHandler(async (event) => {
     if (!postData) {
       throw createError({
         statusCode: 404,
-        message: 'Пост не найден'
+        message: 'Post not found'
       })
     }
 
@@ -55,12 +56,21 @@ export default defineEventHandler(async (event) => {
     const isAuthor = postData.authorId?.includes(authResult.currentUserId)
     const isParticipant = postData.currentParticipants?.includes(authResult.currentUserId)
 
+    console.log('Auth check:', {
+      currentUserId: authResult.currentUserId,
+      ownerId: postData.ownerId,
+      authorId: postData.authorId,
+      isOwner,
+      isAuthor,
+      isParticipant
+    })
+
     // Если это запрос на выход из проекта
     if (body.action === 'leaveProject') {
       if (!isParticipant) {
         throw createError({
           statusCode: 403,
-          message: 'Вы не являетесь участником этого проекта'
+          message: 'You are not a participant in this project'
         })
       }
 
@@ -74,35 +84,83 @@ export default defineEventHandler(async (event) => {
         updatedAt: new Date().toISOString()
       }
       await postRef.update(updateData)
-    } else if (body.currentParticipants) {
-      // Проверяем, что текущий пользователь является владельцем или автором
-      if (!isOwner && !isAuthor) {
-        throw createError({
-          statusCode: 403,
-          message: 'Только владелец или автор может управлять участниками'
-        })
-      }
-
-      // Обновляем список участников
-      const updateData = {
-        currentParticipants: body.currentParticipants,
-        updatedAt: new Date().toISOString()
-      }
-      await postRef.update(updateData)
     } else {
-      // Обычное обновление поста
+      // Обычное обновление поста (включая участников, если они переданы)
+      console.log('Starting regular post update...')
       if (!isOwner && !isAuthor) {
+        console.log('Permission denied: user is not owner or author')
         throw createError({
           statusCode: 403,
-          message: 'Только владелец или автор может редактировать пост'
+          message: 'Only the owner or author can edit the post'
         })
       }
+      
+      console.log('Permission granted, proceeding with update...')
 
+      console.log('Updating post with data:', body)
+      
+      // Удаляем поля, которые не должны обновляться напрямую
+      const { id, createdAt, ...updateFields } = body
+      console.log('Fields after removing id and createdAt:', updateFields)
+      
+      // Проверяем и обрабатываем специальные поля
+      const processedFields: any = {}
+      
+      // Обрабатываем каждое поле отдельно
+      Object.entries(updateFields).forEach(([key, value]) => {
+        console.log(`Processing field ${key}:`, value, 'type:', typeof value)
+        if (value !== undefined && value !== null) {
+          // Проверяем специальные типы данных
+          if (Array.isArray(value)) {
+            processedFields[key] = value
+            console.log(`Added array field ${key}:`, value)
+          } else if (typeof value === 'object') {
+            processedFields[key] = value
+            console.log(`Added object field ${key}:`, value)
+          } else if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+            processedFields[key] = value
+            console.log(`Added primitive field ${key}:`, value)
+          } else {
+            console.log(`Skipping field ${key} with unsupported type:`, typeof value, value)
+          }
+        } else {
+          console.log(`Skipping field ${key} because it's null or undefined`)
+        }
+      })
+      
+      console.log('Processed fields:', processedFields)
+      
       const updateData = {
-        ...body,
+        ...processedFields,
         updatedAt: new Date().toISOString()
       }
-      await postRef.update(updateData)
+      
+      console.log('Final update data:', updateData)
+      
+      // Выполняем обновление
+      try {
+        await postRef.update(updateData)
+        console.log('Update completed successfully')
+      } catch (updateError: any) {
+        console.error('Firebase update error:', updateError)
+        throw createError({
+          statusCode: 500,
+          message: `Failed to update post: ${updateError.message}`
+        })
+      }
+      
+      // Проверяем, что обновление действительно произошло
+      const checkUpdate = await postRef.get()
+      const updatedData = checkUpdate.data()
+      console.log('Verification - updated data:', updatedData)
+      
+      // Проверяем ключевые поля
+      const fieldsToCheck = ['title', 'annotation', 'content', 'status']
+      fieldsToCheck.forEach(field => {
+        if (updateData[field] !== undefined) {
+          console.log(`Field ${field}: expected=${updateData[field]}, actual=${updatedData?.[field]}`)
+        }
+      })
     }
 
     // Get updated post
@@ -112,24 +170,35 @@ export default defineEventHandler(async (event) => {
       ...updatedPost.data()
     } as Post
 
+    console.log('Updated post data:', post)
+
     // Fetch author profiles
     const authorProfiles = await Promise.all(
       (post.authorId || []).map(async (authorId: string) => {
-        const profileDoc = await db.collection('profiles').doc(authorId).get()
-        if (profileDoc.exists) {
-          return {
-            id: profileDoc.id,
-            ...profileDoc.data()
+        try {
+          const profileDoc = await db.collection('profiles').doc(authorId).get()
+          if (profileDoc.exists) {
+            return {
+              id: profileDoc.id,
+              ...profileDoc.data()
+            }
           }
+          return null
+        } catch (error) {
+          console.error(`Error fetching profile for ${authorId}:`, error)
+          return null
         }
-        return null
       })
     )
 
-    return {
+    const result = {
       ...post,
       author: authorProfiles.filter(Boolean)
     }
+    
+    console.log('Final response:', result)
+    
+    return result
   } catch (error: any) {
     console.error('Error updating post:', error)
     throw createError({

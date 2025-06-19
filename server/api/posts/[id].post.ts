@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
     if (!authResult.isAuthenticated || !authResult.currentUserId) {
       throw createError({
         statusCode: 401,
-        message: 'Требуется авторизация'
+        message: 'Authentication required'
       })
     }
 
@@ -47,7 +47,7 @@ export default defineEventHandler(async (event) => {
     if (!postData) {
       throw createError({
         statusCode: 404,
-        message: 'Пост не найден'
+        message: 'Post not found'
       })
     }
 
@@ -58,7 +58,7 @@ export default defineEventHandler(async (event) => {
       if (!isParticipant) {
         throw createError({
           statusCode: 403,
-          message: 'Вы не являетесь участником этого проекта'
+          message: 'You are not a participant in this project'
         })
       }
 
@@ -75,13 +75,13 @@ export default defineEventHandler(async (event) => {
 
       return {
         success: true,
-        message: 'Вы успешно вышли из проекта'
+        message: 'You have successfully left the project'
       }
     }
 
     throw createError({
       statusCode: 400,
-      message: 'Неизвестное действие'
+      message: 'Unknown action'
     })
   } catch (error: any) {
     console.error('Error processing post action:', error)

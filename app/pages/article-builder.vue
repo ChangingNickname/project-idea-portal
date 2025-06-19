@@ -352,12 +352,13 @@ const handleFormUpdate = (newForm: Partial<Post>) => {
 
 // Handle save/update
 const handleSave = async () => {
+  console.log('handleSave', store.draft)
   try {
     const response = await $fetch<Post>(`/api/posts${store.draft.id ? `/${store.draft.id}` : ''}`, {
       method: store.draft.id ? 'put' : 'post',
       body: store.draft
     })
-    
+    console.log('handleSave response', response)
     if (response) {
       store.updateDraft(response, true)
       previewKey.value++ // Обновляем превью после сохранения
@@ -405,7 +406,7 @@ const copyId = async () => {
 // Handle publish
 const handlePublish = async () => {
   if (!store.draft.id) return
-  
+  console.log('handlePublish', store.draft)
   try {
     const response = await $fetch<Post>(`/api/posts/${store.draft.id}`, {
       method: 'put',
@@ -414,7 +415,7 @@ const handlePublish = async () => {
         status: 'published'
       }
     })
-    
+    console.log('handlePublish response', response)
     if (response) {
       store.updateDraft(response)
       useToast().add({
@@ -441,7 +442,7 @@ const handlePublish = async () => {
 // Handle unpublish
 const handleUnpublish = async () => {
   if (!store.draft.id) return
-  
+  console.log('handleUnpublish', store.draft)
   try {
     const response = await $fetch<Post>(`/api/posts/${store.draft.id}`, {
       method: 'put',
@@ -477,7 +478,7 @@ const handleUnpublish = async () => {
 // Handle archive
 const handleArchive = async () => {
   if (!store.draft.id) return
-  
+  console.log('handleArchive', store.draft)
   try {
     const response = await $fetch<Post>(`/api/posts/${store.draft.id}`, {
       method: 'put',
@@ -513,7 +514,7 @@ const handleArchive = async () => {
 // Handle restore
 const handleRestore = async () => {
   if (!store.draft.id) return
-  
+  console.log('handleRestore', store.draft)
   try {
     const response = await $fetch<Post>(`/api/posts/${store.draft.id}`, {
       method: 'put',
