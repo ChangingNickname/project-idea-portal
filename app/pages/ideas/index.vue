@@ -353,7 +353,7 @@
     }
     
     // Initialize search query
-    searchQuery.value = (query.q as string) || ''
+    searchQuery.value = (query.q as string) || (query.search as string) || (query.title as string) || ''
     
     // Initialize sorting
     sortBy.value = (query.sortBy as string) || 'createdAt'
@@ -368,7 +368,7 @@
     
     // Initialize all form fields from URL
     searchState.value = {
-      title: (query.title as string) || '',
+      title: (query.title as string) || (query.search as string) || '',
       keywords: (query.keywords as string) || '',
       dateRange: dateFrom ? {
         start: new CalendarDate(
@@ -390,7 +390,7 @@
     selectedAuthors.value = searchState.value.authors || []
     
     // Initialize selected subject areas
-    if (searchState.value.subjectAreas?.length > 0) {
+    if (searchState.value.subjectAreas && searchState.value.subjectAreas.length > 0) {
       selectedSubjectAreas.value = searchState.value.subjectAreas.map(key => ({
         key,
         label: t(`subjectAreas.${key}`),
@@ -425,13 +425,12 @@
     const query: Record<string, string> = {}
     
     // Add parameters only if they differ from default values
-    if (searchQuery.value) query.search = searchQuery.value
+    if (searchQuery.value) query.title = searchQuery.value
     if (sortBy.value !== 'createdAt') query.sortBy = sortBy.value
     if (sortDirection.value !== 'desc') query.sortDirection = sortDirection.value
     if (currentPage.value > 1) query.page = currentPage.value.toString()
     
     // Add advanced search parameters only if they exist
-    if (searchState.value.title) query.title = searchState.value.title
     if (searchState.value.keywords) query.keywords = searchState.value.keywords
     
     // Handle dates
@@ -464,10 +463,9 @@
       const query: any = {
         page: currentPage.value,
         limit: itemsPerPage.value,
-        q: searchQuery.value,
+        title: searchQuery.value || searchState.value.title,
         sortBy: sortBy.value,
         sortDirection: sortDirection.value,
-        title: searchState.value.title,
         keywords: searchState.value.keywords,
         authors: searchState.value.authors,
         subjectAreas: route.query.subjectAreas || selectedSubjectAreas.value.map(area => area.key)
@@ -517,19 +515,12 @@
     loadPosts()
   }, { immediate: true })
 
-  // Remove automatic URL updates for advanced search fields
-  watch([searchQuery, sortBy, sortDirection, currentPage], () => {
+  // Remove automatic URL updates for searchQuery - only manual search
+  watch([sortBy, sortDirection, currentPage], () => {
     if (!isAdvancedSearchOpen.value) {
       updateQueryParams()
     }
   })
-
-  // Remove automatic URL updates for searchState
-  watch(() => searchState.value, () => {
-    if (!isAdvancedSearchOpen.value) {
-      updateQueryParams()
-    }
-  }, { deep: true })
 
   // Load selected authors' profiles on mount and when selectedAuthors changes
   watch(selectedAuthors, async (newAuthors: string[]) => {
@@ -586,7 +577,7 @@
   const debouncedAuthorSearch = useDebounceFn(() => {
     searchAuthors()
   }, 300)
-  
+
   // Reset advanced search
   const resetAdvancedSearch = () => {
     searchState.value = {
