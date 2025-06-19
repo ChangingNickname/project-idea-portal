@@ -323,7 +323,7 @@ const sendJoinRequest = async () => {
   if (!userStore.user || !props.post.owner || !props.post.id || !props.post.title) return
 
   try {
-    const message = `Пользователь желает принять участие в проекте "${props.post.title}" (ID: ${props.post.id})\n\nПринять его?\n\n[Да](/api/user/${props.post.owner.id}/join/${props.post.id}?accept=true)\n[Нет](/api/user/${props.post.owner.id}/join/${props.post.id}?accept=false)`
+    const message = `User wants to join the project "${props.post.title}" (ID: ${props.post.id})\n\nAccept them?\n\n[Yes](/api/user/${props.post.owner.id}/join/${props.post.id}?accept=true)\n[No](/api/user/${props.post.owner.id}/join/${props.post.id}?accept=false)`
 
     await $fetch(`/api/user/${props.post.owner.id}/message`, {
       method: 'POST',

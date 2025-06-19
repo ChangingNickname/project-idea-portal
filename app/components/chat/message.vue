@@ -242,7 +242,7 @@ const handleMessageClick = (event: MouseEvent) => {
         
         // Проверяем, что это запрос на присоединение
         if (href.includes('/join/')) {
-          const isAccepted = target.textContent?.toLowerCase() === 'да'
+          const isAccepted = target.textContent?.toLowerCase() === 'yes'
           const postId = href.split('/join/')[1]?.split('?')[0]
           
           if (postId && props.metadata?.postId) {
@@ -269,16 +269,16 @@ const handleMessageClick = (event: MouseEvent) => {
             console.log('API request successful')
             // Обновляем сообщение после успешного ответа
             if (props.type === 'join_request' && props.metadata?.postId) {
-              const isAccepted = target.textContent?.toLowerCase() === 'да'
+              const accepted = target.textContent?.toLowerCase() === 'yes'
               console.log('Join request response:', {
-                isAccepted,
+                accepted,
                 postId: props.metadata.postId,
                 userId: props.user.id
               })
 
               // Обновляем текст сообщения
               const newMessage = props.message?.replace(
-                /\[(Да|Нет)\]\(.*?\)/g,
+                /\[(Yes|No)\]\(.*?\)/g,
                 (match, text) => `[${text}]`
               )
               if (newMessage) {

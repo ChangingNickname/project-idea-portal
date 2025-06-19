@@ -315,8 +315,8 @@ const handleJoinRequestResponse = async ({ accepted, postId, userId }: { accepte
 
     // Отправляем сообщение об ответе
     const responseMessage = accepted 
-      ? `Вы приняты в проект!`
-      : `Ваш запрос на присоединение к проекту отклонен.`
+      ? `You have been accepted to the project!`
+      : `Your request to join the project has been declined.`
 
     await $fetch(`/api/user/${userId}/message`, {
       method: 'POST',
